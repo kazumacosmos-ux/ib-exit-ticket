@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>1-B出口 時間帯予約</title>
+  <title>1-B出口 スタッフ管理</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -13,71 +13,155 @@
   <main class="card">
 
     <h1>1-B出口</h1>
-    <h2>時間帯予約</h2>
+    <h2>スタッフ管理</h2>
 
-    <section id="reserveArea">
+    <section id="loginArea">
 
-      <p>行きたい時間帯を選んで予約してください。</p>
+      <input
+        id="email"
+        type="email"
+        placeholder="メールアドレス"
+        autocomplete="username"
+      >
 
-      <label for="size">人数</label>
-      <select id="size">
+      <input
+        id="password"
+        type="password"
+        placeholder="パスワード"
+        autocomplete="current-password"
+      >
+
+      <button id="login">
+        ログイン
+      </button>
+
+      <p id="loginError" class="error"></p>
+
+    </section>
+
+    <section id="controlArea" hidden>
+
+      <div class="staff-status">
+        <strong id="state">
+          受付中
+        </strong>
+      </div>
+
+      <button
+        id="toggle"
+        class="secondary"
+      >
+        受付停止
+      </button>
+
+      <h3>予約設定</h3>
+
+      <label for="start">
+        開始時刻
+      </label>
+
+      <input
+        id="start"
+        type="time"
+      >
+
+      <label for="end">
+        終了時刻
+      </label>
+
+      <input
+        id="end"
+        type="time"
+      >
+
+      <label for="slotMinutes">
+        1枠の長さ
+      </label>
+
+      <select id="slotMinutes">
+        <option value="10">10分</option>
+        <option value="15">15分</option>
+        <option value="20">20分</option>
+        <option value="30">30分</option>
+        <option value="45">45分</option>
+        <option value="60">60分</option>
+      </select>
+
+      <label for="maxGroups">
+        1枠あたりの最大組数
+      </label>
+
+      <select id="maxGroups">
+        <option value="1">1組</option>
+        <option value="2">2組</option>
+        <option value="3">3組</option>
+        <option value="4">4組</option>
+        <option value="5">5組</option>
+        <option value="6">6組</option>
+        <option value="7">7組</option>
+        <option value="8">8組</option>
+        <option value="9">9組</option>
+        <option value="10">10組</option>
+      </select>
+
+      <button id="saveSettings">
+        設定を保存
+      </button>
+
+      <p id="settingsMessage" class="message"></p>
+
+      <hr>
+
+      <h3>紙予約を追加</h3>
+
+      <label for="paperSize">
+        人数
+      </label>
+
+      <select id="paperSize">
         <option value="1">1人</option>
         <option value="2">2人</option>
         <option value="3">3人</option>
         <option value="4">4人</option>
       </select>
 
-      <label for="slot">時間帯</label>
-      <select id="slot"></select>
+      <label for="paperSlot">
+        時間帯
+      </label>
 
-      <p id="slotInfo" class="slot-info"></p>
+      <select id="paperSlot"></select>
 
-      <button id="reserve">
-        この時間帯で予約する
+      <p id="paperSlotInfo" class="slot-info"></p>
+
+      <button id="addPaper">
+        紙予約を追加
       </button>
 
-      <p id="error" class="error"></p>
+      <p id="paperMessage" class="message"></p>
+
+      <hr>
+
+      <h3>予約状況</h3>
+
+      <div id="slotList" class="slot-list"></div>
+
+      <hr>
+
+      <button
+        id="logout"
+        class="secondary"
+      >
+        ログアウト
+      </button>
 
     </section>
-
-    <section id="reservationArea" hidden>
-
-      <p>予約が完了しました</p>
-
-      <div class="reservation-number">
-        <span>予約番号</span>
-        <strong id="myNumber">-</strong>
-      </div>
-
-      <p>
-        予約時間
-      </p>
-
-      <div id="mySlot" class="big">
-        -
-      </div>
-
-      <p>
-        人数：<strong id="mySize">-</strong>人
-      </p>
-
-      <p class="notice">
-        この画面をスタッフに見せられるようにしておいてください。
-      </p>
-
-    </section>
-
-    <section id="closedArea" hidden>
-      <p class="notice">
-        現在、予約受付を停止しています。
-      </p>
-    </section>
-
-    <p id="error2" class="error"></p>
 
   </main>
 
-  <script type="module" src="app.js"></script>
+  <script
+    type="module"
+    src="staff.js"
+  ></script>
 
 </body>
 
