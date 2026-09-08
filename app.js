@@ -1,1 +1,110 @@
-import{initializeApp}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";import{getDatabase,ref,onValue,runTransaction}from"https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";import{firebaseConfig}from"./firebase-config.js";const app=initializeApp(firebaseConfig),db=getDatabase(app),queueRef=ref(db,"queue");const size=document.getElementById("size"),issue=document.getElementById("issue"),issueArea=document.getElementById("issueArea"),ticketArea=document.getElementById("ticketArea"),myEl=document.getElementById("myNumber"),curEl=document.getElementById("current"),dist=document.getElementById("distance"),status=document.getElementById("status"),closed=document.getElementById("closed"),err=document.getElementById("error");let state={current:0,last:0,open:true},my=Number(localStorage.getItem("ib_ticket")||0);function render(){const open=state.open!==false;closed.hidden=open;if(my){issueArea.hidden=true;ticketArea.hidden=false;myEl.textContent=my;curEl.textContent=state.current??0;const d=my-(state.current??0);dist.textContent=d>0?`あと ${d} 組です`:"";status.textContent=d<=0?"あなたの番":d<=3?"もうすぐ！":"お待ちください"}else{issueArea.hidden=!open;ticketArea.hidden=true}}onValue(queueRef,s=>{state=s.val()||state;render()});issue.onclick=async()=>{err.textContent="";issue.disabled=true;try{const r=await runTransaction(ref(db,"queue/last"),v=>v===null?1:Number(v)+1,{applyLocally:false});if(!r.committed)throw 0;my=Number(r.snapshot.val());localStorage.setItem("ib_ticket",my);render()}catch(e){err.textContent="現在、整理券を発行できません。"}issue.disabled=false};render();
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+import {
+  getDatabase,
+  ref,
+  onValue,
+  runTransaction
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+import {
+  firebaseConfig
+} from "./firebase-config.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const queueRef = ref(db, "queue");
+
+const size = document.getElementById("size");
+const issue = document.getElementById("issue");
+const issueArea = document.getElementById("issueArea");
+const ticketArea = document.getElementById("ticketArea");
+const myEl = document.getElementById("myNumber");
+const curEl = document.getElementById("current");
+const dist = document.getElementById("distance");
+const status = document.getElementById("status");
+const closed = document.getElementById("closed");
+const err = document.getElementById("error");
+
+let state = {
+  current: 0,
+  last: 0,
+  open: true
+};
+
+let my = Number(localStorage.getItem("ib_ticket") || 0);
+
+function render() {
+  const open = state.open !== false;
+
+  closed.hidden = open;
+
+  if (my) {
+    issueArea.hidden = true;
+    ticketArea.hidden = false;
+
+    myEl.textContent = my;
+    curEl.textContent = state.current ?? 0;
+
+    const d = my - (state.current ?? 0);
+
+    dist.textContent = d > 0 ? `あと ${d} 組です` : "";
+
+    status.textContent =
+      d <= 0
+        ? "あなたの番"
+        : d <= 3
+        ? "もうすぐ！"
+        : "お待ちください";
+  } else {
+    issueArea.hidden = !open;
+    ticketArea.hidden = true;
+  }
+}
+
+onValue(
+  queueRef,
+  (snapshot) => {
+    state = snapshot.val() || state;
+    render();
+  },
+  (error) => {
+    err.textContent = "読み込みエラー: " + error.message;
+  }
+);
+
+issue.onclick = async () => {
+  err.textContent = "";
+  issue.disabled = true;
+
+  try {
+    const r = await runTransaction(
+      ref(db, "queue/last"),
+      (value) => {
+        return value === null ? 1 : Number(value) + 1;
+      },
+      {
+        applyLocally: false
+      }
+    );
+
+    if (!r.committed) {
+      throw new Error("整理券番号の発行が確定しませんでした");
+    }
+
+    my = Number(r.snapshot.val());
+
+    localStorage.setItem("ib_ticket", my);
+
+    render();
+
+  } catch (e) {
+    err.textContent = "エラー: " + e.message;
+  }
+
+  issue.disabled = false;
+};
+
+render();
