@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
 import {
   getDatabase,
   ref,
@@ -28,6 +29,13 @@ const $ = (id) => document.getElementById(id);
 let settings = {};
 let slots = {};
 let reservations = {};
+
+
+// ====================
+// スタッフ用アカウント
+// ====================
+
+const STAFF_EMAIL = "kazuma.cosmos@gmail.com";
 
 
 // ====================
@@ -82,7 +90,10 @@ function createSlots() {
     m += minutes
   ) {
 
-    const e = m + minutes;
+    const e = Math.min(
+      m + minutes,
+      end
+    );
 
     result[slotKey(m)] = {
       key: slotKey(m),
@@ -114,7 +125,7 @@ function escapeHtml(value) {
 
 
 // ====================
-// 最大組数の選択肢を作る
+// 最大組数の選択肢
 // ====================
 
 function setupMaxGroups() {
@@ -566,16 +577,29 @@ async function deleteReservation(
 $("login").onclick =
   async () => {
 
+    const password =
+      $("password").value;
+
+
     $("loginMessage").textContent =
       "";
+
+
+    if (!password) {
+
+      $("loginMessage").textContent =
+        "パスワードを入力してください。";
+
+      return;
+    }
 
 
     try {
 
       await signInWithEmailAndPassword(
         auth,
-        $("email").value.trim(),
-        $("password").value
+        STAFF_EMAIL,
+        password
       );
 
     } catch (error) {
@@ -583,7 +607,7 @@ $("login").onclick =
       console.error(error);
 
       $("loginMessage").textContent =
-        "ログインできませんでした。メールアドレスとパスワードを確認してください。";
+        "パスワードが違います。";
     }
   };
 
