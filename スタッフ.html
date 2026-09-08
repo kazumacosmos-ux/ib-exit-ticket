@@ -1,12 +1,21 @@
 <!doctype html>
 <html lang="ja">
+
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
   <title>1-B出口 スタッフ管理</title>
 
-  <link rel="stylesheet" href="./デザイン.css">
+  <link
+    rel="stylesheet"
+    href="./デザイン.css"
+  >
 </head>
+
 
 <body>
 
@@ -14,23 +23,14 @@
 
   <h1>1-B出口 スタッフ管理</h1>
 
+
   <!-- ==================== -->
-  <!-- ログイン -->
+  <!-- スタッフログイン -->
   <!-- ==================== -->
 
   <section id="loginArea">
 
     <h2>スタッフログイン</h2>
-
-    <label for="email">
-      メールアドレス
-    </label>
-
-    <input
-      id="email"
-      type="email"
-      autocomplete="username"
-    >
 
     <label for="password">
       パスワード
@@ -40,13 +40,17 @@
       id="password"
       type="password"
       autocomplete="current-password"
+      placeholder="パスワードを入力"
     >
 
     <button id="login">
       ログイン
     </button>
 
-    <p id="loginMessage" class="error"></p>
+    <p
+      id="loginMessage"
+      class="error"
+    ></p>
 
   </section>
 
@@ -55,18 +59,26 @@
   <!-- スタッフ管理画面 -->
   <!-- ==================== -->
 
-  <section id="controlArea" hidden>
+  <section
+    id="controlArea"
+    hidden
+  >
 
+
+    <!-- ==================== -->
     <!-- 受付状態 -->
+    <!-- ==================== -->
 
     <section>
 
       <h2>受付状態</h2>
 
       <div class="staff-status">
+
         <strong id="state">
           受付中
         </strong>
+
       </div>
 
       <button
@@ -90,6 +102,7 @@
 
       <h2>予約設定</h2>
 
+
       <label for="start">
         開始時刻
       </label>
@@ -97,6 +110,7 @@
       <input
         id="start"
         type="time"
+        value="09:00"
       >
 
 
@@ -107,6 +121,7 @@
       <input
         id="end"
         type="time"
+        value="17:00"
       >
 
 
@@ -128,7 +143,7 @@
           20分
         </option>
 
-        <option value="30">
+        <option value="30" selected>
           30分
         </option>
 
@@ -143,25 +158,53 @@
       </select>
 
 
-      <label>
+      <label for="maxGroups">
         1枠あたりの最大組数
-
-        <select id="maxGroups">
-
-          <option value="1">1組</option>
-          <option value="2">2組</option>
-          <option value="3">3組</option>
-          <option value="4">4組</option>
-          <option value="5">5組</option>
-          <option value="6">6組</option>
-          <option value="7">7組</option>
-          <option value="8">8組</option>
-          <option value="9">9組</option>
-          <option value="10">10組</option>
-
-        </select>
-
       </label>
+
+      <select id="maxGroups">
+
+        <option value="1">
+          1組
+        </option>
+
+        <option value="2">
+          2組
+        </option>
+
+        <option value="3">
+          3組
+        </option>
+
+        <option value="4">
+          4組
+        </option>
+
+        <option value="5" selected>
+          5組
+        </option>
+
+        <option value="6">
+          6組
+        </option>
+
+        <option value="7">
+          7組
+        </option>
+
+        <option value="8">
+          8組
+        </option>
+
+        <option value="9">
+          9組
+        </option>
+
+        <option value="10">
+          10組
+        </option>
+
+      </select>
 
 
       <button id="saveSettings">
@@ -187,6 +230,7 @@
 
       <h2>紙予約を追加</h2>
 
+
       <label for="paperName">
         名前
       </label>
@@ -205,10 +249,21 @@
 
       <select id="paperSize">
 
-        <option value="1">1人</option>
-        <option value="2">2人</option>
-        <option value="3">3人</option>
-        <option value="4">4人</option>
+        <option value="1">
+          1人
+        </option>
+
+        <option value="2">
+          2人
+        </option>
+
+        <option value="3">
+          3人
+        </option>
+
+        <option value="4">
+          4人
+        </option>
 
       </select>
 
@@ -217,7 +272,8 @@
         時間帯
       </label>
 
-      <select id="paperSlot"></select>
+      <select id="paperSlot">
+      </select>
 
       <p
         id="paperSlotInfo"
@@ -270,12 +326,15 @@
       ログアウト
     </button>
 
+
   </section>
 
 </main>
 
 
+<!-- ==================== -->
 <!-- スタッフ用JavaScript -->
+<!-- ==================== -->
 
 <script
   type="module"
@@ -283,4 +342,5 @@
 ></script>
 
 </body>
+
 </html>
