@@ -7,16 +7,34 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <main class="card">
+
   <h1>1-B出口</h1>
   <h2>スタッフ管理</h2>
 
   <section id="loginArea">
-    <input id="email" type="email" placeholder="メールアドレス">
-    <input id="password" type="password" placeholder="パスワード">
-    <button id="login">ログイン</button>
+
+    <input
+      id="email"
+      type="email"
+      placeholder="メールアドレス"
+    >
+
+    <input
+      id="password"
+      type="password"
+      placeholder="パスワード"
+    >
+
+    <button id="login">
+      ログイン
+    </button>
+
     <p id="loginError" class="error"></p>
+
   </section>
+
 
   <section id="controlArea" hidden>
 
@@ -34,23 +52,46 @@
 
     <label>
       1枠の時間（分）
-      <input id="slotMinutes" type="number" min="1">
+      <input
+        id="slotMinutes"
+        type="number"
+        min="1"
+      >
     </label>
 
     <label>
       1枠あたりの最大グループ数
-      <input id="maxGroups" type="number" min="1">
+      <input
+        id="maxGroups"
+        type="number"
+        min="1"
+      >
     </label>
 
-    <button id="saveSettings">設定を保存</button>
+    <button id="saveSettings">
+      設定を保存
+    </button>
+
+    <p id="settingsMessage"></p>
+
 
     <hr>
+
 
     <h3>受付状態</h3>
+
     <p id="state"></p>
-    <button id="toggle" class="secondary">受付停止</button>
+
+    <button
+      id="toggle"
+      class="secondary"
+    >
+      受付停止
+    </button>
+
 
     <hr>
+
 
     <h3>紙予約を追加</h3>
 
@@ -59,27 +100,53 @@
       <select id="paperSlot"></select>
     </label>
 
+    <p id="paperSlotInfo"></p>
+
     <label>
       人数
-      <input id="paperSize" type="number" min="1" max="4" value="1">
+      <input
+        id="paperSize"
+        type="number"
+        min="1"
+        max="4"
+        value="1"
+      >
     </label>
 
-    <button id="addPaper">紙予約を追加</button>
+    <button id="addPaper">
+      紙予約を追加
+    </button>
 
-    <p id="paperError" class="error"></p>
+    <p id="paperMessage"></p>
+
 
     <hr>
+
 
     <h3>予約状況</h3>
+
     <div id="slotList"></div>
+
 
     <hr>
 
-    <button id="logout" class="secondary">ログアウト</button>
+
+    <button
+      id="logout"
+      class="secondary"
+    >
+      ログアウト
+    </button>
 
   </section>
+
 </main>
 
-<script type="module" src="staff.js"></script>
+
+<script
+  type="module"
+  src="staff.js"
+></script>
+
 </body>
 </html>
