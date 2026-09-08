@@ -1,346 +1,176 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
-
 <head>
-  <meta charset="utf-8">
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
-  >
-
-  <title>1-B出口 スタッフ管理</title>
-
-  <link
-    rel="stylesheet"
-    href="./デザイン.css"
-  >
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スタッフ管理</title>
+  <link rel="stylesheet" href="./デザイン.css">
 </head>
-
 
 <body>
 
-<main class="container">
+  <main class="container">
 
-  <h1>1-B出口 スタッフ管理</h1>
+    <h1>スタッフ管理</h1>
 
+    <!-- ログイン -->
+    <section id="loginArea">
 
-  <!-- ==================== -->
-  <!-- スタッフログイン -->
-  <!-- ==================== -->
+      <h2>スタッフログイン</h2>
 
-  <section id="loginArea">
+      <label for="password">
+        パスワード
+      </label>
 
-    <h2>スタッフログイン</h2>
-
-    <label for="password">
-      パスワード
-    </label>
-
-    <input
-      id="password"
-      type="password"
-      autocomplete="current-password"
-      placeholder="パスワードを入力"
-    >
-
-    <button id="login">
-      ログイン
-    </button>
-
-    <p
-      id="loginMessage"
-      class="error"
-    ></p>
-
-  </section>
-
-
-  <!-- ==================== -->
-  <!-- スタッフ管理画面 -->
-  <!-- ==================== -->
-
-  <section
-    id="controlArea"
-    hidden
-  >
-
-
-    <!-- ==================== -->
-    <!-- 受付状態 -->
-    <!-- ==================== -->
-
-    <section>
-
-      <h2>受付状態</h2>
-
-      <div class="staff-status">
-
-        <strong id="state">
-          受付中
-        </strong>
-
-      </div>
-
-      <button
-        id="toggle"
-        class="secondary"
+      <input
+        id="password"
+        type="password"
+        autocomplete="current-password"
+        placeholder="パスワードを入力"
       >
-        受付停止
+
+      <button id="login">
+        ログイン
       </button>
+
+      <p id="loginMessage" class="error"></p>
 
     </section>
 
 
-    <hr>
+    <!-- 管理画面 -->
+    <section id="adminArea" style="display:none;">
+
+      <h2>受付設定</h2>
+
+      <p id="receptionState"></p>
+
+      <button id="toggleOpen"></button>
 
 
-    <!-- ==================== -->
-    <!-- 予約設定 -->
-    <!-- ==================== -->
+      <h3>時間設定</h3>
 
-    <section>
-
-      <h2>予約設定</h2>
-
-
-      <label for="start">
+      <label>
         開始時刻
+        <input
+          id="start"
+          type="time"
+        >
       </label>
 
-      <input
-        id="start"
-        type="time"
-        value="09:00"
-      >
-
-
-      <label for="end">
+      <label>
         終了時刻
+        <input
+          id="end"
+          type="time"
+        >
       </label>
 
-      <input
-        id="end"
-        type="time"
-        value="17:00"
-      >
+      <label>
+        1枠の時間
+        <select id="slotMinutes">
 
+          <option value="15">15分</option>
+          <option value="30">30分</option>
+          <option value="45">45分</option>
+          <option value="60">60分</option>
+          <option value="90">90分</option>
+          <option value="120">120分</option>
 
-      <label for="slotMinutes">
-        1枠の長さ
+        </select>
       </label>
 
-      <select id="slotMinutes">
 
-        <option value="10">
-          10分
-        </option>
-
-        <option value="15">
-          15分
-        </option>
-
-        <option value="20">
-          20分
-        </option>
-
-        <option value="30" selected>
-          30分
-        </option>
-
-        <option value="45">
-          45分
-        </option>
-
-        <option value="60">
-          60分
-        </option>
-
-      </select>
-
-
-      <label for="maxGroups">
+      <label>
         1枠あたりの最大組数
+
+        <select id="maxGroups">
+
+          <option value="1">1組</option>
+          <option value="2">2組</option>
+          <option value="3">3組</option>
+          <option value="4">4組</option>
+          <option value="5">5組</option>
+          <option value="6">6組</option>
+          <option value="7">7組</option>
+          <option value="8">8組</option>
+          <option value="9">9組</option>
+          <option value="10">10組</option>
+
+        </select>
+
       </label>
-
-      <select id="maxGroups">
-
-        <option value="1">
-          1組
-        </option>
-
-        <option value="2">
-          2組
-        </option>
-
-        <option value="3">
-          3組
-        </option>
-
-        <option value="4">
-          4組
-        </option>
-
-        <option value="5" selected>
-          5組
-        </option>
-
-        <option value="6">
-          6組
-        </option>
-
-        <option value="7">
-          7組
-        </option>
-
-        <option value="8">
-          8組
-        </option>
-
-        <option value="9">
-          9組
-        </option>
-
-        <option value="10">
-          10組
-        </option>
-
-      </select>
-
 
       <button id="saveSettings">
         設定を保存
       </button>
 
-      <p
-        id="settingsMessage"
-        class="message"
-      ></p>
-
-    </section>
+      <p id="settingsMessage"></p>
 
 
-    <hr>
+      <hr>
 
 
-    <!-- ==================== -->
-    <!-- 紙予約 -->
-    <!-- ==================== -->
-
-    <section>
-
+      <!-- 紙予約 -->
       <h2>紙予約を追加</h2>
 
-
-      <label for="paperName">
+      <label>
         名前
+        <input
+          id="paperName"
+          type="text"
+          placeholder="代表者名など"
+        >
       </label>
 
-      <input
-        id="paperName"
-        type="text"
-        maxlength="30"
-        placeholder="代表者名"
-      >
-
-
-      <label for="paperSize">
+      <label>
         人数
+        <select id="paperSize">
+
+          <option value="1">1人</option>
+          <option value="2">2人</option>
+          <option value="3">3人</option>
+          <option value="4">4人</option>
+
+        </select>
       </label>
 
-      <select id="paperSize">
-
-        <option value="1">
-          1人
-        </option>
-
-        <option value="2">
-          2人
-        </option>
-
-        <option value="3">
-          3人
-        </option>
-
-        <option value="4">
-          4人
-        </option>
-
-      </select>
-
-
-      <label for="paperSlot">
-        時間帯
+      <label>
+        時間枠
+        <select id="paperSlot"></select>
       </label>
 
-      <select id="paperSlot">
-      </select>
-
-      <p
-        id="paperSlotInfo"
-        class="slot-info"
-      ></p>
-
+      <p id="paperSlotInfo"></p>
 
       <button id="addPaper">
         紙予約を追加
       </button>
 
-      <p
-        id="paperMessage"
-        class="message"
-      ></p>
+      <p id="paperMessage"></p>
+
+
+      <hr>
+
+
+      <!-- 予約一覧 -->
+      <h2>予約一覧</h2>
+
+      <div id="slotList"></div>
+
+
+      <hr>
+
+
+      <button id="logout">
+        ログアウト
+      </button>
 
     </section>
 
-
-    <hr>
-
-
-    <!-- ==================== -->
-    <!-- 予約状況 -->
-    <!-- ==================== -->
-
-    <section>
-
-      <h2>予約状況</h2>
-
-      <div
-        id="slotList"
-        class="slot-list"
-      ></div>
-
-    </section>
+  </main>
 
 
-    <hr>
-
-
-    <!-- ==================== -->
-    <!-- ログアウト -->
-    <!-- ==================== -->
-
-    <button
-      id="logout"
-      class="secondary"
-    >
-      ログアウト
-    </button>
-
-
-  </section>
-
-</main>
-
-
-<!-- ==================== -->
-<!-- スタッフ用JavaScript -->
-<!-- ==================== -->
-
-<script
-  type="module"
-  src="./スタッフ.js"
-></script>
+  <script type="module" src="./スタッフ.js"></script>
 
 </body>
-
 </html>
