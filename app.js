@@ -36,6 +36,8 @@ const mySizeEl = document.getElementById("mySize");
 const errorEl = document.getElementById("error");
 const error2El = document.getElementById("error2");
 
+const nameEl = document.getElementById("name");
+
 let settings = {
   start: "09:00",
   end: "17:00",
@@ -52,20 +54,28 @@ const savedReservation =
 
 if (savedReservation) {
   try {
-    myReservation = JSON.parse(savedReservation);
+    myReservation =
+      JSON.parse(savedReservation);
   } catch {
-    localStorage.removeItem("ib_reservation");
+    localStorage.removeItem(
+      "ib_reservation"
+    );
   }
 }
 
 function timeToMinutes(time) {
-  const [hour, minute] = time.split(":").map(Number);
+  const [hour, minute] =
+    time.split(":").map(Number);
+
   return hour * 60 + minute;
 }
 
 function minutesToTime(minutes) {
-  const hour = Math.floor(minutes / 60);
-  const minute = minutes % 60;
+  const hour =
+    Math.floor(minutes / 60);
+
+  const minute =
+    minutes % 60;
 
   return (
     String(hour).padStart(2, "0") +
@@ -77,9 +87,14 @@ function minutesToTime(minutes) {
 function createSlots() {
   const result = [];
 
-  const start = timeToMinutes(settings.start);
-  const end = timeToMinutes(settings.end);
-  const duration = Number(settings.slotMinutes);
+  const start =
+    timeToMinutes(settings.start);
+
+  const end =
+    timeToMinutes(settings.end);
+
+  const duration =
+    Number(settings.slotMinutes);
 
   if (!duration || duration <= 0) {
     return result;
@@ -90,10 +105,16 @@ function createSlots() {
     time < end;
     time += duration
   ) {
-    const slotStart = minutesToTime(time);
-    const slotEnd = minutesToTime(
-      Math.min(time + duration, end)
-    );
+    const slotStart =
+      minutesToTime(time);
+
+    const slotEnd =
+      minutesToTime(
+        Math.min(
+          time + duration,
+          end
+        )
+      );
 
     result.push({
       key: slotStart.replace(":", "-"),
@@ -106,64 +127,95 @@ function createSlots() {
 }
 
 function renderSlots() {
-  const generatedSlots = createSlots();
-  const previousValue = slotEl.value;
+  const generatedSlots =
+    createSlots();
+
+  const previousValue =
+    slotEl.value;
 
   slotEl.innerHTML = "";
 
   let firstAvailable = null;
 
   for (const slot of generatedSlots) {
-    const data = slots[slot.key] || {};
 
-    const count = Number(data.count || 0);
-    const maxGroups = Number(settings.maxGroups || 0);
-    const full = count >= maxGroups;
+    const data =
+      slots[slot.key] || {};
 
-    const option = document.createElement("option");
+    const count =
+      Number(data.count || 0);
 
-    option.value = slot.key;
+    const maxGroups =
+      Number(settings.maxGroups || 0);
+
+    const full =
+      count >= maxGroups;
+
+    const option =
+      document.createElement("option");
+
+    option.value =
+      slot.key;
+
     option.textContent =
       `${slot.start}〜${slot.end}　${count}/${maxGroups}組`;
 
-    option.disabled = full;
+    option.disabled =
+      full;
 
     slotEl.appendChild(option);
 
-    if (!full && firstAvailable === null) {
-      firstAvailable = slot.key;
+    if (
+      !full &&
+      firstAvailable === null
+    ) {
+      firstAvailable =
+        slot.key;
     }
   }
 
-  const previousOption = [...slotEl.options].find(
-    option =>
-      option.value === previousValue &&
-      !option.disabled
-  );
+  const previousOption =
+    [...slotEl.options].find(
+      option =>
+        option.value === previousValue &&
+        !option.disabled
+    );
 
   if (previousOption) {
-    slotEl.value = previousValue;
-  } else if (firstAvailable !== null) {
-    slotEl.value = firstAvailable;
+    slotEl.value =
+      previousValue;
+  } else if (
+    firstAvailable !== null
+  ) {
+    slotEl.value =
+      firstAvailable;
   }
 
   updateSlotInfo();
 }
 
 function updateSlotInfo() {
-  const selected = slotEl.value;
+  const selected =
+    slotEl.value;
 
   if (!selected) {
+
     slotInfoEl.textContent =
       "予約できる時間帯がありません。";
 
     reserveBtn.disabled = true;
+
     return;
   }
 
-  const data = slots[selected] || {};
-  const count = Number(data.count || 0);
-  const maxGroups = Number(settings.maxGroups || 0);
+  const data =
+    slots[selected] || {};
+
+  const count =
+    Number(data.count || 0);
+
+  const maxGroups =
+    Number(settings.maxGroups || 0);
 
   slotInfoEl.textContent =
     `現在 ${count}組 / ${maxGroups}組`;
@@ -173,14 +225,23 @@ function updateSlotInfo() {
 }
 
 function renderReservation() {
+
   if (!myReservation) {
-    reservationArea.hidden = true;
+
+    reservationArea.hidden =
+      true;
+
     return;
   }
 
-  reserveArea.hidden = true;
-  closedArea.hidden = true;
-  reservationArea.hidden = false;
+  reserveArea.hidden =
+    true;
+
+  closedArea.hidden =
+    true;
+
+  reservationArea.hidden =
+    false;
 
   myNumberEl.textContent =
     myReservation.number;
@@ -190,18 +251,35 @@ function renderReservation() {
 
   mySizeEl.textContent =
     myReservation.size;
+
+  if (
+    myReservation.name &&
+    document.getElementById("myName")
+  ) {
+    document.getElementById(
+      "myName"
+    ).textContent =
+      myReservation.name;
+  }
 }
 
 function renderOpenState() {
+
   if (myReservation) {
+
     renderReservation();
+
     return;
   }
 
-  const open = settings.open !== false;
+  const open =
+    settings.open !== false;
 
-  reserveArea.hidden = !open;
-  closedArea.hidden = open;
+  reserveArea.hidden =
+    !open;
+
+  closedArea.hidden =
+    open;
 
   if (open) {
     renderSlots();
@@ -211,9 +289,12 @@ function renderOpenState() {
 onValue(
   settingsRef,
   snapshot => {
-    const data = snapshot.val();
+
+    const data =
+      snapshot.val();
 
     if (data) {
+
       settings = {
         ...settings,
         ...data
@@ -223,6 +304,7 @@ onValue(
     renderOpenState();
   },
   error => {
+
     error2El.textContent =
       "設定の読み込みに失敗しました。";
 
@@ -233,13 +315,16 @@ onValue(
 onValue(
   slotsRef,
   snapshot => {
-    slots = snapshot.val() || {};
+
+    slots =
+      snapshot.val() || {};
 
     if (!myReservation) {
       renderSlots();
     }
   },
   error => {
+
     error2El.textContent =
       "予約状況の読み込みに失敗しました。";
 
@@ -253,45 +338,61 @@ slotEl.addEventListener(
 );
 
 reserveBtn.onclick = async () => {
+
   errorEl.textContent = "";
 
   if (settings.open === false) {
+
     errorEl.textContent =
       "現在、予約受付を停止しています。";
+
     return;
   }
 
-  const selectedKey = slotEl.value;
+  const name =
+    nameEl
+      ? nameEl.value.trim()
+      : "";
+
+  if (!name) {
+
+    errorEl.textContent =
+      "名前を入力してください。";
+
+    return;
+  }
+
+  const selectedKey =
+    slotEl.value;
 
   if (!selectedKey) {
+
     errorEl.textContent =
       "時間帯を選択してください。";
+
     return;
   }
 
-  const selectedSlot = createSlots().find(
-    slot => slot.key === selectedKey
-  );
+  const selectedSlot =
+    createSlots().find(
+      slot =>
+        slot.key === selectedKey
+    );
 
   if (!selectedSlot) {
+
     errorEl.textContent =
       "選択した時間帯が見つかりません。";
+
     return;
   }
 
-  const size = Number(sizeEl.value);
+  const size =
+    Number(sizeEl.value);
 
   reserveBtn.disabled = true;
 
   try {
-
-    /*
-     * ① まず時間帯の空きを確保する。
-     *
-     * Transactionなので、
-     * 複数人が同時に予約しても
-     * maxGroupsを超えないようにする。
-     */
 
     const countRef =
       ref(
@@ -303,7 +404,10 @@ reserveBtn.onclick = async () => {
       await runTransaction(
         countRef,
         current => {
-          const count = Number(current || 0);
+
+          const count =
+            Number(current || 0);
+
           const max =
             Number(settings.maxGroups || 0);
 
@@ -319,27 +423,29 @@ reserveBtn.onclick = async () => {
       );
 
     if (!countResult.committed) {
+
       errorEl.textContent =
         "申し訳ありません。この時間帯は満員になりました。別の時間帯を選んでください。";
 
       renderSlots();
+
       return;
     }
 
-
-    /*
-     * ② 空きを確保できたら
-     *    通し予約番号を発行する。
-     */
-
     const lastRef =
-      ref(db, "Queue/reservationLast");
+      ref(
+        db,
+        "Queue/reservationLast"
+      );
 
     const numberResult =
       await runTransaction(
         lastRef,
         current => {
-          return Number(current || 0) + 1;
+
+          return (
+            Number(current || 0) + 1
+          );
         },
         {
           applyLocally: false
@@ -347,27 +453,42 @@ reserveBtn.onclick = async () => {
       );
 
     if (!numberResult.committed) {
+
       throw new Error(
         "予約番号を発行できませんでした。"
       );
     }
 
     const reservationNumber =
-      Number(numberResult.snapshot.val());
-
-
-    /*
-     * ③ 予約データを保存する。
-     */
+      Number(
+        numberResult.snapshot.val()
+      );
 
     const reservation = {
-      number: reservationNumber,
-      slot: selectedKey,
-      start: selectedSlot.start,
-      end: selectedSlot.end,
-      size: size,
-      type: "web",
-      createdAt: Date.now()
+
+      number:
+        reservationNumber,
+
+      name:
+        name,
+
+      slot:
+        selectedKey,
+
+      start:
+        selectedSlot.start,
+
+      end:
+        selectedSlot.end,
+
+      size:
+        size,
+
+      type:
+        "web",
+
+      createdAt:
+        Date.now()
     };
 
     await set(
@@ -378,16 +499,14 @@ reserveBtn.onclick = async () => {
       reservation
     );
 
-
-    /*
-     * ④ お客さんの端末にも保存。
-     */
-
-    myReservation = reservation;
+    myReservation =
+      reservation;
 
     localStorage.setItem(
       "ib_reservation",
-      JSON.stringify(reservation)
+      JSON.stringify(
+        reservation
+      )
     );
 
     renderReservation();
@@ -401,7 +520,8 @@ reserveBtn.onclick = async () => {
 
   } finally {
 
-    reserveBtn.disabled = false;
+    reserveBtn.disabled =
+      false;
   }
 };
 
