@@ -1,136 +1,71 @@
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+<!doctype html>
+<html lang="ja">
 
-import {
-  getDatabase,
-  ref,
-  onValue,
-  runTransaction
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-import {
-  firebaseConfig
-} from "./firebase-config.js";
+  <title>1-B出口 整理券</title>
 
+  <link rel="stylesheet" href="style.css">
+</head>
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const queueRef = ref(db, "queue");
+<body>
 
+  <main class="card">
 
-const size = document.getElementById("size");
-const issue = document.getElementById("issue");
-const issueArea = document.getElementById("issueArea");
-const ticketArea = document.getElementById("ticketArea");
-const myEl = document.getElementById("myNumber");
-const curEl = document.getElementById("current");
-const dist = document.getElementById("distance");
-const status = document.getElementById("status");
-const closed = document.getElementById("closed");
-const err = document.getElementById("error");
+    <h1>1-B出口</h1>
+    <h2>整理券</h2>
 
+    <section id="issueArea">
 
-let state = {
-  current: 0,
-  last: 0,
-  open: true
-};
+      <p>1グループにつき1枚です。</p>
 
-let my = Number(localStorage.getItem("ib_ticket") || 0);
+      <label for="size">人数</label>
 
+      <select id="size">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select>
 
-function render() {
-  const open = state.open !== false;
+      <button id="issue">
+        整理券を取る
+      </button>
 
-  closed.hidden = open;
+      <p id="error" class="error"></p>
 
-  if (my) {
-    issueArea.hidden = true;
-    ticketArea.hidden = false;
-
-    myEl.textContent = my;
-    curEl.textContent = state.current ?? 0;
-
-    const d = my - (state.current ?? 0);
-
-    dist.textContent =
-      d > 0 ? `あと ${d} 組です` : "";
-
-    status.textContent =
-      d <= 0
-        ? "あなたの番"
-        : d <= 3
-        ? "もうすぐ！"
-        : "お待ちください";
-
-  } else {
-    issueArea.hidden = !open;
-    ticketArea.hidden = true;
-  }
-}
+    </section>
 
 
-onValue(
-  queueRef,
-  (snapshot) => {
-    state = snapshot.val() || state;
-    render();
-  },
-  (error) => {
-    err.textContent =
-      "読み込みエラー: " + error.message;
-  }
-);
+    <section id="ticketArea" hidden>
+
+      <p>あなたの整理券番号</p>
+
+      <div id="myNumber" class="big">-</div>
+
+      <p>
+        現在の案内番号：
+        <strong id="current">-</strong>
+      </p>
+
+      <p id="distance"></p>
+
+      <div id="status" class="status"></div>
+
+    </section>
 
 
-issue.onclick = async () => {
+    <p id="closed" class="notice" hidden>
+      現在、整理券の発行を停止しています。
+    </p>
 
-  err.textContent = "";
-  issue.disabled = true;
-
-  try {
-
-    const r = await runTransaction(
-      ref(db, "queue/last"),
-
-      (value) => {
-        return value === null
-          ? 1
-          : Number(value) + 1;
-      },
-
-      {
-        applyLocally: false
-      }
-    );
+  </main>
 
 
-    if (!r.committed) {
-      throw new Error(
-        "整理券番号の発行が確定しませんでした"
-      );
-    }
+  <script type="module" src="app.js"></script>
 
+</body>
 
-    my = Number(r.snapshot.val());
-
-    localStorage.setItem(
-      "ib_ticket",
-      my
-    );
-
-    render();
-
-  } catch (e) {
-
-    err.textContent =
-      "エラー: " + e.message;
-
-  }
-
-  issue.disabled = false;
-};
-
-
-render();
+</html>
