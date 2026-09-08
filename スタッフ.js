@@ -30,9 +30,25 @@ let slots = {};
 let reservations = {};
 
 
+// ====================
+// 時間関連
+// ====================
+
 function toMinutes(time) {
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;
+}
+
+
+function formatTime(minutes) {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+
+  return (
+    String(h).padStart(2, "0") +
+    ":" +
+    String(m).padStart(2, "0")
+  );
 }
 
 
@@ -48,17 +64,30 @@ function slotKey(minutes) {
 function createSlots() {
   const result = {};
 
-  const start = toMinutes(settings.start || "09:00");
-  const end = toMinutes(settings.end || "17:00");
-  const minutes = Number(settings.slotMinutes || 30);
+  const start = toMinutes(
+    settings.start || "09:00"
+  );
 
-  for (let m = start; m < end; m += minutes) {
+  const end = toMinutes(
+    settings.end || "17:00"
+  );
+
+  const minutes =
+    Number(settings.slotMinutes || 30);
+
+
+  for (
+    let m = start;
+    m < end;
+    m += minutes
+  ) {
+
     const e = m + minutes;
 
     result[slotKey(m)] = {
       key: slotKey(m),
-      start: slotKey(m).replace("-", ":"),
-      end: slotKey(e).replace("-", ":")
+      start: formatTime(m),
+      end: formatTime(e)
     };
   }
 
@@ -66,168 +95,294 @@ function createSlots() {
 }
 
 
+// ====================
+// HTML安全対策
+// ====================
+
 function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  }[c]));
+  return String(value).replace(
+    /[&<>"']/g,
+    (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[c])
+  );
 }
 
 
+// ====================
+// 最大組数の選択肢を作る
+// ====================
+
+function setupMaxGroups() {
+
+  const select = $("maxGroups");
+
+  if (!select) return;
+
+  select.innerHTML = "";
+
+  for (let i = 1; i <= 10; i++) {
+
+    const option =
+      document.createElement("option");
+
+    option.value = String(i);
+
+    option.textContent = `${i}組`;
+
+    select.appendChild(option);
+  }
+
+  select.value =
+    String(settings.maxGroups || 5);
+}
+
+
+// ====================
+// 全体表示
+// ====================
+
 function render() {
+
+  setupMaxGroups();
+
   renderPaperSlots();
+
   renderReservations();
 }
 
 
+// ====================
+// 紙予約の時間帯表示
+// ====================
+
 function renderPaperSlots() {
+
   const select = $("paperSlot");
 
   if (!select) return;
 
   select.innerHTML = "";
 
-  Object.values(createSlots()).forEach((slot) => {
 
-    const count = Number(
-      slots[slot.key]?.count || 0
-    );
+  Object.values(createSlots())
+    .forEach((slot) => {
 
-    const option = document.createElement("option");
+      const count =
+        Number(
+          slots[slot.key]?.count || 0
+        );
 
-    option.value = slot.key;
 
-    option.textContent =
-      `${slot.start}～${slot.end}（${count}/${settings.maxGroups}組）`;
+      const option =
+        document.createElement("option");
 
-    option.disabled =
-      count >= Number(settings.maxGroups);
+      option.value = slot.key;
 
-    select.appendChild(option);
-  });
+      option.textContent =
+        `${slot.start}～${slot.end}（${count}/${settings.maxGroups}組）`;
+
+      option.disabled =
+        count >= Number(settings.maxGroups);
+
+      select.appendChild(option);
+    });
+
 
   updatePaperSlotInfo();
 }
 
 
+// ====================
+// 紙予約の時間帯情報
+// ====================
+
 function updatePaperSlotInfo() {
+
   const select = $("paperSlot");
+
   const info = $("paperSlotInfo");
 
   if (!select || !info) return;
 
-  const slot = createSlots()[select.value];
 
-  info.textContent = slot
-    ? `${slot.start}～${slot.end}`
-    : "";
+  const slot =
+    createSlots()[select.value];
+
+
+  info.textContent =
+    slot
+      ? `${slot.start}～${slot.end}`
+      : "";
 }
 
 
+// ====================
+// 予約一覧表示
+// ====================
+
 function renderReservations() {
+
   const list = $("slotList");
 
   if (!list) return;
 
   list.innerHTML = "";
 
-  Object.values(createSlots()).forEach((slot) => {
 
-    const count = Number(
-      slots[slot.key]?.count || 0
-    );
+  Object.values(createSlots())
+    .forEach((slot) => {
 
-    const box = document.createElement("div");
-
-    box.className = "slot-box";
-
-    box.innerHTML =
-      `<h4>${slot.start}～${slot.end} <span>${count}/${settings.maxGroups}組</span></h4>`;
-
-    const reservationsInSlot =
-      Object.values(reservations)
-        .filter((r) => r.slot === slot.key)
-        .sort(
-          (a, b) =>
-            Number(a.number) - Number(b.number)
+      const count =
+        Number(
+          slots[slot.key]?.count || 0
         );
 
-    if (reservationsInSlot.length === 0) {
-      box.innerHTML += "<p>予約なし</p>";
-    }
 
-    reservationsInSlot.forEach((reservation) => {
-
-      const row = document.createElement("div");
-
-      row.className = "reservation-row";
-
-      const text = document.createElement("div");
-
-      text.innerHTML =
-        `<strong>No.${reservation.number}</strong>　` +
-        `${escapeHtml(reservation.name || "名前なし")}　` +
-        `${reservation.size}人　` +
-        `${reservation.type === "paper" ? "紙" : "Web"}`;
-
-      const moveButton =
-        document.createElement("button");
-
-      moveButton.textContent = "時間変更";
-      moveButton.className = "small";
-
-      moveButton.onclick = () =>
-        moveReservation(reservation);
-
-
-      const deleteButton =
-        document.createElement("button");
-
-      deleteButton.textContent = "削除";
-      deleteButton.className = "small danger";
-
-      deleteButton.onclick = () =>
-        deleteReservation(reservation);
-
-
-      const actions =
+      const box =
         document.createElement("div");
 
-      actions.appendChild(moveButton);
-      actions.appendChild(deleteButton);
+      box.className = "slot-box";
 
-      row.appendChild(text);
-      row.appendChild(actions);
 
-      box.appendChild(row);
+      box.innerHTML =
+        `<h4>${slot.start}～${slot.end} <span>${count}/${settings.maxGroups}組</span></h4>`;
+
+
+      const reservationsInSlot =
+        Object.values(reservations)
+          .filter(
+            (r) =>
+              r.slot === slot.key
+          )
+          .sort(
+            (a, b) =>
+              Number(a.number) -
+              Number(b.number)
+          );
+
+
+      if (
+        reservationsInSlot.length === 0
+      ) {
+
+        box.innerHTML +=
+          "<p>予約なし</p>";
+      }
+
+
+      reservationsInSlot
+        .forEach((reservation) => {
+
+          const row =
+            document.createElement("div");
+
+          row.className =
+            "reservation-row";
+
+
+          const text =
+            document.createElement("div");
+
+
+          text.innerHTML =
+            `<strong>No.${reservation.number}</strong>　` +
+            `${escapeHtml(reservation.name || "名前なし")}　` +
+            `${reservation.size}人　` +
+            `${reservation.type === "paper" ? "紙" : "Web"}`;
+
+
+          const moveButton =
+            document.createElement("button");
+
+          moveButton.textContent =
+            "時間変更";
+
+          moveButton.className =
+            "small";
+
+          moveButton.onclick =
+            () =>
+              moveReservation(
+                reservation
+              );
+
+
+          const deleteButton =
+            document.createElement("button");
+
+          deleteButton.textContent =
+            "削除";
+
+          deleteButton.className =
+            "small danger";
+
+          deleteButton.onclick =
+            () =>
+              deleteReservation(
+                reservation
+              );
+
+
+          const actions =
+            document.createElement("div");
+
+          actions.appendChild(
+            moveButton
+          );
+
+          actions.appendChild(
+            deleteButton
+          );
+
+
+          row.appendChild(text);
+
+          row.appendChild(actions);
+
+          box.appendChild(row);
+        });
+
+
+      list.appendChild(box);
     });
-
-    list.appendChild(box);
-  });
 }
 
 
-async function moveReservation(reservation) {
+// ====================
+// 予約時間変更
+// ====================
+
+async function moveReservation(
+  reservation
+) {
 
   const available =
-    Object.values(createSlots()).filter((slot) => {
+    Object.values(createSlots())
+      .filter((slot) => {
 
-      const count =
-        Number(slots[slot.key]?.count || 0);
+        const count =
+          Number(
+            slots[slot.key]?.count || 0
+          );
 
-      return (
-        slot.key !== reservation.slot &&
-        count < Number(settings.maxGroups)
-      );
-    });
+        return (
+          slot.key !== reservation.slot &&
+          count <
+            Number(settings.maxGroups)
+        );
+      });
 
 
   if (available.length === 0) {
 
-    alert("移動できる空き枠がありません。");
+    alert(
+      "移動できる空き枠がありません。"
+    );
 
     return;
   }
@@ -254,12 +409,16 @@ async function moveReservation(reservation) {
 
 
   const target =
-    available[Number(input) - 1];
+    available[
+      Number(input) - 1
+    ];
 
 
   if (!target) {
 
-    alert("正しい番号を入力してください。");
+    alert(
+      "正しい番号を入力してください。"
+    );
 
     return;
   }
@@ -279,6 +438,8 @@ async function moveReservation(reservation) {
     );
 
 
+  // 元の枠を1減らす
+
   const oldResult =
     await runTransaction(
       oldRef,
@@ -292,11 +453,15 @@ async function moveReservation(reservation) {
 
   if (!oldResult.committed) {
 
-    alert("元の枠の更新に失敗しました。");
+    alert(
+      "元の枠の更新に失敗しました。"
+    );
 
     return;
   }
 
+
+  // 新しい枠を1増やす
 
   const newResult =
     await runTransaction(
@@ -306,8 +471,10 @@ async function moveReservation(reservation) {
         const count =
           Number(value || 0);
 
-        return count >=
+        return (
+          count >=
           Number(settings.maxGroups)
+        )
           ? undefined
           : count + 1;
       }
@@ -316,17 +483,24 @@ async function moveReservation(reservation) {
 
   if (!newResult.committed) {
 
+    // 失敗したら元に戻す
+
     await runTransaction(
       oldRef,
       (value) =>
         Number(value || 0) + 1
     );
 
-    alert("移動先が満員になりました。");
+
+    alert(
+      "移動先が満員になりました。"
+    );
 
     return;
   }
 
+
+  // 予約データを変更
 
   await update(
     ref(
@@ -342,7 +516,13 @@ async function moveReservation(reservation) {
 }
 
 
-async function deleteReservation(reservation) {
+// ====================
+// 予約削除
+// ====================
+
+async function deleteReservation(
+  reservation
+) {
 
   const ok =
     confirm(
@@ -353,6 +533,8 @@ async function deleteReservation(reservation) {
   if (!ok) return;
 
 
+  // 予約を削除
+
   await remove(
     ref(
       db,
@@ -360,6 +542,8 @@ async function deleteReservation(reservation) {
     )
   );
 
+
+  // 枠の人数を1減らす
 
   await runTransaction(
     ref(
@@ -375,37 +559,64 @@ async function deleteReservation(reservation) {
 }
 
 
-$("login").onclick = async () => {
+// ====================
+// ログイン
+// ====================
 
-  $("loginMessage").textContent = "";
-
-  try {
-
-    await signInWithEmailAndPassword(
-      auth,
-      $("email").value.trim(),
-      $("password").value
-    );
-
-  } catch (error) {
+$("login").onclick =
+  async () => {
 
     $("loginMessage").textContent =
-      "ログインできませんでした。メールアドレスとパスワードを確認してください。";
+      "";
+
+
+    try {
+
+      await signInWithEmailAndPassword(
+        auth,
+        $("email").value.trim(),
+        $("password").value
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+      $("loginMessage").textContent =
+        "ログインできませんでした。メールアドレスとパスワードを確認してください。";
+    }
+  };
+
+
+// ====================
+// ログイン状態
+// ====================
+
+onAuthStateChanged(
+  auth,
+  (user) => {
+
+    $("loginArea").hidden =
+      !!user;
+
+    $("controlArea").hidden =
+      !user;
   }
-};
+);
 
 
-onAuthStateChanged(auth, (user) => {
+// ====================
+// ログアウト
+// ====================
 
-  $("loginArea").hidden = !!user;
+$("logout").onclick =
+  () =>
+    signOut(auth);
 
-  $("controlArea").hidden = !user;
-});
 
-
-$("logout").onclick = () =>
-  signOut(auth);
-
+// ====================
+// Firebase設定監視
+// ====================
 
 onValue(
   ref(db, "Queue/settings"),
@@ -414,17 +625,21 @@ onValue(
     settings =
       snapshot.val() || {};
 
+
     $("start").value =
-      settings.start || "09:00";
+      settings.start ||
+      "09:00";
+
 
     $("end").value =
-      settings.end || "17:00";
+      settings.end ||
+      "17:00";
+
 
     $("slotMinutes").value =
-      String(settings.slotMinutes || 30);
-
-    $("maxGroups").value =
-      String(settings.maxGroups || 5);
+      String(
+        settings.slotMinutes || 30
+      );
 
 
     $("state").textContent =
@@ -444,6 +659,10 @@ onValue(
 );
 
 
+// ====================
+// 枠数監視
+// ====================
+
 onValue(
   ref(db, "Queue/slots"),
   (snapshot) => {
@@ -455,6 +674,10 @@ onValue(
   }
 );
 
+
+// ====================
+// 予約監視
+// ====================
 
 onValue(
   ref(db, "Queue/reservations"),
@@ -468,162 +691,209 @@ onValue(
 );
 
 
-$("toggle").onclick = async () => {
+// ====================
+// 受付停止・再開
+// ====================
 
-  await update(
-    ref(db, "Queue/settings"),
-    {
-      open:
-        settings.open === false
-    }
-  );
-};
+$("toggle").onclick =
+  async () => {
 
-
-$("saveSettings").onclick = async () => {
-
-  await update(
-    ref(db, "Queue/settings"),
-    {
-      start: $("start").value,
-      end: $("end").value,
-      slotMinutes:
-        Number($("slotMinutes").value),
-      maxGroups:
-        Number($("maxGroups").value),
-      open:
-        settings.open !== false
-    }
-  );
+    await update(
+      ref(db, "Queue/settings"),
+      {
+        open:
+          settings.open === false
+      }
+    );
+  };
 
 
-  $("settingsMessage").textContent =
-    "設定を保存しました。";
-};
+// ====================
+// 設定保存
+// ====================
 
+$("saveSettings").onclick =
+  async () => {
+
+    await update(
+      ref(db, "Queue/settings"),
+      {
+        start:
+          $("start").value,
+
+        end:
+          $("end").value,
+
+        slotMinutes:
+          Number(
+            $("slotMinutes").value
+          ),
+
+        maxGroups:
+          Number(
+            $("maxGroups").value
+          ),
+
+        open:
+          settings.open !== false
+      }
+    );
+
+
+    $("settingsMessage").textContent =
+      "設定を保存しました。";
+  };
+
+
+// ====================
+// 紙予約の時間変更
+// ====================
 
 $("paperSlot").onchange =
   updatePaperSlotInfo;
 
 
-$("addPaper").onclick = async () => {
+// ====================
+// 紙予約追加
+// ====================
 
-  $("paperMessage").textContent = "";
-
-  const name =
-    $("paperName").value.trim();
-
-  const size =
-    Number($("paperSize").value);
-
-  const slot =
-    createSlots()[$("paperSlot").value];
-
-
-  if (!name) {
+$("addPaper").onclick =
+  async () => {
 
     $("paperMessage").textContent =
-      "名前を入力してください。";
-
-    return;
-  }
+      "";
 
 
-  if (!slot) {
-
-    $("paperMessage").textContent =
-      "時間帯を選択してください。";
-
-    return;
-  }
+    const name =
+      $("paperName").value.trim();
 
 
-  const countRef =
-    ref(
-      db,
-      `Queue/slots/${slot.key}/count`
-    );
+    const size =
+      Number(
+        $("paperSize").value
+      );
 
 
-  const countResult =
-    await runTransaction(
-      countRef,
-      (value) => {
+    const slot =
+      createSlots()[
+        $("paperSlot").value
+      ];
 
-        const count =
-          Number(value || 0);
 
-        return count >=
-          Number(settings.maxGroups)
-          ? undefined
-          : count + 1;
+    if (!name) {
+
+      $("paperMessage").textContent =
+        "名前を入力してください。";
+
+      return;
+    }
+
+
+    if (!slot) {
+
+      $("paperMessage").textContent =
+        "時間帯を選択してください。";
+
+      return;
+    }
+
+
+    // 枠数を1増やす
+
+    const countRef =
+      ref(
+        db,
+        `Queue/slots/${slot.key}/count`
+      );
+
+
+    const countResult =
+      await runTransaction(
+        countRef,
+        (value) => {
+
+          const count =
+            Number(value || 0);
+
+          return (
+            count >=
+            Number(settings.maxGroups)
+          )
+            ? undefined
+            : count + 1;
+        }
+      );
+
+
+    if (!countResult.committed) {
+
+      $("paperMessage").textContent =
+        "その時間帯は満員です。";
+
+      return;
+    }
+
+
+    // 予約番号を取得
+
+    const lastResult =
+      await runTransaction(
+        ref(
+          db,
+          "Queue/reservationLast"
+        ),
+        (value) =>
+          Number(value || 0) + 1
+      );
+
+
+    if (!lastResult.committed) {
+
+      await runTransaction(
+        countRef,
+        (value) =>
+          Math.max(
+            0,
+            Number(value || 0) - 1
+          )
+      );
+
+
+      $("paperMessage").textContent =
+        "予約番号の取得に失敗しました。";
+
+      return;
+    }
+
+
+    const number =
+      lastResult.snapshot.val();
+
+
+    // 予約データ保存
+
+    await set(
+      ref(
+        db,
+        `Queue/reservations/${number}`
+      ),
+      {
+        number,
+        name,
+        slot: slot.key,
+        start: slot.start,
+        end: slot.end,
+        size,
+        type: "paper",
+        createdAt: Date.now()
       }
     );
 
 
-  if (!countResult.committed) {
-
-    $("paperMessage").textContent =
-      "その時間帯は満員です。";
-
-    return;
-  }
-
-
-  const lastResult =
-    await runTransaction(
-      ref(
-        db,
-        "Queue/reservationLast"
-      ),
-      (value) =>
-        Number(value || 0) + 1
-    );
-
-
-  if (!lastResult.committed) {
-
-    await runTransaction(
-      countRef,
-      (value) =>
-        Math.max(
-          0,
-          Number(value || 0) - 1
-        )
-    );
+    $("paperName").value =
+      "";
 
 
     $("paperMessage").textContent =
-      "予約番号の取得に失敗しました。";
-
-    return;
-  }
-
-
-  const number =
-    lastResult.snapshot.val();
-
-
-  await set(
-    ref(
-      db,
-      `Queue/reservations/${number}`
-    ),
-    {
-      number,
-      name,
-      slot: slot.key,
-      start: slot.start,
-      end: slot.end,
-      size,
-      type: "paper",
-      createdAt: Date.now()
-    }
-  );
-
-
-  $("paperName").value = "";
-
-  $("paperMessage").textContent =
-    `No.${number} を追加しました。`;
-};
+      `No.${number} を追加しました。`;
+  };
