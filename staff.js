@@ -27,25 +27,17 @@ import {
    Firebase
 ========================= */
 
-const app =
-  initializeApp(firebaseConfig);
-
-const auth =
-  getAuth(app);
-
-const db =
-  getDatabase(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
 
 /* =========================
    Firebase References
 ========================= */
 
-const settingsRef =
-  ref(db, "Queue/settings");
-
-const slotsRef =
-  ref(db, "Queue/slots");
+const settingsRef = ref(db, "Queue/settings");
+const slotsRef = ref(db, "Queue/slots");
 
 
 /* =========================
@@ -136,7 +128,6 @@ let slots = {};
 ========================= */
 
 function timeToMinutes(time) {
-
   const [hour, minute] =
     time.split(":").map(Number);
 
@@ -145,21 +136,21 @@ function timeToMinutes(time) {
 
 
 function minutesToTime(minutes) {
-
   const hour =
     Math.floor(minutes / 60);
 
   const minute =
     minutes % 60;
 
-  return String(hour).padStart(2, "0") +
+  return (
+    String(hour).padStart(2, "0") +
     ":" +
-    String(minute).padStart(2, "0");
+    String(minute).padStart(2, "0")
+  );
 }
 
 
 function createSlots() {
-
   const result = [];
 
   const start =
@@ -171,18 +162,15 @@ function createSlots() {
   const duration =
     Number(settings.slotMinutes);
 
-
   if (!duration || duration <= 0) {
     return result;
   }
-
 
   for (
     let time = start;
     time < end;
     time += duration
   ) {
-
     const slotStart =
       minutesToTime(time);
 
@@ -194,21 +182,12 @@ function createSlots() {
         )
       );
 
-
     result.push({
-
-      key:
-        slotStart.replace(":", "-"),
-
-      start:
-        slotStart,
-
-      end:
-        slotEnd
-
+      key: slotStart.replace(":", "-"),
+      start: slotStart,
+      end: slotEnd
     });
   }
-
 
   return result;
 }
@@ -221,10 +200,8 @@ function createSlots() {
 onAuthStateChanged(
   auth,
   user => {
-
     loginArea.hidden = !!user;
     controlArea.hidden = !user;
-
   }
 );
 
@@ -236,9 +213,7 @@ onAuthStateChanged(
 login.onclick = async () => {
 
   loginError.textContent = "";
-
   login.disabled = true;
-
 
   try {
 
@@ -258,7 +233,6 @@ login.onclick = async () => {
   } finally {
 
     login.disabled = false;
-
   }
 };
 
@@ -275,14 +249,11 @@ onValue(
       snapshot.val();
 
     if (data) {
-
       settings = {
         ...settings,
         ...data
       };
-
     }
-
 
     startEl.value =
       settings.start;
@@ -295,7 +266,6 @@ onValue(
 
     maxGroupsEl.value =
       String(settings.maxGroups);
-
 
     renderState();
     renderPaperSlots();
@@ -332,10 +302,8 @@ function renderState() {
   const open =
     settings.open !== false;
 
-
   stateEl.textContent =
     open ? "受付中" : "受付停止中";
-
 
   toggle.textContent =
     open ? "受付停止" : "受付再開";
@@ -350,7 +318,6 @@ toggle.onclick = async () => {
 
   const newOpen =
     settings.open === false;
-
 
   try {
 
@@ -368,7 +335,6 @@ toggle.onclick = async () => {
     alert(
       "受付状態の変更に失敗しました。"
     );
-
   }
 };
 
@@ -427,10 +393,8 @@ saveSettings.onclick = async () => {
       }
     );
 
-
     settingsMessage.textContent =
       "設定を保存しました。";
-
 
   } catch (e) {
 
@@ -451,13 +415,12 @@ function renderPaperSlots() {
   const generated =
     createSlots();
 
-
   const previous =
     paperSlot.value;
 
-
   paperSlot.innerHTML = "";
 
+  let firstAvailable = null;
 
   for (const slot of generated) {
 
@@ -473,10 +436,8 @@ function renderPaperSlots() {
     const full =
       count >= max;
 
-
     const option =
       document.createElement("option");
-
 
     option.value =
       slot.key;
@@ -487,23 +448,31 @@ function renderPaperSlots() {
     option.disabled =
       full;
 
-
     paperSlot.appendChild(option);
+
+    if (!full && firstAvailable === null) {
+      firstAvailable = slot.key;
+    }
   }
 
 
-  if (
-    previous &&
-    [...paperSlot.options].some(
+  const previousOption =
+    [...paperSlot.options].find(
       option =>
         option.value === previous &&
         !option.disabled
-    )
-  ) {
+    );
+
+
+  if (previousOption) {
 
     paperSlot.value =
       previous;
 
+  } else if (firstAvailable !== null) {
+
+    paperSlot.value =
+      firstAvailable;
   }
 
 
@@ -526,7 +495,6 @@ function updatePaperSlotInfo() {
   const key =
     paperSlot.value;
 
-
   if (!key) {
 
     paperSlotInfo.textContent =
@@ -537,7 +505,6 @@ function updatePaperSlotInfo() {
     return;
   }
 
-
   const data =
     slots[key] || {};
 
@@ -547,10 +514,8 @@ function updatePaperSlotInfo() {
   const max =
     Number(settings.maxGroups || 0);
 
-
   paperSlotInfo.textContent =
     `現在 ${count}組 / ${max}組`;
-
 
   addPaper.disabled =
     count >= max;
@@ -565,14 +530,11 @@ addPaper.onclick = async () => {
 
   paperMessage.textContent = "";
 
-
   const selectedKey =
     paperSlot.value;
 
-
   const size =
     Number(paperSize.value);
-
 
   if (!selectedKey) {
 
@@ -582,14 +544,58 @@ addPaper.onclick = async () => {
     return;
   }
 
-
   addPaper.disabled = true;
-
 
   try {
 
     /*
-     * 予約番号を通し番号で発行
+     * ① 先に時間帯の空きを確保
+     */
+
+    const countRef =
+      ref(
+        db,
+        `Queue/slots/${selectedKey}/count`
+      );
+
+
+    const countResult =
+      await runTransaction(
+        countRef,
+        current => {
+
+          const count =
+            Number(current || 0);
+
+          const max =
+            Number(settings.maxGroups || 0);
+
+          if (count >= max) {
+            return;
+          }
+
+          return count + 1;
+        },
+        {
+          applyLocally: false
+        }
+      );
+
+
+    if (!countResult.committed) {
+
+      paperMessage.textContent =
+        "この時間帯は満員になりました。";
+
+      renderPaperSlots();
+
+      return;
+    }
+
+
+    /*
+     * ② 空きを確保できたら
+     *    予約番号を発行
      */
 
     const lastRef =
@@ -614,6 +620,7 @@ addPaper.onclick = async () => {
 
 
     if (!numberResult.committed) {
+
       throw new Error(
         "予約番号を発行できませんでした。"
       );
@@ -621,54 +628,14 @@ addPaper.onclick = async () => {
 
 
     const reservationNumber =
-      Number(numberResult.snapshot.val());
+      Number(
+        numberResult.snapshot.val()
+      );
 
 
     /*
-     * 時間帯の空きをTransactionで確保
+     * ③ 時間帯情報
      */
-
-    const countRef =
-      ref(
-        db,
-        `Queue/slots/${selectedKey}/count`
-      );
-
-
-    const countResult =
-      await runTransaction(
-        countRef,
-        current => {
-
-          const count =
-            Number(current || 0);
-
-          const max =
-            Number(settings.maxGroups || 0);
-
-
-          if (count >= max) {
-            return;
-          }
-
-
-          return count + 1;
-
-        },
-        {
-          applyLocally: false
-        }
-      );
-
-
-    if (!countResult.committed) {
-
-      paperMessage.textContent =
-        "この時間帯は満員になりました。";
-
-      return;
-    }
-
 
     const selectedSlot =
       createSlots().find(
@@ -686,7 +653,7 @@ addPaper.onclick = async () => {
 
 
     /*
-     * 予約データ
+     * ④ 予約データ保存
      */
 
     const reservation = {
@@ -714,7 +681,6 @@ addPaper.onclick = async () => {
 
       createdBy:
         auth.currentUser?.uid || ""
-
     };
 
 
@@ -741,7 +707,6 @@ addPaper.onclick = async () => {
   } finally {
 
     addPaper.disabled = false;
-
   }
 };
 
@@ -755,9 +720,7 @@ function renderSlotList() {
   const generated =
     createSlots();
 
-
   slotList.innerHTML = "";
-
 
   if (generated.length === 0) {
 
@@ -778,7 +741,6 @@ function renderSlotList() {
 
     const max =
       Number(settings.maxGroups || 0);
-
 
     const div =
       document.createElement("div");
@@ -822,6 +784,5 @@ logout.onclick = async () => {
   } catch (e) {
 
     console.error(e);
-
   }
 };
