@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>1-B出口 予約</title>
+<link rel="stylesheet" href="./デザイン.css">
+</head>
+<body>
+<main class="container">
+<h1>1-B出口 予約</h1>
+<section id="reserveArea">
+<label for="name">名前</label><input id="name" type="text" maxlength="30" placeholder="代表者の名前">
+<label for="size">人数</label><select id="size"><option value="1">1人</option><option value="2">2人</option><option value="3">3人</option><option value="4">4人</option></select>
+<label for="slot">時間帯</label><select id="slot"></select><p id="slotInfo" class="slot-info"></p>
+<button id="reserve">この時間帯で予約する</button><p id="error" class="error"></p>
+</section>
+<section id="reservationArea" hidden><h2>予約完了</h2><p>予約番号：<strong id="myNumber"></strong></p><p>名前：<strong id="myName"></strong></p><p>時間：<strong id="mySlot"></strong></p><p>人数：<strong id="mySize"></strong>人</p></section>
+<section id="closedArea" hidden><h2>現在受付停止中です</h2><p>スタッフから案内があるまでお待ちください。</p></section>
+</main>
+<script type="module" src="./お客さん.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="ja">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>1-B出口 スタッフ管理</title><link rel="stylesheet" href="./デザイン.css"></head>
+<body><main class="container"><h1>1-B出口 スタッフ管理</h1>
+<section id="loginArea"><label for="email">メールアドレス</label><input id="email" type="email"><label for="password">パスワード</label><input id="password" type="password"><button id="login">ログイン</button><p id="loginMessage" class="error"></p></section>
+<section id="controlArea" hidden><div class="staff-status"><strong id="state">受付中</strong></div><button id="toggle" class="secondary">受付停止</button>
+<h3>予約設定</h3><label for="start">開始時刻</label><input id="start" type="time"><label for="end">終了時刻</label><input id="end" type="time"><label for="slotMinutes">1枠の長さ</label><select id="slotMinutes"><option>10</option><option>15</option><option>20</option><option>30</option><option>45</option><option>60</option></select><label for="maxGroups">1枠あたりの最大組数</label><select id="maxGroups">1,2,3,4,5,6,7,8,9,10</select><button id="saveSettings">設定を保存</button><p id="settingsMessage" class="message"></p>
+<hr><h3>紙予約を追加</h3><label for="paperName">名前</label><input id="paperName" type="text" maxlength="30"><label for="paperSize">人数</label><select id="paperSize"><option>1</option><option>2</option><option>3</option><option>4</option></select><label for="paperSlot">時間帯</label><select id="paperSlot"></select><p id="paperSlotInfo" class="slot-info"></p><button id="addPaper">紙予約を追加</button><p id="paperMessage" class="message"></p>
+<hr><h3>予約状況</h3><div id="slotList" class="slot-list"></div><button id="logout" class="secondary">ログアウト</button></section></main><script type="module" src="./スタッフ.js"></script></body></html>
