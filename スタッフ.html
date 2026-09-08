@@ -97,36 +97,21 @@
       </label>
 
 
+      <!-- 1枠の時間 -->
+
       <label>
         1枠の時間
 
-        <select id="slotMinutes">
+        <input
+          id="slotMinutes"
+          type="number"
+          min="1"
+          step="1"
+          inputmode="numeric"
+          placeholder="例：30"
+        >
 
-          <option value="15">
-            15分
-          </option>
-
-          <option value="30">
-            30分
-          </option>
-
-          <option value="45">
-            45分
-          </option>
-
-          <option value="60">
-            60分
-          </option>
-
-          <option value="90">
-            90分
-          </option>
-
-          <option value="120">
-            120分
-          </option>
-
-        </select>
+        分
 
       </label>
 
@@ -290,7 +275,6 @@
 
   <!-- ==================== -->
   <!-- スタッフ用JavaScript -->
-  <!-- キャッシュ対策付き -->
   <!-- ==================== -->
 
   <script
