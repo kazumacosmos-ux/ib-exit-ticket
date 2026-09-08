@@ -15,7 +15,7 @@ import {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const queueRef = ref(db, "queue");
+const queueRef = ref(db, "Queue");
 
 const size = document.getElementById("size");
 const issue = document.getElementById("issue");
@@ -81,7 +81,7 @@ issue.onclick = async () => {
 
   try {
     const r = await runTransaction(
-      ref(db, "queue/last"),
+      ref(db, "Queue/last"),
       (value) => {
         return value === null ? 1 : Number(value) + 1;
       },
