@@ -1,23 +1,433 @@
 <!doctype html>
 <html lang="ja">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>1-B出口 予約</title>
-<link rel="stylesheet" href="./デザイン.css">
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
+
+  <title>1-B出口搭乗券</title>
+
+  <link
+    rel="stylesheet"
+    href="./デザイン.css"
+  >
+
+  <style>
+    /* ==============================
+       搭乗券
+       ============================== */
+
+    .boarding-pass {
+      margin-top: 20px;
+      background: #ffffff;
+      border: 2px solid #222;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .boarding-pass-header {
+      padding: 22px 20px 18px;
+      border-bottom: 2px dashed #888;
+    }
+
+    .boarding-pass-title {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .airline-name {
+      margin: 7px 0 0;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .boarding-pass-main {
+      padding: 22px 20px;
+    }
+
+    .visit-time-box {
+      padding: 18px;
+      margin-bottom: 20px;
+      border-radius: 14px;
+      background: #f1f5f9;
+      text-align: center;
+    }
+
+    .visit-time-label {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .visit-time {
+      margin: 0;
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+    }
+
+    .boarding-pass-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 20px;
+    }
+
+    .boarding-info {
+      min-width: 0;
+    }
+
+    .boarding-info-label {
+      margin: 0 0 4px;
+      font-size: 12px;
+      color: #666;
+      font-weight: 700;
+    }
+
+    .boarding-info-value {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      word-break: break-word;
+    }
+
+    .boarding-gate {
+      font-size: 24px;
+    }
+
+    .boarding-pass-footer {
+      padding: 16px 20px 20px;
+      border-top: 2px dashed #888;
+      text-align: center;
+    }
+
+    .boarding-note {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .boarding-number {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    @media (max-width: 480px) {
+
+      .boarding-pass-title {
+        font-size: 24px;
+      }
+
+      .visit-time {
+        font-size: 26px;
+      }
+
+      .boarding-pass-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 14px 12px;
+      }
+
+      .boarding-info-value {
+        font-size: 16px;
+      }
+
+      .boarding-gate {
+        font-size: 21px;
+      }
+    }
+  </style>
 </head>
+
+
 <body>
-<main class="container">
-<h1>1-B出口 予約</h1>
-<section id="reserveArea">
-<label for="name">名前</label><input id="name" type="text" maxlength="30" placeholder="代表者の名前">
-<label for="size">人数</label><select id="size"><option value="1">1人</option><option value="2">2人</option><option value="3">3人</option><option value="4">4人</option></select>
-<label for="slot">時間帯</label><select id="slot"></select><p id="slotInfo" class="slot-info"></p>
-<button id="reserve">この時間帯で予約する</button><p id="error" class="error"></p>
-</section>
-<section id="reservationArea" hidden><h2>予約完了</h2><p>予約番号：<strong id="myNumber"></strong></p><p>名前：<strong id="myName"></strong></p><p>時間：<strong id="mySlot"></strong></p><p>人数：<strong id="mySize"></strong>人</p></section>
-<section id="closedArea" hidden><h2>現在受付停止中です</h2><p>スタッフから案内があるまでお待ちください。</p></section>
-</main>
-<script type="module" src="./お客さん.js"></script>
+
+  <main class="container">
+
+    <!-- ==============================
+         予約画面
+         ============================== -->
+
+    <section id="reserveArea">
+
+      <h1>1-B出口 予約</h1>
+
+      <label for="name">
+        名前
+      </label>
+
+      <input
+        id="name"
+        type="text"
+        maxlength="30"
+        placeholder="代表者の名前"
+      >
+
+
+      <label for="size">
+        人数
+      </label>
+
+      <select id="size">
+
+        <option value="1">
+          1人
+        </option>
+
+        <option value="2">
+          2人
+        </option>
+
+        <option value="3">
+          3人
+        </option>
+
+        <option value="4">
+          4人
+        </option>
+
+      </select>
+
+
+      <label for="slot">
+        ご来場時間
+      </label>
+
+      <select id="slot">
+      </select>
+
+      <p
+        id="slotInfo"
+        class="slot-info"
+      ></p>
+
+
+      <button
+        id="reserve"
+        type="button"
+      >
+        この時間帯で予約する
+      </button>
+
+
+      <p
+        id="error"
+        class="error"
+      ></p>
+
+    </section>
+
+
+    <!-- ==============================
+         搭乗券
+         ============================== -->
+
+    <section
+      id="reservationArea"
+      hidden
+    >
+
+      <div class="boarding-pass">
+
+        <!-- ヘッダー -->
+
+        <header class="boarding-pass-header">
+
+          <h1 class="boarding-pass-title">
+            1-B出口搭乗券
+          </h1>
+
+          <p class="airline-name">
+            出口ドリームスカイライン
+          </p>
+
+        </header>
+
+
+        <!-- メイン -->
+
+        <div class="boarding-pass-main">
+
+          <!-- ご来場時間 -->
+
+          <div class="visit-time-box">
+
+            <p class="visit-time-label">
+              ご来場時間
+            </p>
+
+            <p
+              id="mySlot"
+              class="visit-time"
+            ></p>
+
+          </div>
+
+
+          <!-- 各種情報 -->
+
+          <div class="boarding-pass-grid">
+
+            <!-- 日付 -->
+
+            <div class="boarding-info">
+
+              <p class="boarding-info-label">
+                日付
+              </p>
+
+              <p
+                id="myDate"
+                class="boarding-info-value"
+              ></p>
+
+            </div>
+
+
+            <!-- 便名 -->
+
+            <div class="boarding-info">
+
+              <p class="boarding-info-label">
+                便名
+              </p>
+
+              <p
+                id="myFlight"
+                class="boarding-info-value"
+              ></p>
+
+            </div>
+
+
+            <!-- 搭乗ゲート -->
+
+            <div class="boarding-info">
+
+              <p class="boarding-info-label">
+                搭乗ゲート
+              </p>
+
+              <p
+                id="myGate"
+                class="boarding-info-value boarding-gate"
+              >
+                1-B
+              </p>
+
+            </div>
+
+
+            <!-- 搭乗時刻 -->
+
+            <div class="boarding-info">
+
+              <p class="boarding-info-label">
+                搭乗時刻
+              </p>
+
+              <p
+                id="myBoardingTime"
+                class="boarding-info-value"
+              ></p>
+
+            </div>
+
+
+            <!-- 搭乗者 -->
+
+            <div class="boarding-info">
+
+              <p class="boarding-info-label">
+                搭乗者
+              </p>
+
+              <p
+                id="myName"
+                class="boarding-info-value"
+              ></p>
+
+            </div>
+
+
+            <!-- 人数 -->
+
+            <div class="boarding-info">
+
+              <p class="boarding-info-label">
+                搭乗人数
+              </p>
+
+              <p
+                id="mySize"
+                class="boarding-info-value"
+              ></p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- フッター -->
+
+        <footer class="boarding-pass-footer">
+
+          <p class="boarding-note">
+            ご来場時間になりましたら<br>
+            1-B出口へお越しください。
+          </p>
+
+          <p class="boarding-number">
+            予約番号：
+            <strong id="myNumber"></strong>
+          </p>
+
+        </footer>
+
+      </div>
+
+    </section>
+
+
+    <!-- ==============================
+         受付停止
+         ============================== -->
+
+    <section
+      id="closedArea"
+      hidden
+    >
+
+      <h2>
+        現在受付停止中です
+      </h2>
+
+      <p>
+        スタッフから案内があるまでお待ちください。
+      </p>
+
+    </section>
+
+  </main>
+
+
+  <!-- ==============================
+       JavaScript
+       ============================== -->
+
+  <script
+    type="module"
+    src="./お客さん.js?v=20260908-2"
+  ></script>
+
 </body>
+
 </html>
