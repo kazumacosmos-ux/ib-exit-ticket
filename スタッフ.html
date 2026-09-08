@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>スタッフ管理</title>
+
   <link rel="stylesheet" href="./デザイン.css">
 </head>
 
@@ -13,7 +15,11 @@
 
     <h1>スタッフ管理</h1>
 
-    <!-- ログイン -->
+
+    <!-- ==================== -->
+    <!-- スタッフログイン -->
+    <!-- ==================== -->
+
     <section id="loginArea">
 
       <h2>スタッフログイン</h2>
@@ -33,77 +39,154 @@
         ログイン
       </button>
 
-      <p id="loginMessage" class="error"></p>
+      <p
+        id="loginMessage"
+        class="error"
+      ></p>
 
     </section>
 
 
-    <!-- 管理画面 -->
-    <section id="adminArea" style="display:none;">
+    <!-- ==================== -->
+    <!-- スタッフ管理画面 -->
+    <!-- ==================== -->
+
+    <section
+      id="adminArea"
+      style="display:none;"
+    >
 
       <h2>受付設定</h2>
 
-      <p id="receptionState"></p>
 
-      <button id="toggleOpen"></button>
+      <!-- 受付状態 -->
 
+      <p id="receptionState">
+        受付中
+      </p>
+
+      <button id="toggleOpen">
+        受付停止
+      </button>
+
+
+      <!-- ==================== -->
+      <!-- 時間設定 -->
+      <!-- ==================== -->
 
       <h3>時間設定</h3>
 
+
       <label>
         開始時刻
+
         <input
           id="start"
           type="time"
         >
       </label>
 
+
       <label>
         終了時刻
+
         <input
           id="end"
           type="time"
         >
       </label>
 
+
       <label>
         1枠の時間
+
         <select id="slotMinutes">
 
-          <option value="15">15分</option>
-          <option value="30">30分</option>
-          <option value="45">45分</option>
-          <option value="60">60分</option>
-          <option value="90">90分</option>
-          <option value="120">120分</option>
+          <option value="15">
+            15分
+          </option>
+
+          <option value="30">
+            30分
+          </option>
+
+          <option value="45">
+            45分
+          </option>
+
+          <option value="60">
+            60分
+          </option>
+
+          <option value="90">
+            90分
+          </option>
+
+          <option value="120">
+            120分
+          </option>
 
         </select>
+
       </label>
 
+
+      <!-- 最大組数 -->
 
       <label>
         1枠あたりの最大組数
 
         <select id="maxGroups">
 
-          <option value="1">1組</option>
-          <option value="2">2組</option>
-          <option value="3">3組</option>
-          <option value="4">4組</option>
-          <option value="5">5組</option>
-          <option value="6">6組</option>
-          <option value="7">7組</option>
-          <option value="8">8組</option>
-          <option value="9">9組</option>
-          <option value="10">10組</option>
+          <option value="1">
+            1組
+          </option>
+
+          <option value="2">
+            2組
+          </option>
+
+          <option value="3">
+            3組
+          </option>
+
+          <option value="4">
+            4組
+          </option>
+
+          <option value="5">
+            5組
+          </option>
+
+          <option value="6">
+            6組
+          </option>
+
+          <option value="7">
+            7組
+          </option>
+
+          <option value="8">
+            8組
+          </option>
+
+          <option value="9">
+            9組
+          </option>
+
+          <option value="10">
+            10組
+          </option>
 
         </select>
 
       </label>
 
+
       <button id="saveSettings">
         設定を保存
       </button>
+
 
       <p id="settingsMessage"></p>
 
@@ -111,40 +194,67 @@
       <hr>
 
 
+      <!-- ==================== -->
       <!-- 紙予約 -->
+      <!-- ==================== -->
+
       <h2>紙予約を追加</h2>
+
 
       <label>
         名前
+
         <input
           id="paperName"
           type="text"
           placeholder="代表者名など"
         >
+
       </label>
+
 
       <label>
         人数
+
         <select id="paperSize">
 
-          <option value="1">1人</option>
-          <option value="2">2人</option>
-          <option value="3">3人</option>
-          <option value="4">4人</option>
+          <option value="1">
+            1人
+          </option>
+
+          <option value="2">
+            2人
+          </option>
+
+          <option value="3">
+            3人
+          </option>
+
+          <option value="4">
+            4人
+          </option>
 
         </select>
+
       </label>
+
 
       <label>
         時間枠
-        <select id="paperSlot"></select>
+
+        <select id="paperSlot">
+        </select>
+
       </label>
 
+
       <p id="paperSlotInfo"></p>
+
 
       <button id="addPaper">
         紙予約を追加
       </button>
+
 
       <p id="paperMessage"></p>
 
@@ -152,14 +262,22 @@
       <hr>
 
 
+      <!-- ==================== -->
       <!-- 予約一覧 -->
+      <!-- ==================== -->
+
       <h2>予約一覧</h2>
+
 
       <div id="slotList"></div>
 
 
       <hr>
 
+
+      <!-- ==================== -->
+      <!-- ログアウト -->
+      <!-- ==================== -->
 
       <button id="logout">
         ログアウト
@@ -170,7 +288,16 @@
   </main>
 
 
-  <script type="module" src="./スタッフ.js"></script>
+  <!-- ==================== -->
+  <!-- スタッフ用JavaScript -->
+  <!-- キャッシュ対策付き -->
+  <!-- ==================== -->
+
+  <script
+    type="module"
+    src="./スタッフ.js?v=20260908"
+  ></script>
+
 
 </body>
 </html>
