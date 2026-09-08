@@ -4,9 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <title>1-B出口 整理券</title>
-
+  <title>1-B出口 時間帯予約</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -15,54 +13,69 @@
   <main class="card">
 
     <h1>1-B出口</h1>
-    <h2>整理券</h2>
+    <h2>時間帯予約</h2>
 
-    <section id="issueArea">
+    <section id="reserveArea">
 
-      <p>1グループにつき1枚です。</p>
+      <p>行きたい時間帯を選んで予約してください。</p>
 
       <label for="size">人数</label>
-
       <select id="size">
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
+        <option value="1">1人</option>
+        <option value="2">2人</option>
+        <option value="3">3人</option>
+        <option value="4">4人</option>
       </select>
 
-      <button id="issue">
-        整理券を取る
+      <label for="slot">時間帯</label>
+      <select id="slot"></select>
+
+      <p id="slotInfo" class="slot-info"></p>
+
+      <button id="reserve">
+        この時間帯で予約する
       </button>
 
       <p id="error" class="error"></p>
 
     </section>
 
+    <section id="reservationArea" hidden>
 
-    <section id="ticketArea" hidden>
+      <p>予約が完了しました</p>
 
-      <p>あなたの整理券番号</p>
-
-      <div id="myNumber" class="big">-</div>
+      <div class="reservation-number">
+        <span>予約番号</span>
+        <strong id="myNumber">-</strong>
+      </div>
 
       <p>
-        現在の案内番号：
-        <strong id="current">-</strong>
+        予約時間
       </p>
 
-      <p id="distance"></p>
+      <div id="mySlot" class="big">
+        -
+      </div>
 
-      <div id="status" class="status"></div>
+      <p>
+        人数：<strong id="mySize">-</strong>人
+      </p>
+
+      <p class="notice">
+        この画面をスタッフに見せられるようにしておいてください。
+      </p>
 
     </section>
 
+    <section id="closedArea" hidden>
+      <p class="notice">
+        現在、予約受付を停止しています。
+      </p>
+    </section>
 
-    <p id="closed" class="notice" hidden>
-      現在、整理券の発行を停止しています。
-    </p>
+    <p id="error2" class="error"></p>
 
   </main>
-
 
   <script type="module" src="app.js"></script>
 
