@@ -1,4 +1,10 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+// ==============================
+// スタッフ管理ページ
+// スタッフ.js
+// ==============================
+
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
   getDatabase,
@@ -8,21 +14,23 @@ import {
   set,
   update,
   remove
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+} from
+  "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 import {
   getAuth,
   signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+} from
+  "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import { firebaseConfig } from "./Firebase設定.js";
 
 
-// ====================
-// Firebase
-// ====================
+// ==============================
+// Firebase 初期化
+// ==============================
 
 const app = initializeApp(firebaseConfig);
 
@@ -31,194 +39,177 @@ const db = getDatabase(app);
 const auth = getAuth(app);
 
 
-// ====================
-// HTML取得
-// ====================
+// ==============================
+// スタッフ情報
+// ==============================
 
-const $ = (id) => document.getElementById(id);
-
-
-// ====================
-// データ
-// ====================
-
-let settings = {};
-let slots = {};
-let reservations = {};
-
-
-// ====================
-// スタッフ用アカウント
-// ====================
-
+// スタッフログインに使用するメールアドレス
 const STAFF_EMAIL = "kazuma.cosmos@gmail.com";
 
 
-// ====================
-// 時間関連
-// ====================
+// ==============================
+// 時刻設定
+// ==============================
+
+// 開始時刻・終了時刻は固定
+const FIXED_START = "09:00";
+const FIXED_END = "15:00";
+
+
+// ==============================
+// 現在の設定
+// ==============================
+
+let currentSettings = {
+  start: FIXED_START,
+  end: FIXED_END,
+  slotMinutes: 30,
+  maxGroups: 5,
+  open: true
+};
+
+
+// ==============================
+// HTML取得用関数
+// ==============================
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+
+// ==============================
+// 時刻を「分」に変換
+// 例：09:30 → 570
+// ==============================
 
 function toMinutes(time) {
 
-  const [h, m] =
-    time.split(":").map(Number);
+  if (!time) {
+    return 0;
+  }
 
-  return h * 60 + m;
+  const parts = time.split(":");
+
+  const hour = Number(parts[0]);
+  const minute = Number(parts[1]);
+
+  return hour * 60 + minute;
 }
 
+
+// ==============================
+// 「分」を時刻に変換
+// 例：570 → 09:30
+// ==============================
 
 function formatTime(minutes) {
 
-  const h =
-    Math.floor(minutes / 60);
+  const hour = Math.floor(minutes / 60);
 
-  const m =
-    minutes % 60;
+  const minute = minutes % 60;
 
   return (
-    String(h).padStart(2, "0") +
+    String(hour).padStart(2, "0") +
     ":" +
-    String(m).padStart(2, "0")
+    String(minute).padStart(2, "0")
   );
 }
 
 
-function slotKey(minutes) {
+// ==============================
+// スロットキーを作る
+// 例：09:30 → 09-30
+// ==============================
 
-  return (
-    String(
-      Math.floor(minutes / 60)
-    ).padStart(2, "0") +
-    "-" +
-    String(minutes % 60).padStart(2, "0")
-  );
+function slotKey(time) {
+
+  return time.replace(":", "-");
 }
 
 
-// ====================
-// 時間枠を作る
-// ====================
+// ==============================
+// 時間枠を作成
+// ==============================
 
 function createSlots() {
 
-  const result = {};
+  const slots = [];
 
-  const start =
-    toMinutes(
-      settings.start || "09:00"
-    );
+  // 開始・終了は必ず固定値を使用
+  const startMinutes = toMinutes(FIXED_START);
 
-  const end =
-    toMinutes(
-      settings.end || "17:00"
-    );
+  const endMinutes = toMinutes(FIXED_END);
 
-  const slotMinutes =
-    Number(
-      settings.slotMinutes || 30
-    );
+  const slotMinutes = Number(currentSettings.slotMinutes);
 
-
-  for (
-    let m = start;
-    m < end;
-    m += slotMinutes
-  ) {
-
-    const e =
-      Math.min(
-        m + slotMinutes,
-        end
-      );
-
-
-    result[slotKey(m)] = {
-
-      key:
-        slotKey(m),
-
-      start:
-        formatTime(m),
-
-      end:
-        formatTime(e)
-    };
+  if (!slotMinutes || slotMinutes <= 0) {
+    return slots;
   }
 
+  for (
+    let minutes = startMinutes;
+    minutes + slotMinutes <= endMinutes;
+    minutes += slotMinutes
+  ) {
 
-  return result;
+    const start = formatTime(minutes);
+
+    const end = formatTime(minutes + slotMinutes);
+
+    slots.push({
+      key: slotKey(start),
+      start: start,
+      end: end
+    });
+  }
+
+  return slots;
 }
 
 
-// ====================
-// HTML安全対策
-// ====================
+// ==============================
+// HTMLエスケープ
+// ==============================
 
 function escapeHtml(value) {
 
-  return String(value).replace(
-    /[&<>"']/g,
-    (c) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#039;"
-    }[c])
-  );
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 
-// ====================
-// 最大組数の選択肢
-// ====================
+// ==============================
+// 最大組数を設定
+// ==============================
 
 function setupMaxGroups() {
 
-  const select =
-    $("maxGroups");
+  const maxGroupsElement = $("maxGroups");
 
-  if (!select) return;
-
-
-  select.innerHTML = "";
-
-
-  for (
-    let i = 1;
-    i <= 10;
-    i++
-  ) {
-
-    const option =
-      document.createElement(
-        "option"
-      );
-
-
-    option.value =
-      String(i);
-
-    option.textContent =
-      `${i}組`;
-
-
-    select.appendChild(
-      option
-    );
+  if (!maxGroupsElement) {
+    return;
   }
 
+  const value = Number(currentSettings.maxGroups);
 
-  select.value =
-    String(
-      settings.maxGroups || 5
-    );
+  if (value >= 1 && value <= 10) {
+    maxGroupsElement.value = String(value);
+  }
 }
 
 
-// ====================
-// 全体表示
-// ====================
+// ==============================
+// ページ全体を表示
+// ==============================
 
 function render() {
 
@@ -230,593 +221,587 @@ function render() {
 }
 
 
-// ====================
-// 紙予約の時間枠
-// ====================
+// ==============================
+// 紙予約の時間枠一覧を作成
+// ==============================
 
 function renderPaperSlots() {
 
-  const select =
-    $("paperSlot");
+  const paperSlot = $("paperSlot");
 
-  if (!select) return;
-
-
-  const currentValue =
-    select.value;
-
-
-  select.innerHTML = "";
-
-
-  const maxGroups =
-    Number(
-      settings.maxGroups || 5
-    );
-
-
-  Object.values(
-    createSlots()
-  ).forEach((slot) => {
-
-    const count =
-      Number(
-        slots[slot.key]?.count || 0
-      );
-
-
-    const option =
-      document.createElement(
-        "option"
-      );
-
-
-    option.value =
-      slot.key;
-
-
-    option.textContent =
-      `${slot.start}～${slot.end}` +
-      `（${count}/${maxGroups}組）`;
-
-
-    option.disabled =
-      count >= maxGroups;
-
-
-    select.appendChild(
-      option
-    );
-  });
-
-
-  if (
-    currentValue &&
-    select.querySelector(
-      `option[value="${currentValue}"]`
-    )
-  ) {
-
-    select.value =
-      currentValue;
+  if (!paperSlot) {
+    return;
   }
 
+  const slots = createSlots();
+
+  paperSlot.innerHTML = "";
+
+  for (const slot of slots) {
+
+    const option = document.createElement("option");
+
+    option.value = slot.key;
+
+    option.textContent =
+      `${slot.start}〜${slot.end}`;
+
+    paperSlot.appendChild(option);
+  }
 
   updatePaperSlotInfo();
 }
 
 
-// ====================
-// 紙予約の時間枠情報
-// ====================
+// ==============================
+// 紙予約の時間枠情報を表示
+// ==============================
 
 function updatePaperSlotInfo() {
 
-  const select =
-    $("paperSlot");
+  const paperSlot = $("paperSlot");
 
-  const info =
-    $("paperSlotInfo");
+  const info = $("paperSlotInfo");
 
-  if (!select || !info) return;
+  if (!paperSlot || !info) {
+    return;
+  }
 
+  const selectedSlot = paperSlot.value;
 
-  const slot =
-    createSlots()[select.value];
+  if (!selectedSlot) {
 
+    info.textContent = "";
 
-  info.textContent =
-    slot
-      ? `${slot.start}～${slot.end}`
-      : "";
+    return;
+  }
+
+  const slot = createSlots().find(
+    item => item.key === selectedSlot
+  );
+
+  if (!slot) {
+
+    info.textContent = "";
+
+    return;
+  }
+
+  const countRef = ref(
+    db,
+    `Queue/slots/${slot.key}/count`
+  );
+
+  onValue(
+    countRef,
+    snapshot => {
+
+      const count = snapshot.exists()
+        ? Number(snapshot.val())
+        : 0;
+
+      const max = Number(
+        currentSettings.maxGroups
+      );
+
+      info.textContent =
+        `現在 ${count} / ${max} 組`;
+    },
+    {
+      onlyOnce: false
+    }
+  );
 }
 
 
-// ====================
-// 予約一覧
-// ====================
+// ==============================
+// 予約一覧を表示
+// ==============================
 
 function renderReservations() {
 
-  const list =
-    $("slotList");
+  const slotList = $("slotList");
 
-  if (!list) return;
+  if (!slotList) {
+    return;
+  }
 
+  const reservationsRef =
+    ref(db, "Queue/reservations");
 
-  list.innerHTML = "";
+  onValue(
+    reservationsRef,
+    snapshot => {
 
+      const data = snapshot.val();
 
-  const maxGroups =
-    Number(
-      settings.maxGroups || 5
-    );
+      const reservations = [];
 
+      if (data) {
 
-  Object.values(
-    createSlots()
-  ).forEach((slot) => {
+        for (const key of Object.keys(data)) {
 
-    const count =
-      Number(
-        slots[slot.key]?.count || 0
-      );
+          const reservation = data[key];
 
+          if (!reservation) {
+            continue;
+          }
 
-    const box =
-      document.createElement(
-        "div"
-      );
-
-
-    box.className =
-      "slot-box";
-
-
-    box.innerHTML =
-      `<h4>
-        ${slot.start}～${slot.end}
-        <span>
-          ${count}/${maxGroups}組
-        </span>
-      </h4>`;
-
-
-    const reservationsInSlot =
-      Object.values(
-        reservations
-      )
-        .filter(
-          (r) =>
-            r &&
-            r.slot === slot.key
-        )
-        .sort(
-          (a, b) =>
-            Number(a.number) -
-            Number(b.number)
-        );
-
-
-    if (
-      reservationsInSlot.length === 0
-    ) {
-
-      box.innerHTML +=
-        "<p>予約なし</p>";
-    }
-
-
-    reservationsInSlot.forEach(
-      (reservation) => {
-
-        const row =
-          document.createElement(
-            "div"
-          );
-
-
-        row.className =
-          "reservation-row";
-
-
-        const text =
-          document.createElement(
-            "div"
-          );
-
-
-        text.innerHTML =
-          `<strong>
-            No.${escapeHtml(reservation.number)}
-          </strong>　` +
-
-          `${escapeHtml(
-            reservation.name ||
-            "名前なし"
-          )}　` +
-
-          `${escapeHtml(
-            reservation.size
-          )}人　` +
-
-          `${reservation.type === "paper"
-            ? "紙"
-            : "Web"}`;
-
-
-        const actions =
-          document.createElement(
-            "div"
-          );
-
-
-        // ====================
-        // 時間変更ボタン
-        // ====================
-
-        const moveButton =
-          document.createElement(
-            "button"
-          );
-
-
-        moveButton.textContent =
-          "時間変更";
-
-
-        moveButton.className =
-          "small";
-
-
-        moveButton.onclick =
-          () =>
-            moveReservation(
-              reservation
-            );
-
-
-        // ====================
-        // 削除ボタン
-        // ====================
-
-        const deleteButton =
-          document.createElement(
-            "button"
-          );
-
-
-        deleteButton.textContent =
-          "削除";
-
-
-        deleteButton.className =
-          "small danger";
-
-
-        deleteButton.onclick =
-          () =>
-            deleteReservation(
-              reservation
-            );
-
-
-        actions.appendChild(
-          moveButton
-        );
-
-
-        actions.appendChild(
-          deleteButton
-        );
-
-
-        row.appendChild(
-          text
-        );
-
-
-        row.appendChild(
-          actions
-        );
-
-
-        box.appendChild(
-          row
-        );
+          reservations.push(reservation);
+        }
       }
-    );
+
+      reservations.sort(
+        (a, b) => Number(a.number) - Number(b.number)
+      );
+
+      const slots = createSlots();
+
+      slotList.innerHTML = "";
+
+      for (const slot of slots) {
+
+        const slotReservations =
+          reservations.filter(
+            reservation =>
+              reservation.slot === slot.key
+          );
+
+        const section =
+          document.createElement("section");
+
+        section.className = "slot-section";
+
+        const title =
+          document.createElement("h3");
+
+        title.textContent =
+          `${slot.start}〜${slot.end} ` +
+          `（${slotReservations.length}/${currentSettings.maxGroups}組）`;
+
+        section.appendChild(title);
+
+        if (slotReservations.length === 0) {
+
+          const empty =
+            document.createElement("p");
+
+          empty.textContent =
+            "予約はありません。";
+
+          section.appendChild(empty);
+
+        } else {
+
+          for (
+            const reservation
+            of slotReservations
+          ) {
+
+            const item =
+              document.createElement("div");
+
+            item.className =
+              "reservation-item";
+
+            const name =
+              reservation.name
+              ? escapeHtml(reservation.name)
+              : "名前なし";
+
+            const size =
+              Number(reservation.size);
+
+            const type =
+              reservation.type === "paper"
+              ? "紙予約"
+              : "Web予約";
+
+            item.innerHTML = `
+              <strong>
+                ${name}
+              </strong>
+              <br>
+              ${size}人
+              ・
+              ${type}
+              ・
+              予約番号 ${reservation.number}
+            `;
+
+            // ==========================
+            // 移動用セレクト
+            // ==========================
+
+            const moveSelect =
+              document.createElement("select");
+
+            const defaultOption =
+              document.createElement("option");
+
+            defaultOption.value = "";
+
+            defaultOption.textContent =
+              "時間枠を変更";
+
+            moveSelect.appendChild(
+              defaultOption
+            );
+
+            for (const targetSlot of slots) {
+
+              if (
+                targetSlot.key === reservation.slot
+              ) {
+                continue;
+              }
+
+              const option =
+                document.createElement("option");
+
+              option.value =
+                targetSlot.key;
+
+              option.textContent =
+                `${targetSlot.start}〜${targetSlot.end}`;
+
+              moveSelect.appendChild(option);
+            }
+
+            moveSelect.addEventListener(
+              "change",
+              async () => {
+
+                const targetSlot =
+                  moveSelect.value;
+
+                if (!targetSlot) {
+                  return;
+                }
+
+                await moveReservation(
+                  reservation,
+                  targetSlot
+                );
+
+                moveSelect.value = "";
+              }
+            );
+
+            item.appendChild(
+              document.createElement("br")
+            );
+
+            item.appendChild(moveSelect);
 
 
-    list.appendChild(
-      box
-    );
-  });
+            // ==========================
+            // 削除ボタン
+            // ==========================
+
+            const deleteButton =
+              document.createElement("button");
+
+            deleteButton.textContent =
+              "削除";
+
+            deleteButton.type =
+              "button";
+
+            deleteButton.addEventListener(
+              "click",
+              async () => {
+
+                await deleteReservation(
+                  reservation
+                );
+              }
+            );
+
+            item.appendChild(
+              document.createTextNode(" ")
+            );
+
+            item.appendChild(
+              deleteButton
+            );
+
+            section.appendChild(item);
+          }
+        }
+
+        slotList.appendChild(section);
+      }
+    }
+  );
 }
 
 
-// ====================
-// 予約の時間変更
-// ====================
+// ==============================
+// 予約の時間枠を変更
+// ==============================
 
 async function moveReservation(
-  reservation
+  reservation,
+  targetSlotKey
 ) {
 
-  const maxGroups =
-    Number(
-      settings.maxGroups || 5
-    );
-
-
-  const available =
-    Object.values(
-      createSlots()
-    ).filter(
-      (slot) => {
-
-        const count =
-          Number(
-            slots[slot.key]?.count || 0
-          );
-
-
-        return (
-          slot.key !==
-            reservation.slot &&
-          count < maxGroups
-        );
-      }
-    );
-
+  const oldSlotKey =
+    reservation.slot;
 
   if (
-    available.length === 0
+    !oldSlotKey ||
+    !targetSlotKey ||
+    oldSlotKey === targetSlotKey
   ) {
+    return;
+  }
 
-    alert(
-      "移動できる空き枠がありません。"
+
+  // ==========================
+  // 対象時間枠を探す
+  // ==========================
+
+  const targetSlot =
+    createSlots().find(
+      slot => slot.key === targetSlotKey
     );
+
+  if (!targetSlot) {
+
+    alert("変更先の時間枠が見つかりません。");
 
     return;
   }
 
 
-  const choices =
-    available
-      .map(
-        (slot, index) => {
+  // ==========================
+  // 移動先の人数を確認
+  // ==========================
 
-          const count =
-            Number(
-              slots[slot.key]?.count ||
-              0
-            );
-
-
-          return (
-            `${index + 1}: ` +
-            `${slot.start}～${slot.end} ` +
-            `（${count}/${maxGroups}組）`
-          );
-        }
-      )
-      .join("\n");
-
-
-  const input =
-    prompt(
-      "移動先の番号を入力してください。\n\n" +
-      choices
-    );
-
-
-  if (
-    input === null
-  ) return;
-
-
-  const index =
-    Number(input) - 1;
-
-
-  const target =
-    available[index];
-
-
-  if (!target) {
-
-    alert(
-      "正しい番号を入力してください。"
-    );
-
-    return;
-  }
-
-
-  // ====================
-  // 元の枠
-  // ====================
-
-  const oldRef =
+  const targetCountRef =
     ref(
       db,
-      `Queue/slots/${reservation.slot}/count`
+      `Queue/slots/${targetSlotKey}/count`
     );
 
 
-  // ====================
-  // 新しい枠
-  // ====================
+  let targetIncremented = false;
 
-  const newRef =
-    ref(
-      db,
-      `Queue/slots/${target.key}/count`
-    );
-
-
-  // ====================
-  // 新しい枠を先に確保
-  // ====================
-
-  const newResult =
-    await runTransaction(
-      newRef,
-      (value) => {
-
-        const count =
-          Number(value || 0);
-
-
-        if (
-          count >= maxGroups
-        ) {
-
-          return undefined;
-        }
-
-
-        return count + 1;
-      }
-    );
-
-
-  if (
-    !newResult.committed
-  ) {
-
-    alert(
-      "移動先が満員になりました。"
-    );
-
-    return;
-  }
-
-
-  // ====================
-  // 予約データ変更
-  // ====================
 
   try {
 
-    await update(
+    const transactionResult =
+      await runTransaction(
+        targetCountRef,
+        current => {
+
+          const count =
+            current === null
+              ? 0
+              : Number(current);
+
+          const maxGroups =
+            Number(currentSettings.maxGroups);
+
+          if (count >= maxGroups) {
+
+            return;
+          }
+
+          return count + 1;
+        }
+      );
+
+
+    if (!transactionResult.committed) {
+
+      alert(
+        "変更先の時間枠が満員です。"
+      );
+
+      return;
+    }
+
+
+    targetIncremented = true;
+
+
+    // ==========================
+    // 予約情報を更新
+    // ==========================
+
+    const reservationRef =
       ref(
         db,
         `Queue/reservations/${reservation.number}`
-      ),
+      );
+
+    await update(
+      reservationRef,
       {
-        slot:
-          target.key,
-
-        start:
-          target.start,
-
-        end:
-          target.end
+        slot: targetSlot.key,
+        start: targetSlot.start,
+        end: targetSlot.end
       }
     );
+
+
+    // ==========================
+    // 元の時間枠を1減らす
+    // ==========================
+
+    const oldCountRef =
+      ref(
+        db,
+        `Queue/slots/${oldSlotKey}/count`
+      );
+
+    await runTransaction(
+      oldCountRef,
+      current => {
+
+        const count =
+          current === null
+            ? 0
+            : Number(current);
+
+        return Math.max(0, count - 1);
+      }
+    );
+
+
+    alert("時間枠を変更しました。");
 
 
   } catch (error) {
 
     console.error(
+      "予約移動エラー:",
       error
     );
 
 
-    // 予約変更に失敗したら
-    // 新しい枠を元に戻す
+    // ==========================
+    // 予約更新に失敗した場合
+    // 移動先を元に戻す
+    // ==========================
 
-    await runTransaction(
-      newRef,
-      (value) =>
-        Math.max(
-          0,
-          Number(value || 0) - 1
-        )
-    );
+    if (targetIncremented) {
 
+      try {
+
+        await runTransaction(
+          targetCountRef,
+          current => {
+
+            const count =
+              current === null
+                ? 0
+                : Number(current);
+
+            return Math.max(
+              0,
+              count - 1
+            );
+          }
+        );
+
+      } catch (rollbackError) {
+
+        console.error(
+          "ロールバックエラー:",
+          rollbackError
+        );
+      }
+    }
 
     alert(
-      "予約の時間変更に失敗しました。"
+      "時間枠の変更に失敗しました。"
     );
-
-    return;
   }
-
-
-  // ====================
-  // 元の枠を1減らす
-  // ====================
-
-  await runTransaction(
-    oldRef,
-    (value) =>
-      Math.max(
-        0,
-        Number(value || 0) - 1
-      )
-  );
-
-
-  alert(
-    `${target.start}～${target.end}へ変更しました。`
-  );
 }
 
 
-// ====================
-// 予約削除
-// ====================
+// ==============================
+// 予約を削除
+// ==============================
 
 async function deleteReservation(
   reservation
 ) {
 
-  const ok =
+  const number =
+    reservation.number;
+
+  if (number === undefined) {
+    return;
+  }
+
+
+  // ==========================
+  // 確認
+  // ==========================
+
+  const confirmed =
     confirm(
-      `No.${reservation.number}「${reservation.name || "名前なし"}」を削除しますか？`
+      `予約番号 ${number} を削除しますか？`
     );
 
+  if (!confirmed) {
+    return;
+  }
 
-  if (!ok) return;
+
+  const reservationRef =
+    ref(
+      db,
+      `Queue/reservations/${number}`
+    );
 
 
   try {
 
-    // ====================
-    // 予約データ削除
-    // ====================
+    // ==========================
+    // 予約データを削除
+    // ==========================
 
     await remove(
-      ref(
-        db,
-        `Queue/reservations/${reservation.number}`
-      )
+      reservationRef
     );
 
 
-    // ====================
-    // 枠の人数を1減らす
-    // ====================
+    // ==========================
+    // 時間枠の人数を1減らす
+    // ==========================
 
-    await runTransaction(
-      ref(
-        db,
-        `Queue/slots/${reservation.slot}/count`
-      ),
-      (value) =>
-        Math.max(
-          0,
-          Number(value || 0) - 1
-        )
-    );
+    if (reservation.slot) {
+
+      const countRef =
+        ref(
+          db,
+          `Queue/slots/${reservation.slot}/count`
+        );
+
+      await runTransaction(
+        countRef,
+        current => {
+
+          const count =
+            current === null
+              ? 0
+              : Number(current);
+
+          return Math.max(
+            0,
+            count - 1
+          );
+        }
+      );
+    }
 
 
-    alert(
-      `No.${reservation.number}の予約を削除しました。`
-    );
+    alert("予約を削除しました。");
 
 
   } catch (error) {
@@ -826,101 +811,95 @@ async function deleteReservation(
       error
     );
 
-
     alert(
-      "予約の削除に失敗しました。\n" +
-      "Firebaseのルールを確認してください。"
+      "予約の削除に失敗しました。"
     );
   }
 }
 
 
-// ====================
+// ==============================
 // ログイン
-// ====================
+// ==============================
 
-const loginButton =
-  $("login");
+$("login").addEventListener(
+  "click",
+  async () => {
 
+    const password =
+      $("password").value;
 
-if (loginButton) {
-
-  loginButton.onclick =
-    async () => {
-
-      const password =
-        $("password")?.value || "";
+    const loginMessage =
+      $("loginMessage");
 
 
-      const message =
-        $("loginMessage");
+    if (!password) {
+
+      loginMessage.textContent =
+        "パスワードを入力してください。";
+
+      return;
+    }
 
 
-      if (message) {
-
-        message.textContent =
-          "";
-      }
+    loginMessage.textContent =
+      "ログインしています……";
 
 
-      if (!password) {
+    try {
 
-        if (message) {
+      await signInWithEmailAndPassword(
+        auth,
+        STAFF_EMAIL,
+        password
+      );
 
-          message.textContent =
-            "パスワードを入力してください。";
-        }
+      loginMessage.textContent =
+        "";
 
-        return;
-      }
+    } catch (error) {
 
+      console.error(
+        "ログインエラー:",
+        error
+      );
 
-      try {
-
-        await signInWithEmailAndPassword(
-          auth,
-          STAFF_EMAIL,
-          password
-        );
-
-
-      } catch (error) {
-
-        console.error(
-          "ログインエラー:",
-          error
-        );
+      loginMessage.textContent =
+        "パスワードが違います。";
+    }
+  }
+);
 
 
-        if (message) {
+// ==============================
+// Enterキーでもログイン
+// ==============================
 
-          message.textContent =
-            "パスワードが違います。";
-        }
-      }
-    };
-}
+$("password").addEventListener(
+  "keydown",
+  event => {
+
+    if (event.key === "Enter") {
+
+      $("login").click();
+    }
+  }
+);
 
 
-// ====================
-// ログイン状態
-// ====================
+// ==============================
+// 認証状態の監視
+// ==============================
 
 onAuthStateChanged(
   auth,
-  (user) => {
+  user => {
 
     const loginArea =
       $("loginArea");
 
     const adminArea =
       $("adminArea");
-
-
-    if (!loginArea ||
-        !adminArea) {
-      return;
-    }
 
 
     if (user) {
@@ -930,6 +909,9 @@ onAuthStateChanged(
 
       adminArea.style.display =
         "block";
+
+      // ログインしたら設定を表示
+      render();
 
     } else {
 
@@ -943,96 +925,113 @@ onAuthStateChanged(
 );
 
 
-// ====================
-// ログアウト
-// ====================
+// ==============================
+// Firebaseの設定を監視
+// ==============================
 
-const logoutButton =
-  $("logout");
-
-
-if (logoutButton) {
-
-  logoutButton.onclick =
-    async () => {
-
-      await signOut(auth);
-    };
-}
-
-
-// ====================
-// Firebase設定監視
-// ====================
+const settingsRef =
+  ref(db, "Queue/settings");
 
 onValue(
-  ref(
-    db,
-    "Queue/settings"
-  ),
-  (snapshot) => {
+  settingsRef,
+  snapshot => {
 
-    settings =
-      snapshot.val() || {};
+    const data =
+      snapshot.val();
 
 
-    const start =
-      $("start");
+    if (data) {
 
-    const end =
-      $("end");
+      currentSettings = {
+
+        // Firebaseに何が入っていても
+        // 開始・終了は固定
+        start: FIXED_START,
+
+        end: FIXED_END,
+
+        slotMinutes:
+          Number(data.slotMinutes) || 30,
+
+        maxGroups:
+          Number(data.maxGroups) || 5,
+
+        open:
+          data.open !== false
+      };
+    }
+
+
+    // ==========================
+    // 1枠の時間
+    // ==========================
 
     const slotMinutes =
       $("slotMinutes");
-
-    const state =
-      $("receptionState");
-
-    const toggle =
-      $("toggleOpen");
-
-
-    if (start) {
-
-      start.value =
-        settings.start ||
-        "09:00";
-    }
-
-
-    if (end) {
-
-      end.value =
-        settings.end ||
-        "17:00";
-    }
-
 
     if (slotMinutes) {
 
       slotMinutes.value =
         String(
-          settings.slotMinutes ||
-          30
+          currentSettings.slotMinutes
         );
     }
 
 
-    if (state) {
+    // ==========================
+    // 最大組数
+    // ==========================
 
-      state.textContent =
-        settings.open === false
-          ? "受付停止中"
-          : "受付中";
+    const maxGroups =
+      $("maxGroups");
+
+    if (maxGroups) {
+
+      maxGroups.value =
+        String(
+          currentSettings.maxGroups
+        );
     }
 
 
-    if (toggle) {
+    // ==========================
+    // 受付状態
+    // ==========================
 
-      toggle.textContent =
-        settings.open === false
-          ? "受付再開"
-          : "受付停止";
+    const receptionState =
+      $("receptionState");
+
+    const toggleOpen =
+      $("toggleOpen");
+
+
+    if (currentSettings.open) {
+
+      if (receptionState) {
+
+        receptionState.textContent =
+          "受付中";
+      }
+
+      if (toggleOpen) {
+
+        toggleOpen.textContent =
+          "受付停止";
+      }
+
+    } else {
+
+      if (receptionState) {
+
+        receptionState.textContent =
+          "受付停止中";
+      }
+
+      if (toggleOpen) {
+
+        toggleOpen.textContent =
+          "受付再開";
+      }
     }
 
 
@@ -1041,304 +1040,332 @@ onValue(
 );
 
 
-// ====================
-// 枠数監視
-// ====================
+// ==============================
+// 時間枠の人数を監視
+// ==============================
+
+const slotsRef =
+  ref(db, "Queue/slots");
 
 onValue(
-  ref(
-    db,
-    "Queue/slots"
-  ),
-  (snapshot) => {
+  slotsRef,
+  () => {
 
-    slots =
-      snapshot.val() || {};
+    renderPaperSlots();
 
-    render();
+    renderReservations();
   }
 );
 
 
-// ====================
-// 予約監視
-// ====================
-
-onValue(
-  ref(
-    db,
-    "Queue/reservations"
-  ),
-  (snapshot) => {
-
-    reservations =
-      snapshot.val() || {};
-
-    render();
-  }
-);
-
-
-// ====================
+// ==============================
 // 受付停止・再開
-// ====================
+// ==============================
 
-const toggleButton =
-  $("toggleOpen");
+$("toggleOpen").addEventListener(
+  "click",
+  async () => {
 
-
-if (toggleButton) {
-
-  toggleButton.onclick =
-    async () => {
-
-      try {
-
-        await update(
-          ref(
-            db,
-            "Queue/settings"
-          ),
-          {
-            open:
-              settings.open === false
-          }
-        );
+    const newOpen =
+      !currentSettings.open;
 
 
-      } catch (error) {
+    try {
 
-        console.error(
-          "受付状態変更エラー:",
-          error
-        );
-
-
-        alert(
-          "受付状態の変更に失敗しました。"
-        );
-      }
-    };
-}
-
-
-// ====================
-// 設定保存
-// ====================
-
-const saveSettingsButton =
-  $("saveSettings");
-
-
-if (saveSettingsButton) {
-
-  saveSettingsButton.onclick =
-    async () => {
-
-      const start =
-        $("start")?.value;
-
-      const end =
-        $("end")?.value;
-
-      const slotMinutes =
-        Number(
-          $("slotMinutes")?.value
-        );
-
-      const maxGroups =
-        Number(
-          $("maxGroups")?.value
-        );
-
-
-      if (!start || !end) {
-
-        alert(
-          "開始時刻と終了時刻を入力してください。"
-        );
-
-        return;
-      }
-
-
-      if (
-        toMinutes(end) <=
-        toMinutes(start)
-      ) {
-
-        alert(
-          "終了時刻は開始時刻より後にしてください。"
-        );
-
-        return;
-      }
-
-
-      try {
-
-        await update(
-          ref(
-            db,
-            "Queue/settings"
-          ),
-          {
-            start,
-
-            end,
-
-            slotMinutes,
-
-            maxGroups,
-
-            open:
-              settings.open !== false
-          }
-        );
-
-
-        const message =
-          $("settingsMessage");
-
-
-        if (message) {
-
-          message.textContent =
-            "設定を保存しました。";
+      await update(
+        ref(db, "Queue/settings"),
+        {
+          open: newOpen
         }
+      );
+
+    } catch (error) {
+
+      console.error(
+        "受付状態変更エラー:",
+        error
+      );
+
+      alert(
+        "受付状態の変更に失敗しました。"
+      );
+    }
+  }
+);
 
 
-      } catch (error) {
+// ==============================
+// 設定を保存
+// ==============================
 
-        console.error(
-          "設定保存エラー:",
-          error
-        );
+$("saveSettings").addEventListener(
+  "click",
+  async () => {
 
-
-        alert(
-          "設定の保存に失敗しました。"
-        );
-      }
-    };
-}
+    const settingsMessage =
+      $("settingsMessage");
 
 
-// ====================
-// 紙予約の時間変更
-// ====================
+    // ==========================
+    // 1枠の時間
+    // ==========================
 
-const paperSlot =
-  $("paperSlot");
-
-
-if (paperSlot) {
-
-  paperSlot.onchange =
-    updatePaperSlotInfo;
-}
+    const slotMinutes =
+      Number(
+        $("slotMinutes").value
+      );
 
 
-// ====================
-// 紙予約追加
-// ====================
+    // ==========================
+    // 最大組数
+    // ==========================
 
-const addPaperButton =
-  $("addPaper");
-
-
-if (addPaperButton) {
-
-  addPaperButton.onclick =
-    async () => {
-
-      const message =
-        $("paperMessage");
+    const maxGroups =
+      Number(
+        $("maxGroups").value
+      );
 
 
-      if (message) {
+    // ==========================
+    // 入力チェック
+    // ==========================
 
-        message.textContent =
-          "";
-      }
+    if (
+      !Number.isInteger(slotMinutes) ||
+      slotMinutes <= 0
+    ) {
 
+      settingsMessage.textContent =
+        "1枠の時間は1分以上の整数にしてください。";
 
-      const name =
-        $("paperName")?.value.trim() ||
-        "";
-
-
-      const size =
-        Number(
-          $("paperSize")?.value
-        );
+      return;
+    }
 
 
-      const selectedKey =
-        $("paperSlot")?.value;
+    if (
+      !Number.isInteger(maxGroups) ||
+      maxGroups < 1 ||
+      maxGroups > 10
+    ) {
+
+      settingsMessage.textContent =
+        "最大組数は1〜10組にしてください。";
+
+      return;
+    }
 
 
-      const slot =
-        createSlots()[
-          selectedKey
-        ];
+    // ==========================
+    // 09:00〜15:00に収まるか確認
+    // ==========================
+
+    const totalMinutes =
+      toMinutes(FIXED_END) -
+      toMinutes(FIXED_START);
 
 
-      if (!name) {
+    if (slotMinutes > totalMinutes) {
 
-        if (message) {
+      settingsMessage.textContent =
+        "1枠の時間が長すぎます。15:00までに収まる時間を設定してください。";
 
-          message.textContent =
-            "名前を入力してください。";
+      return;
+    }
+
+
+    // ==========================
+    // きれいに割り切れるか確認
+    // ==========================
+
+    if (
+      totalMinutes % slotMinutes !== 0
+    ) {
+
+      settingsMessage.textContent =
+        "1枠の時間は、09:00〜15:00の6時間にきれいに収まる値にしてください。";
+
+      return;
+    }
+
+
+    settingsMessage.textContent =
+      "保存しています……";
+
+
+    try {
+
+      await update(
+        ref(db, "Queue/settings"),
+        {
+
+          // 開始時刻は固定
+          start: FIXED_START,
+
+          // 終了時刻は固定
+          end: FIXED_END,
+
+          // スタッフが変更可能
+          slotMinutes: slotMinutes,
+
+          // スタッフが変更可能
+          maxGroups: maxGroups,
+
+          // 現在の受付状態
+          open: currentSettings.open
         }
-
-        return;
-      }
+      );
 
 
-      if (!slot) {
-
-        if (message) {
-
-          message.textContent =
-            "時間帯を選択してください。";
-        }
-
-        return;
-      }
+      settingsMessage.textContent =
+        "設定を保存しました。";
 
 
-      // ====================
-      // 枠数を1増やす
-      // ====================
+    } catch (error) {
 
-      const countRef =
-        ref(
-          db,
-          `Queue/slots/${slot.key}/count`
-        );
+      console.error(
+        "設定保存エラー:",
+        error
+      );
 
-
-      const maxGroups =
-        Number(
-          settings.maxGroups || 5
-        );
+      settingsMessage.textContent =
+        "設定の保存に失敗しました。";
+    }
+  }
+);
 
 
-      const countResult =
+// ==============================
+// 紙予約の時間枠変更
+// ==============================
+
+$("paperSlot").addEventListener(
+  "change",
+  () => {
+
+    updatePaperSlotInfo();
+  }
+);
+
+
+// ==============================
+// 紙予約を追加
+// ==============================
+
+$("addPaper").addEventListener(
+  "click",
+  async () => {
+
+    const paperName =
+      $("paperName").value.trim();
+
+    const paperSize =
+      Number(
+        $("paperSize").value
+      );
+
+    const paperSlot =
+      $("paperSlot").value;
+
+    const paperMessage =
+      $("paperMessage");
+
+
+    // ==========================
+    // 入力チェック
+    // ==========================
+
+    if (!paperName) {
+
+      paperMessage.textContent =
+        "名前を入力してください。";
+
+      return;
+    }
+
+
+    if (
+      !Number.isInteger(paperSize) ||
+      paperSize < 1 ||
+      paperSize > 4
+    ) {
+
+      paperMessage.textContent =
+        "人数は1〜4人にしてください。";
+
+      return;
+    }
+
+
+    if (!paperSlot) {
+
+      paperMessage.textContent =
+        "時間枠を選択してください。";
+
+      return;
+    }
+
+
+    // ==========================
+    // 選択した時間枠を探す
+    // ==========================
+
+    const slot =
+      createSlots().find(
+        item => item.key === paperSlot
+      );
+
+
+    if (!slot) {
+
+      paperMessage.textContent =
+        "時間枠が見つかりません。";
+
+      return;
+    }
+
+
+    paperMessage.textContent =
+      "追加しています……";
+
+
+    // ==========================
+    // 時間枠の人数を増やす
+    // ==========================
+
+    const countRef =
+      ref(
+        db,
+        `Queue/slots/${slot.key}/count`
+      );
+
+
+    let countTransaction;
+
+
+    try {
+
+      countTransaction =
         await runTransaction(
           countRef,
-          (value) => {
+          current => {
 
             const count =
-              Number(value || 0);
+              current === null
+                ? 0
+                : Number(current);
+
+            const maxGroups =
+              Number(
+                currentSettings.maxGroups
+              );
 
 
+            // 満員ならキャンセル
             if (
               count >= maxGroups
             ) {
 
-              return undefined;
+              return;
             }
 
 
@@ -1346,145 +1373,259 @@ if (addPaperButton) {
           }
         );
 
+    } catch (error) {
 
-      if (
-        !countResult.committed
-      ) {
+      console.error(
+        "枠数更新エラー:",
+        error
+      );
 
-        if (message) {
+      paperMessage.textContent =
+        "時間枠の更新に失敗しました。";
 
-          message.textContent =
-            "その時間帯は満員です。";
-        }
-
-        return;
-      }
+      return;
+    }
 
 
-      // ====================
-      // 予約番号を取得
-      // ====================
+    // ==========================
+    // 満員だった場合
+    // ==========================
 
-      const lastResult =
+    if (
+      !countTransaction.committed
+    ) {
+
+      paperMessage.textContent =
+        "その時間枠は満員です。";
+
+      return;
+    }
+
+
+    // ==========================
+    // 予約番号を発行
+    // ==========================
+
+    const lastRef =
+      ref(
+        db,
+        "Queue/reservationLast"
+      );
+
+
+    let reservationNumber;
+
+
+    try {
+
+      const result =
         await runTransaction(
-          ref(
-            db,
-            "Queue/reservationLast"
-          ),
-          (value) =>
-            Number(value || 0) + 1
-        );
+          lastRef,
+          current => {
 
+            const value =
+              current === null
+                ? 0
+                : Number(current);
 
-      if (
-        !lastResult.committed
-      ) {
-
-        await runTransaction(
-          countRef,
-          (value) =>
-            Math.max(
-              0,
-              Number(value || 0) - 1
-            )
-        );
-
-
-        if (message) {
-
-          message.textContent =
-            "予約番号の取得に失敗しました。";
-        }
-
-        return;
-      }
-
-
-      const number =
-        lastResult.snapshot.val();
-
-
-      // ====================
-      // 予約データ保存
-      // ====================
-
-      try {
-
-        await set(
-          ref(
-            db,
-            `Queue/reservations/${number}`
-          ),
-          {
-            number,
-
-            name,
-
-            slot:
-              slot.key,
-
-            start:
-              slot.start,
-
-            end:
-              slot.end,
-
-            size,
-
-            type:
-              "paper",
-
-            createdAt:
-              Date.now()
+            return value + 1;
           }
         );
 
 
-      } catch (error) {
+      if (!result.committed) {
 
-        console.error(
-          "紙予約保存エラー:",
-          error
+        throw new Error(
+          "予約番号の発行に失敗しました。"
         );
+      }
 
 
-        // 保存失敗時は枠数を戻す
+      reservationNumber =
+        result.snapshot.val();
+
+
+    } catch (error) {
+
+      console.error(
+        "予約番号発行エラー:",
+        error
+      );
+
+
+      // 枠数を元に戻す
+      try {
 
         await runTransaction(
           countRef,
-          (value) =>
-            Math.max(
+          current => {
+
+            const count =
+              current === null
+                ? 0
+                : Number(current);
+
+            return Math.max(
               0,
-              Number(value || 0) - 1
-            )
+              count - 1
+            );
+          }
         );
 
+      } catch (rollbackError) {
 
-        if (message) {
-
-          message.textContent =
-            "紙予約の保存に失敗しました。";
-        }
-
-        return;
+        console.error(
+          "枠数ロールバックエラー:",
+          rollbackError
+        );
       }
 
 
-      const paperName =
-        $("paperName");
+      paperMessage.textContent =
+        "予約番号の発行に失敗しました。";
+
+      return;
+    }
 
 
-      if (paperName) {
+    // ==========================
+    // 予約データ
+    // ==========================
 
-        paperName.value =
-          "";
-      }
+    const reservationData = {
 
+      number:
+        Number(reservationNumber),
 
-      if (message) {
+      name:
+        paperName,
 
-        message.textContent =
-          `No.${number} を追加しました。`;
-      }
+      slot:
+        slot.key,
+
+      start:
+        slot.start,
+
+      end:
+        slot.end,
+
+      size:
+        paperSize,
+
+      type:
+        "paper",
+
+      createdAt:
+        Date.now()
     };
-}
+
+
+    // ==========================
+    // 予約を保存
+    // ==========================
+
+    const reservationRef =
+      ref(
+        db,
+        `Queue/reservations/${reservationNumber}`
+      );
+
+
+    try {
+
+      await set(
+        reservationRef,
+        reservationData
+      );
+
+
+      paperMessage.textContent =
+        `予約を追加しました。予約番号：${reservationNumber}`;
+
+
+      // 入力欄をクリア
+      $("paperName").value = "";
+
+
+      // 最新の枠情報を表示
+      updatePaperSlotInfo();
+
+
+    } catch (error) {
+
+      console.error(
+        "紙予約保存エラー:",
+        error
+      );
+
+
+      // ==========================
+      // 保存失敗時のロールバック
+      // ==========================
+
+      try {
+
+        await runTransaction(
+          countRef,
+          current => {
+
+            const count =
+              current === null
+                ? 0
+                : Number(current);
+
+            return Math.max(
+              0,
+              count - 1
+            );
+          }
+        );
+
+      } catch (rollbackError) {
+
+        console.error(
+          "枠数ロールバックエラー:",
+          rollbackError
+        );
+      }
+
+
+      paperMessage.textContent =
+        "紙予約の保存に失敗しました。";
+    }
+  }
+);
+
+
+// ==============================
+// ログアウト
+// ==============================
+
+$("logout").addEventListener(
+  "click",
+  async () => {
+
+    try {
+
+      await signOut(auth);
+
+    } catch (error) {
+
+      console.error(
+        "ログアウトエラー:",
+        error
+      );
+
+      alert(
+        "ログアウトに失敗しました。"
+      );
+    }
+  }
+);
+
+
+// ==============================
+// 初期表示
+// ==============================
+
+render();
