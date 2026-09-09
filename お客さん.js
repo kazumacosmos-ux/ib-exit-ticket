@@ -7,7 +7,8 @@ import {
   onChildRemoved,
   onChildChanged,
   runTransaction,
-  set
+  set,
+  remove
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 
 import { firebaseConfig } from "./Firebase設定.js";
@@ -168,7 +169,6 @@ function renderSlots() {
   select.innerHTML = "";
 
   const generated = createSlots();
-
   const slotList = Object.values(generated);
 
   if (slotList.length === 0) {
@@ -270,7 +270,7 @@ function updateInfo() {
 
 
 /* =========================
-   端末に保存された予約
+   保存された予約を取得
 ========================= */
 
 function getSavedReservation() {
@@ -411,12 +411,18 @@ function renderBoardingPass(reservation) {
     </div>
   `;
 
+
+  /* =========================
+     キャンセルボタン
+  ========================= */
+
   const cancelButton =
     $("cancelReservation");
 
   if (cancelButton) {
-    cancelButton.onclick =
-      () => cancelReservation(reservation);
+    cancelButton.onclick = () => {
+      cancelReservation(reservation);
+    };
   }
 }
 
@@ -458,34 +464,7 @@ function showReserveArea() {
 
 
 /* =========================
-   保存された予約を表示
-========================= */
-
-function renderSavedReservation() {
-  const reservation =
-    getSavedReservation();
-
-  if (!reservation) {
-    hideBoardingPass();
-    showReserveArea();
-
-    return;
-  }
-
-  const reserveArea =
-    $("reserveArea");
-
-  if (reserveArea) {
-    reserveArea.hidden = true;
-  }
-
-  renderBoardingPass(reservation);
-}
-
-
-/* =========================
    スタッフによる削除
-   ★重要
 ========================= */
 
 function handleRemoteReservationRemoved(
@@ -508,23 +487,21 @@ function handleRemoteReservationRemoved(
     return;
   }
 
-  /*
-   * Firebaseから自分の予約が削除された
-   */
+
+  /* Firebaseから削除されたので
+     端末の予約も削除 */
 
   localStorage.removeItem(
     "ib_reservation"
   );
 
-  /*
-   * 搭乗券を完全に消す
-   */
+
+  /* 搭乗券を消す */
 
   hideBoardingPass();
 
-  /*
-   * 予約画面を戻す
-   */
+
+  /* 予約画面を戻す */
 
   const reserveArea =
     $("reserveArea");
@@ -534,9 +511,6 @@ function handleRemoteReservationRemoved(
       settings.open === false;
   }
 
-  /*
-   * 閉鎖中なら閉鎖画面を表示
-   */
 
   const closedArea =
     $("closedArea");
@@ -546,10 +520,8 @@ function handleRemoteReservationRemoved(
       settings.open !== false;
   }
 
-  /*
-   * 同じ削除について
-   * 何度もalertを出さない
-   */
+
+  /* メッセージ */
 
   if (!cancellationMessageShown) {
 
@@ -563,8 +535,7 @@ function handleRemoteReservationRemoved(
 
 
 /* =========================
-   Firebaseの予約と
-   端末保存データを同期
+   Firebase予約との同期
 ========================= */
 
 function syncLocalReservation() {
@@ -585,9 +556,8 @@ function syncLocalReservation() {
   const remote =
     reservations[number];
 
-  /*
-   * Firebaseに予約が存在しない
-   */
+
+  /* Firebaseに存在しない */
 
   if (!remote) {
 
@@ -599,10 +569,7 @@ function syncLocalReservation() {
   }
 
 
-  /*
-   * スタッフが時間変更した場合など
-   * Firebase側の最新情報を反映
-   */
+  /* Firebaseの最新情報を反映 */
 
   const updated = {
     ...saved,
@@ -632,8 +599,7 @@ function syncLocalReservation() {
 
 
 /* =========================
-   Firebaseから変更された
-   予約を反映
+   Firebase予約変更
 ========================= */
 
 function handleRemoteReservationChanged(
@@ -655,12 +621,14 @@ function handleRemoteReservationChanged(
   }
 
   if (!remote) {
+
     handleRemoteReservationRemoved(
       changedNumber
     );
 
     return;
   }
+
 
   const updated = {
     ...saved,
@@ -678,10 +646,12 @@ function handleRemoteReservationChanged(
     number: remote.number
   };
 
+
   localStorage.setItem(
     "ib_reservation",
     JSON.stringify(updated)
   );
+
 
   renderBoardingPass(updated);
 }
@@ -778,9 +748,9 @@ const reservationsRef =
   ref(db, "Queue/reservations");
 
 
-/*
- * 予約一覧全体を監視
- */
+/* =========================
+   予約一覧全体を監視
+========================= */
 
 onValue(
   reservationsRef,
@@ -789,21 +759,9 @@ onValue(
     reservations =
       snapshot.val() || {};
 
-    /*
-     * 初回読み込み完了
-     */
-
     reservationsLoaded = true;
 
-    /*
-     * 現在の端末予約と同期
-     */
-
     syncLocalReservation();
-
-    /*
-     * 画面更新
-     */
 
     render();
   }
@@ -812,7 +770,6 @@ onValue(
 
 /* =========================
    Firebase：予約削除
-   ★今回の重要ポイント
 ========================= */
 
 onChildRemoved(
@@ -822,19 +779,9 @@ onChildRemoved(
     const removedNumber =
       snapshot.key;
 
-    /*
-     * Firebaseから削除された予約番号が
-     * この端末の予約番号と同じなら
-     * 搭乗券を消す
-     */
-
     handleRemoteReservationRemoved(
       removedNumber
     );
-
-    /*
-     * ローカルの予約一覧も更新
-     */
 
     delete reservations[
       removedNumber
@@ -857,18 +804,9 @@ onChildChanged(
     const remote =
       snapshot.val();
 
-    /*
-     * ローカルの予約一覧を更新
-     */
-
     reservations[
       changedNumber
     ] = remote;
-
-    /*
-     * この端末の予約なら
-     * 最新情報を反映
-     */
 
     handleRemoteReservationChanged(
       changedNumber,
@@ -1038,7 +976,7 @@ if ($("reserve")) {
 
 
       /* =========================
-         この端末にも保存
+         端末にも保存
       ========================= */
 
       localStorage.setItem(
@@ -1068,13 +1006,13 @@ if ($("reserve")) {
 
 
 /* =========================
-   お客さん自身による
-   予約キャンセル
+   お客さん自身のキャンセル
 ========================= */
 
 async function cancelReservation(
   reservation
 ) {
+
   const ok =
     confirm(
       "この予約をキャンセルしますか？"
@@ -1087,26 +1025,21 @@ async function cancelReservation(
 
   try {
 
-    /*
-     * Firebaseから予約を削除
-     */
+    /* =========================
+       Firebaseから予約を削除
+    ========================= */
 
-    await import(
-      "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js"
-    ).then(
-      ({ remove }) =>
-        remove(
-          ref(
-            db,
-            `Queue/reservations/${reservation.number}`
-          )
-        )
+    await remove(
+      ref(
+        db,
+        `Queue/reservations/${reservation.number}`
+      )
     );
 
 
-    /*
-     * 時間枠の人数を1減らす
-     */
+    /* =========================
+       時間枠の人数を1減らす
+    ========================= */
 
     await runTransaction(
       ref(
@@ -1121,9 +1054,9 @@ async function cancelReservation(
     );
 
 
-    /*
-     * 端末保存を削除
-     */
+    /* =========================
+       端末の保存を削除
+    ========================= */
 
     localStorage.removeItem(
       "ib_reservation"
@@ -1133,16 +1066,16 @@ async function cancelReservation(
     cancellationMessageShown = false;
 
 
-    /*
-     * 搭乗券を消す
-     */
+    /* =========================
+       搭乗券を消す
+    ========================= */
 
     hideBoardingPass();
 
 
-    /*
-     * 予約画面を戻す
-     */
+    /* =========================
+       予約画面へ戻す
+    ========================= */
 
     const reserveArea =
       $("reserveArea");
@@ -1152,6 +1085,7 @@ async function cancelReservation(
         settings.open === false;
     }
 
+
     const closedArea =
       $("closedArea");
 
@@ -1159,6 +1093,7 @@ async function cancelReservation(
       closedArea.hidden =
         settings.open !== false;
     }
+
 
   } catch (error) {
 
