@@ -688,6 +688,10 @@ function renderReservations() {
               "reservation-item";
 
 
+            // ========================
+            // 予約情報
+            // ========================
+
             const name =
               reservation.name
                 ? escapeHtml(
@@ -709,6 +713,11 @@ function renderReservations() {
                 : "Web予約";
 
 
+            const isCompleted =
+              reservation.status ===
+              "completed";
+
+
             item.innerHTML = `
               <strong>
                 ${name}
@@ -719,7 +728,79 @@ function renderReservations() {
               ${type}
               ・
               予約番号 ${reservation.number}
+              <br>
             `;
+
+
+            // ========================
+            // 搭乗状態
+            // ========================
+
+            const statusText =
+              document.createElement(
+                "strong"
+              );
+
+
+            if (isCompleted) {
+
+              statusText.textContent =
+                "🔵 搭乗済み";
+
+            } else {
+
+              statusText.textContent =
+                "🟢 予約済み";
+            }
+
+
+            item.appendChild(
+              statusText
+            );
+
+
+            // ========================
+            // 搭乗済みにするボタン
+            // ========================
+
+            if (!isCompleted) {
+
+              const completedButton =
+                document.createElement(
+                  "button"
+                );
+
+
+              completedButton.textContent =
+                "搭乗済みにする";
+
+
+              completedButton.type =
+                "button";
+
+
+              completedButton.addEventListener(
+                "click",
+                async () => {
+
+                  await markReservationCompleted(
+                    reservation
+                  );
+                }
+              );
+
+
+              item.appendChild(
+                document.createElement(
+                  "br"
+                )
+              );
+
+
+              item.appendChild(
+                completedButton
+              );
+            }
 
 
             // ========================
@@ -877,6 +958,63 @@ function renderReservations() {
       }
     }
   );
+}
+
+
+// ==============================
+// 搭乗済みにする
+// ==============================
+
+async function markReservationCompleted(
+  reservation
+) {
+
+  const number =
+    reservation.number;
+
+
+  if (
+    number === undefined
+  ) {
+
+    return;
+  }
+
+
+  const reservationRef =
+    ref(
+      db,
+      `Queue/reservations/${number}`
+    );
+
+
+  try {
+
+    await update(
+      reservationRef,
+      {
+
+        status:
+          "completed",
+
+        completedAt:
+          Date.now()
+      }
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "搭乗済み更新エラー:",
+      error
+    );
+
+
+    alert(
+      "搭乗済みへの変更に失敗しました。"
+    );
+  }
 }
 
 
@@ -1597,6 +1735,9 @@ if (addPaperButton) {
 
         type:
           "paper",
+
+        status:
+          "reserved",
 
         createdAt:
           Date.now()
