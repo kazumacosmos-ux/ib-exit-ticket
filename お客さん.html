@@ -1,14 +1,659 @@
 <!doctype html>
 <html lang="ja">
+
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  >
 
   <title>1-B出口搭乗券</title>
 
-  <!-- デザインCSS -->
-  <link rel="stylesheet" href="./デザイン.css?v=20260909-3">
+  <style>
+
+    /* =====================================
+       基本
+       ===================================== */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+    }
+
+    body {
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Helvetica Neue",
+        "Hiragino Kaku Gothic ProN",
+        "Yu Gothic",
+        YuGothic,
+        sans-serif;
+
+      background:
+        radial-gradient(
+          circle at 50% 0%,
+          #31558b 0%,
+          #142746 42%,
+          #070d19 100%
+        );
+
+      color: #ffffff;
+
+      min-height: 100vh;
+
+      padding: 28px 14px 60px;
+    }
+
+    .container {
+      width: min(100%, 480px);
+      margin: 0 auto;
+    }
+
+
+    /* =====================================
+       ページタイトル
+       ===================================== */
+
+    .container > h1 {
+      margin: 0 0 20px;
+
+      color: #ffffff;
+
+      font-size: 30px;
+      font-weight: 900;
+
+      letter-spacing: 0.04em;
+
+      text-align: center;
+
+      text-shadow:
+        0 3px 15px rgba(0, 0, 0, 0.25);
+    }
+
+
+    /* =====================================
+       予約エリア
+       ===================================== */
+
+    #reserveArea {
+      background: #ffffff;
+
+      color: #111827;
+
+      border-radius: 25px;
+
+      padding: 27px 21px 24px;
+
+      margin-bottom: 32px;
+
+      box-shadow:
+        0 25px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    #reserveArea::before {
+      content: "✈  1-B AIRLINES";
+
+      display: block;
+
+      color: #64748b;
+
+      font-size: 11px;
+      font-weight: 900;
+
+      letter-spacing: 0.2em;
+
+      margin-bottom: 8px;
+    }
+
+    #reserveArea h2 {
+      margin: 0 0 22px;
+
+      color: #17233c;
+
+      font-size: 27px;
+      font-weight: 900;
+    }
+
+
+    /* =====================================
+       入力
+       ===================================== */
+
+    #reserveArea label {
+      display: block;
+
+      margin: 15px 0 7px;
+
+      color: #64748b;
+
+      font-size: 12px;
+      font-weight: 800;
+
+      letter-spacing: 0.04em;
+    }
+
+    #reserveArea input,
+    #reserveArea select {
+      width: 100%;
+
+      height: 50px;
+
+      border: 1px solid #d8dee8;
+
+      border-radius: 13px;
+
+      background: #f7f9fc;
+
+      color: #172033;
+
+      font-size: 16px;
+
+      padding: 0 14px;
+
+      outline: none;
+    }
+
+    #reserveArea input:focus,
+    #reserveArea select:focus {
+      border-color: #31558b;
+
+      background: #ffffff;
+
+      box-shadow:
+        0 0 0 3px rgba(49, 85, 139, 0.12);
+    }
+
+
+    /* =====================================
+       時間情報
+       ===================================== */
+
+    .slot-info {
+      margin: 12px 0 0;
+
+      padding: 11px 13px;
+
+      border-radius: 11px;
+
+      background: #eef3f9;
+
+      color: #52627a;
+
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+
+    /* =====================================
+       予約ボタン
+       ===================================== */
+
+    #reserve {
+      width: 100%;
+
+      height: 54px;
+
+      margin-top: 20px;
+
+      border: 0;
+
+      border-radius: 14px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #31558b,
+          #142746
+        );
+
+      color: #ffffff;
+
+      font-size: 16px;
+      font-weight: 900;
+
+      letter-spacing: 0.04em;
+
+      box-shadow:
+        0 9px 20px rgba(20, 39, 70, 0.28);
+    }
+
+    #reserve:disabled {
+      opacity: 0.5;
+    }
+
+
+    /* =====================================
+       エラー
+       ===================================== */
+
+    #error {
+      min-height: 20px;
+
+      margin: 11px 0 0;
+
+      color: #c43d3d;
+
+      font-size: 13px;
+      font-weight: 700;
+
+      text-align: center;
+    }
+
+
+    /* =====================================
+       予約済み
+       ===================================== */
+
+    #reservationArea {
+      margin-top: 20px;
+    }
+
+    #reservationArea > h2 {
+      margin: 0 0 17px;
+
+      color: #ffffff;
+
+      font-size: 25px;
+      font-weight: 900;
+
+      text-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.25);
+    }
+
+
+    /* =====================================
+       搭乗券
+       ===================================== */
+
+    .boarding-pass {
+      width: 100%;
+
+      overflow: hidden;
+
+      border-radius: 23px;
+
+      background: #ffffff;
+
+      color: #172033;
+
+      box-shadow:
+        0 25px 60px rgba(0, 0, 0, 0.38);
+
+      margin-bottom: 25px;
+    }
+
+
+    /* =====================================
+       搭乗券 ヘッダー
+       ===================================== */
+
+    .boarding-pass-header {
+      display: flex;
+
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 12px;
+
+      padding: 22px 20px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #31558b,
+          #142746
+        );
+
+      color: #ffffff;
+    }
+
+    .boarding-pass-header h2 {
+      margin: 0;
+
+      color: #ffffff;
+
+      font-size: 21px;
+      font-weight: 900;
+
+      letter-spacing: 0.03em;
+    }
+
+    .boarding-pass-header p {
+      margin: 5px 0 0;
+
+      color: rgba(255,255,255,0.7);
+
+      font-size: 10px;
+
+      letter-spacing: 0.1em;
+    }
+
+    .boarding-pass-header strong {
+      flex-shrink: 0;
+
+      color: #ffffff;
+
+      font-size: 16px;
+
+      letter-spacing: 0.07em;
+    }
+
+
+    /* =====================================
+       搭乗券 メイン
+       ===================================== */
+
+    .boarding-pass-main {
+      padding: 22px 20px;
+
+      background:
+        linear-gradient(
+          180deg,
+          #ffffff,
+          #f6f8fb
+        );
+    }
+
+
+    /* =====================================
+       来場時間
+       ===================================== */
+
+    .boarding-arrival {
+      padding-bottom: 20px;
+
+      border-bottom: 1px solid #e2e7ee;
+    }
+
+    .boarding-arrival span {
+      display: block;
+
+      margin-bottom: 7px;
+
+      color: #7a8799;
+
+      font-size: 10px;
+      font-weight: 900;
+
+      letter-spacing: 0.14em;
+    }
+
+    .boarding-arrival strong {
+      display: block;
+
+      color: #142746;
+
+      font-size: 28px;
+      font-weight: 900;
+    }
+
+
+    /* =====================================
+       情報
+       ===================================== */
+
+    .boarding-info-grid {
+      display: grid;
+
+      grid-template-columns: 1fr 1fr;
+
+      margin-top: 2px;
+    }
+
+    .boarding-info-grid > div {
+      padding: 16px 0;
+
+      border-bottom: 1px solid #e2e7ee;
+    }
+
+    .boarding-info-grid > div:nth-child(odd) {
+      padding-right: 12px;
+
+      border-right: 1px solid #e2e7ee;
+    }
+
+    .boarding-info-grid > div:nth-child(even) {
+      padding-left: 12px;
+    }
+
+    .boarding-info-grid span {
+      display: block;
+
+      margin-bottom: 5px;
+
+      color: #7a8799;
+
+      font-size: 10px;
+      font-weight: 900;
+
+      letter-spacing: 0.1em;
+    }
+
+    .boarding-info-grid strong {
+      display: block;
+
+      color: #17233c;
+
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+
+    /* =====================================
+       代表者
+       ===================================== */
+
+    .boarding-pass-passenger {
+      display: flex;
+
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 10px;
+
+      padding-top: 17px;
+    }
+
+    .boarding-pass-passenger span {
+      color: #7a8799;
+
+      font-size: 10px;
+      font-weight: 900;
+
+      letter-spacing: 0.12em;
+    }
+
+    .boarding-pass-passenger strong {
+      color: #17233c;
+
+      font-size: 17px;
+      font-weight: 900;
+
+      word-break: break-all;
+
+      text-align: right;
+    }
+
+
+    /* =====================================
+       搭乗券 フッター
+       ===================================== */
+
+    .boarding-pass-footer {
+      padding: 19px 20px 20px;
+
+      background: #edf1f6;
+
+      border-top: 2px dashed #c5ccd7;
+    }
+
+    .boarding-note {
+      margin: 0 0 16px;
+
+      color: #586579;
+
+      font-size: 13px;
+
+      line-height: 1.7;
+
+      text-align: center;
+    }
+
+
+    /* =====================================
+       キャンセル
+       ===================================== */
+
+    .cancel-reservation {
+      width: 100%;
+
+      height: 43px;
+
+      border: 1px solid #d3d9e2;
+
+      border-radius: 11px;
+
+      background: #ffffff;
+
+      color: #687386;
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+
+    /* =====================================
+       受付停止
+       ===================================== */
+
+    #closedArea {
+      padding: 30px 20px;
+
+      border-radius: 23px;
+
+      background: #ffffff;
+
+      color: #172033;
+
+      text-align: center;
+
+      box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    #closedArea h2 {
+      margin: 0 0 12px;
+
+      font-size: 22px;
+    }
+
+    #closedArea p {
+      margin: 0;
+
+      color: #687386;
+
+      font-size: 14px;
+
+      line-height: 1.7;
+    }
+
+
+    /* =====================================
+       スマホ
+       ===================================== */
+
+    @media (max-width: 520px) {
+
+      body {
+        padding:
+          20px
+          11px
+          50px;
+      }
+
+      .container > h1 {
+        font-size: 27px;
+      }
+
+      #reserveArea {
+        padding:
+          24px
+          17px
+          22px;
+      }
+
+      .boarding-pass-header {
+        padding:
+          19px
+          17px;
+      }
+
+      .boarding-pass-header h2 {
+        font-size: 18px;
+      }
+
+      .boarding-pass-main {
+        padding:
+          21px
+          17px;
+      }
+
+      .boarding-arrival strong {
+        font-size: 25px;
+      }
+
+      .boarding-pass-footer {
+        padding:
+          18px
+          17px;
+      }
+    }
+
+
+    /* =====================================
+       小さい画面
+       ===================================== */
+
+    @media (max-width: 380px) {
+
+      .boarding-info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .boarding-info-grid > div:nth-child(odd) {
+        padding-right: 0;
+
+        border-right: 0;
+      }
+
+      .boarding-info-grid > div:nth-child(even) {
+        padding-left: 0;
+      }
+
+      .boarding-pass-passenger {
+        align-items: flex-start;
+
+        flex-direction: column;
+      }
+
+      .boarding-pass-passenger strong {
+        text-align: left;
+      }
+    }
+
+  </style>
+
 </head>
+
 
 <body>
 
@@ -16,11 +661,16 @@
 
     <h1>1-B出口 予約</h1>
 
+
     <section id="reserveArea">
 
       <h2>ご予約</h2>
 
-      <label for="name">代表者の名前</label>
+
+      <label for="name">
+        代表者の名前
+      </label>
+
       <input
         id="name"
         type="text"
@@ -28,32 +678,75 @@
         placeholder="代表者の名前"
       >
 
-      <label for="size">人数</label>
+
+      <label for="size">
+        人数
+      </label>
+
       <select id="size">
-        <option value="1">1人</option>
-        <option value="2">2人</option>
-        <option value="3">3人</option>
-        <option value="4">4人</option>
+
+        <option value="1">
+          1人
+        </option>
+
+        <option value="2">
+          2人
+        </option>
+
+        <option value="3">
+          3人
+        </option>
+
+        <option value="4">
+          4人
+        </option>
+
       </select>
 
-      <label for="slot">ご来場時間</label>
+
+      <label for="slot">
+        ご来場時間
+      </label>
+
       <select id="slot"></select>
 
-      <p id="slotInfo" class="slot-info"></p>
 
-      <button id="reserve" type="button">
+      <p
+        id="slotInfo"
+        class="slot-info"
+      ></p>
+
+
+      <button
+        id="reserve"
+        type="button"
+      >
         この時間帯で予約する
       </button>
 
-      <p id="error" class="error"></p>
+
+      <p
+        id="error"
+        class="error"
+      ></p>
 
     </section>
 
-    <section id="reservationArea" hidden></section>
 
-    <section id="closedArea" hidden>
+    <section
+      id="reservationArea"
+      hidden
+    ></section>
 
-      <h2>現在受付停止中です</h2>
+
+    <section
+      id="closedArea"
+      hidden
+    >
+
+      <h2>
+        現在受付停止中です
+      </h2>
 
       <p>
         スタッフから案内があるまでお待ちください。
@@ -63,10 +756,12 @@
 
   </main>
 
+
   <script
     type="module"
-    src="./お客さん.js?v=20260909-2"
+    src="./お客さん.js?v=20260909-4"
   ></script>
 
 </body>
+
 </html>
