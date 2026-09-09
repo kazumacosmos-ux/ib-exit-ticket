@@ -4,9 +4,10 @@ import {
   getDatabase,
   ref,
   onValue,
+  onChildRemoved,
+  onChildChanged,
   runTransaction,
-  set,
-  remove
+  set
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 
 import { firebaseConfig } from "./Firebase設定.js";
@@ -72,7 +73,6 @@ function createSlots() {
   for (let m = start; m < end; m += minutes) {
     const e = m + minutes;
 
-    // 終了時刻を超える枠は作らない
     if (e > end) {
       break;
     }
@@ -126,6 +126,10 @@ function getToday() {
 ========================= */
 
 function getBoardingTime(endTime) {
+  if (!endTime) {
+    return "";
+  }
+
   const minutes = toMinutes(endTime) + 5;
 
   const h = Math.floor(minutes / 60) % 24;
@@ -217,7 +221,6 @@ function renderSlots() {
     select.appendChild(option);
   });
 
-  // 以前選択していた枠がまだ使えるなら維持
   const currentOption = [...select.options].find(
     (option) =>
       option.value === currentValue &&
@@ -267,7 +270,7 @@ function updateInfo() {
 
 
 /* =========================
-   予約情報を取得
+   端末に保存された予約
 ========================= */
 
 function getSavedReservation() {
@@ -281,7 +284,7 @@ function getSavedReservation() {
 
   try {
     return JSON.parse(saved);
-  } catch {
+  } catch (error) {
     localStorage.removeItem(
       "ib_reservation"
     );
@@ -298,11 +301,12 @@ function getSavedReservation() {
 function renderBoardingPass(reservation) {
   const area = $("reservationArea");
 
-  if (!area) {
+  if (!area || !reservation) {
     return;
   }
 
   const number = reservation.number;
+
   const name = escapeHtml(
     reservation.name || ""
   );
@@ -339,10 +343,13 @@ function renderBoardingPass(reservation) {
       <div class="boarding-pass-main">
 
         <div class="boarding-arrival">
+
           <span>ご来場時間</span>
+
           <strong>
             ${escapeHtml(start)}～${escapeHtml(end)}
           </strong>
+
         </div>
 
 
@@ -415,7 +422,7 @@ function renderBoardingPass(reservation) {
 
 
 /* =========================
-   予約表示を消す
+   搭乗券を消す
 ========================= */
 
 function hideBoardingPass() {
@@ -451,7 +458,7 @@ function showReserveArea() {
 
 
 /* =========================
-   保存中の予約を表示
+   保存された予約を表示
 ========================= */
 
 function renderSavedReservation() {
@@ -460,6 +467,7 @@ function renderSavedReservation() {
 
   if (!reservation) {
     hideBoardingPass();
+    showReserveArea();
 
     return;
   }
@@ -476,13 +484,90 @@ function renderSavedReservation() {
 
 
 /* =========================
-   Firebase上の予約と
+   スタッフによる削除
+   ★重要
+========================= */
+
+function handleRemoteReservationRemoved(
+  removedNumber
+) {
+  const saved =
+    getSavedReservation();
+
+  if (!saved) {
+    return;
+  }
+
+  const savedNumber =
+    String(saved.number);
+
+  const targetNumber =
+    String(removedNumber);
+
+  if (savedNumber !== targetNumber) {
+    return;
+  }
+
+  /*
+   * Firebaseから自分の予約が削除された
+   */
+
+  localStorage.removeItem(
+    "ib_reservation"
+  );
+
+  /*
+   * 搭乗券を完全に消す
+   */
+
+  hideBoardingPass();
+
+  /*
+   * 予約画面を戻す
+   */
+
+  const reserveArea =
+    $("reserveArea");
+
+  if (reserveArea) {
+    reserveArea.hidden =
+      settings.open === false;
+  }
+
+  /*
+   * 閉鎖中なら閉鎖画面を表示
+   */
+
+  const closedArea =
+    $("closedArea");
+
+  if (closedArea) {
+    closedArea.hidden =
+      settings.open !== false;
+  }
+
+  /*
+   * 同じ削除について
+   * 何度もalertを出さない
+   */
+
+  if (!cancellationMessageShown) {
+
+    cancellationMessageShown = true;
+
+    alert(
+      "スタッフによって予約がキャンセルされました。"
+    );
+  }
+}
+
+
+/* =========================
+   Firebaseの予約と
    端末保存データを同期
 ========================= */
 
 function syncLocalReservation() {
-  // Firebaseの最初の読み込みが
-  // 完了するまでは何もしない
   if (!reservationsLoaded) {
     return;
   }
@@ -494,61 +579,102 @@ function syncLocalReservation() {
     return;
   }
 
-  const number = String(
-    saved.number
-  );
+  const number =
+    String(saved.number);
 
   const remote =
     reservations[number];
 
   /*
-   * Firebaseから予約が消えている
-   * ↓
-   * スタッフが削除した
-   * ↓
-   * お客さん側の搭乗券も削除
+   * Firebaseに予約が存在しない
    */
+
   if (!remote) {
 
-    localStorage.removeItem(
-      "ib_reservation"
+    handleRemoteReservationRemoved(
+      number
     );
-
-    hideBoardingPass();
-
-    const reserveArea =
-      $("reserveArea");
-
-    if (reserveArea) {
-      reserveArea.hidden =
-        settings.open === false;
-    }
-
-    if (!cancellationMessageShown) {
-
-      cancellationMessageShown = true;
-
-      alert(
-        "スタッフによって予約がキャンセルされました。"
-      );
-    }
 
     return;
   }
 
 
   /*
-   * スタッフが時間変更した場合
-   * ↓
-   * お客さん側の保存データも更新
+   * スタッフが時間変更した場合など
+   * Firebase側の最新情報を反映
    */
+
   const updated = {
     ...saved,
+
     slot: remote.slot,
+
     start: remote.start,
+
     end: remote.end,
+
     size: remote.size,
+
     name: remote.name,
+
+    number: remote.number
+  };
+
+
+  localStorage.setItem(
+    "ib_reservation",
+    JSON.stringify(updated)
+  );
+
+
+  renderBoardingPass(updated);
+}
+
+
+/* =========================
+   Firebaseから変更された
+   予約を反映
+========================= */
+
+function handleRemoteReservationChanged(
+  changedNumber,
+  remote
+) {
+  const saved =
+    getSavedReservation();
+
+  if (!saved) {
+    return;
+  }
+
+  if (
+    String(saved.number) !==
+    String(changedNumber)
+  ) {
+    return;
+  }
+
+  if (!remote) {
+    handleRemoteReservationRemoved(
+      changedNumber
+    );
+
+    return;
+  }
+
+  const updated = {
+    ...saved,
+
+    slot: remote.slot,
+
+    start: remote.start,
+
+    end: remote.end,
+
+    size: remote.size,
+
+    name: remote.name,
+
     number: remote.number
   };
 
@@ -584,12 +710,7 @@ function render() {
 
   } else {
 
-    const reservationArea =
-      $("reservationArea");
-
-    if (reservationArea) {
-      reservationArea.hidden = true;
-    }
+    hideBoardingPass();
 
     const reserveArea =
       $("reserveArea");
@@ -650,27 +771,109 @@ onValue(
 
 
 /* =========================
-   Firebase：予約
-   ★ここが今回の修正ポイント
+   Firebase：予約一覧
 ========================= */
 
+const reservationsRef =
+  ref(db, "Queue/reservations");
+
+
+/*
+ * 予約一覧全体を監視
+ */
+
 onValue(
-  ref(db, "Queue/reservations"),
+  reservationsRef,
   (snapshot) => {
 
     reservations =
       snapshot.val() || {};
 
-    // Firebaseの初回読み込み完了
+    /*
+     * 初回読み込み完了
+     */
+
     reservationsLoaded = true;
 
     /*
-     * スタッフによる削除・時間変更を
-     * お客さん側へ反映
+     * 現在の端末予約と同期
      */
+
     syncLocalReservation();
 
+    /*
+     * 画面更新
+     */
+
     render();
+  }
+);
+
+
+/* =========================
+   Firebase：予約削除
+   ★今回の重要ポイント
+========================= */
+
+onChildRemoved(
+  reservationsRef,
+  (snapshot) => {
+
+    const removedNumber =
+      snapshot.key;
+
+    /*
+     * Firebaseから削除された予約番号が
+     * この端末の予約番号と同じなら
+     * 搭乗券を消す
+     */
+
+    handleRemoteReservationRemoved(
+      removedNumber
+    );
+
+    /*
+     * ローカルの予約一覧も更新
+     */
+
+    delete reservations[
+      removedNumber
+    ];
+  }
+);
+
+
+/* =========================
+   Firebase：予約変更
+========================= */
+
+onChildChanged(
+  reservationsRef,
+  (snapshot) => {
+
+    const changedNumber =
+      snapshot.key;
+
+    const remote =
+      snapshot.val();
+
+    /*
+     * ローカルの予約一覧を更新
+     */
+
+    reservations[
+      changedNumber
+    ] = remote;
+
+    /*
+     * この端末の予約なら
+     * 最新情報を反映
+     */
+
+    handleRemoteReservationChanged(
+      changedNumber,
+      remote
+    );
   }
 );
 
@@ -720,9 +923,10 @@ if ($("reserve")) {
         Number(settings.maxGroups || 1);
 
 
-      /*
-       * 時間枠の人数を増やす
-       */
+      /* =========================
+         時間枠の人数を増やす
+      ========================= */
+
       const countRef =
         ref(
           db,
@@ -758,9 +962,10 @@ if ($("reserve")) {
       }
 
 
-      /*
-       * 予約番号を取得
-       */
+      /* =========================
+         予約番号を取得
+      ========================= */
+
       const lastResult =
         await runTransaction(
           ref(
@@ -794,9 +999,10 @@ if ($("reserve")) {
         lastResult.snapshot.val();
 
 
-      /*
-       * 予約データ
-       */
+      /* =========================
+         予約データ
+      ========================= */
+
       const reservation = {
 
         number,
@@ -818,9 +1024,10 @@ if ($("reserve")) {
       };
 
 
-      /*
-       * Firebaseへ保存
-       */
+      /* =========================
+         Firebaseへ保存
+      ========================= */
+
       await set(
         ref(
           db,
@@ -830,18 +1037,20 @@ if ($("reserve")) {
       );
 
 
-      /*
-       * この端末にも保存
-       */
+      /* =========================
+         この端末にも保存
+      ========================= */
+
       localStorage.setItem(
         "ib_reservation",
         JSON.stringify(reservation)
       );
 
 
-      /*
-       * 画面表示
-       */
+      /* =========================
+         画面表示
+      ========================= */
+
       cancellationMessageShown = false;
 
       const reserveArea =
@@ -855,6 +1064,113 @@ if ($("reserve")) {
         reservation
       );
     };
+}
+
+
+/* =========================
+   お客さん自身による
+   予約キャンセル
+========================= */
+
+async function cancelReservation(
+  reservation
+) {
+  const ok =
+    confirm(
+      "この予約をキャンセルしますか？"
+    );
+
+  if (!ok) {
+    return;
+  }
+
+
+  try {
+
+    /*
+     * Firebaseから予約を削除
+     */
+
+    await import(
+      "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js"
+    ).then(
+      ({ remove }) =>
+        remove(
+          ref(
+            db,
+            `Queue/reservations/${reservation.number}`
+          )
+        )
+    );
+
+
+    /*
+     * 時間枠の人数を1減らす
+     */
+
+    await runTransaction(
+      ref(
+        db,
+        `Queue/slots/${reservation.slot}/count`
+      ),
+      (value) =>
+        Math.max(
+          0,
+          Number(value || 0) - 1
+        )
+    );
+
+
+    /*
+     * 端末保存を削除
+     */
+
+    localStorage.removeItem(
+      "ib_reservation"
+    );
+
+
+    cancellationMessageShown = false;
+
+
+    /*
+     * 搭乗券を消す
+     */
+
+    hideBoardingPass();
+
+
+    /*
+     * 予約画面を戻す
+     */
+
+    const reserveArea =
+      $("reserveArea");
+
+    if (reserveArea) {
+      reserveArea.hidden =
+        settings.open === false;
+    }
+
+    const closedArea =
+      $("closedArea");
+
+    if (closedArea) {
+      closedArea.hidden =
+        settings.open !== false;
+    }
+
+  } catch (error) {
+
+    console.error(
+      "予約キャンセルエラー:",
+      error
+    );
+
+    alert(
+      "予約のキャンセルに失敗しました。"
+    );
+  }
 }
 
 
