@@ -372,6 +372,349 @@ function render() {
   renderPaperSlots();
 
   renderReservations();
+
+}
+
+
+// ==============================
+// スタッフ状況パネル
+// ==============================
+
+function renderDashboard(
+  reservations = {}
+) {
+
+  const adminArea =
+    $("adminArea");
+
+  if (!adminArea) {
+    return;
+  }
+
+
+  let dashboard =
+    $("staffDashboard");
+
+
+  /*
+   * 初回だけ作成
+   */
+
+  if (!dashboard) {
+
+    dashboard =
+      document.createElement(
+        "section"
+      );
+
+    dashboard.id =
+      "staffDashboard";
+
+    dashboard.style.cssText = `
+      margin: 0 0 24px 0;
+      padding: 18px;
+      border-radius: 16px;
+      background: #f4f8fb;
+      border: 1px solid #d5e1e9;
+    `;
+
+
+    /*
+     * adminAreaの先頭に追加
+     */
+
+    adminArea.insertBefore(
+      dashboard,
+      adminArea.firstChild
+    );
+  }
+
+
+  /*
+   * 予約集計
+   */
+
+  const reservationList =
+    Object.values(
+      reservations || {}
+    ).filter(
+      reservation =>
+        reservation
+    );
+
+
+  const total =
+    reservationList.length;
+
+
+  const completed =
+    reservationList.filter(
+      reservation =>
+        reservation.status ===
+        "completed"
+    ).length;
+
+
+  const reserved =
+    reservationList.filter(
+      reservation =>
+        reservation.status !==
+        "completed"
+    ).length;
+
+
+  /*
+   * 時間枠集計
+   */
+
+  const slots =
+    createSlots();
+
+
+  const maxGroups =
+    Number(
+      currentSettings.maxGroups
+    ) || 0;
+
+
+  let totalCapacity =
+    0;
+
+  let usedCapacity =
+    0;
+
+  let fullSlots =
+    0;
+
+
+  for (
+    const slot of slots
+  ) {
+
+    const count =
+      Number(
+        window.staffSlotsData?.[
+          slot.key
+        ]?.count || 0
+      );
+
+
+    totalCapacity +=
+      maxGroups;
+
+    usedCapacity +=
+      count;
+
+
+    if (
+      count >= maxGroups &&
+      maxGroups > 0
+    ) {
+
+      fullSlots++;
+
+    }
+
+  }
+
+
+  const remaining =
+    Math.max(
+      0,
+      totalCapacity -
+      usedCapacity
+    );
+
+
+  /*
+   * 更新
+   */
+
+  dashboard.innerHTML = `
+
+    <div
+      style="
+        font-size:20px;
+        font-weight:700;
+        margin-bottom:14px;
+      "
+    >
+      📊 現在の予約状況
+    </div>
+
+
+    <div
+      style="
+        display:grid;
+        grid-template-columns:
+          repeat(
+            auto-fit,
+            minmax(130px, 1fr)
+          );
+        gap:10px;
+      "
+    >
+
+      <div
+        style="
+          background:#ffffff;
+          border-radius:12px;
+          padding:14px;
+          border:1px solid #dbe5eb;
+        "
+      >
+        <div
+          style="
+            font-size:13px;
+            color:#657783;
+          "
+        >
+          📊 予約総数
+        </div>
+
+        <div
+          style="
+            font-size:27px;
+            font-weight:700;
+            margin-top:4px;
+          "
+        >
+          ${total}組
+        </div>
+      </div>
+
+
+      <div
+        style="
+          background:#ffffff;
+          border-radius:12px;
+          padding:14px;
+          border:1px solid #dbe5eb;
+        "
+      >
+        <div
+          style="
+            font-size:13px;
+            color:#657783;
+          "
+        >
+          🟢 未搭乗
+        </div>
+
+        <div
+          style="
+            font-size:27px;
+            font-weight:700;
+            margin-top:4px;
+          "
+        >
+          ${reserved}組
+        </div>
+      </div>
+
+
+      <div
+        style="
+          background:#ffffff;
+          border-radius:12px;
+          padding:14px;
+          border:1px solid #dbe5eb;
+        "
+      >
+        <div
+          style="
+            font-size:13px;
+            color:#657783;
+          "
+        >
+          🔵 搭乗済み
+        </div>
+
+        <div
+          style="
+            font-size:27px;
+            font-weight:700;
+            margin-top:4px;
+          "
+        >
+          ${completed}組
+        </div>
+      </div>
+
+
+      <div
+        style="
+          background:#ffffff;
+          border-radius:12px;
+          padding:14px;
+          border:1px solid #dbe5eb;
+        "
+      >
+        <div
+          style="
+            font-size:13px;
+            color:#657783;
+          "
+        >
+          🪑 残り枠
+        </div>
+
+        <div
+          style="
+            font-size:27px;
+            font-weight:700;
+            margin-top:4px;
+          "
+        >
+          ${remaining}組
+        </div>
+      </div>
+
+
+      <div
+        style="
+          background:#ffffff;
+          border-radius:12px;
+          padding:14px;
+          border:1px solid #dbe5eb;
+        "
+      >
+        <div
+          style="
+            font-size:13px;
+            color:#657783;
+          "
+        >
+          🔴 満員枠
+        </div>
+
+        <div
+          style="
+            font-size:27px;
+            font-weight:700;
+            margin-top:4px;
+          "
+        >
+          ${fullSlots}枠
+        </div>
+      </div>
+
+    </div>
+
+
+    <div
+      style="
+        margin-top:12px;
+        font-size:13px;
+        color:#657783;
+      "
+    >
+      全${slots.length}枠・
+      最大${totalCapacity}組
+    </div>
+
+  `;
+
 }
 
 
@@ -544,6 +887,15 @@ function renderReservations() {
           );
         }
       }
+
+      /*
+       * 状況パネル更新
+       */
+
+      renderDashboard(
+        data || {}
+      );
+
 
       reservations.sort(
         (a, b) =>
@@ -1418,7 +1770,15 @@ const slotsRef =
 
 onValue(
   slotsRef,
-  () => {
+  snapshot => {
+
+    /*
+     * 現在の時間枠データを保存
+     */
+
+    window.staffSlotsData =
+      snapshot.val() || {};
+
 
     renderPaperSlots();
 
@@ -1895,5 +2255,8 @@ onAuthStateChanged(
 // ==============================
 // 初期表示
 // ==============================
+
+window.staffSlotsData =
+  {};
 
 render();
