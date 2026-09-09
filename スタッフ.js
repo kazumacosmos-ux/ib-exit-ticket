@@ -57,35 +57,16 @@ const STAFF_EMAIL =
 
 
 // ==============================
-// 時刻設定
-// ==============================
-//
-// 開始時刻・終了時刻は固定
-//
-// 09:00 ～ 15:00
-//
-// スタッフ画面から変更できません。
-// ==============================
-
-const FIXED_START =
-  "09:00";
-
-
-const FIXED_END =
-  "15:00";
-
-
-// ==============================
 // 現在の設定
 // ==============================
 
 let currentSettings = {
 
   start:
-    FIXED_START,
+    "09:00",
 
   end:
-    FIXED_END,
+    "15:00",
 
   slotMinutes:
     30,
@@ -99,7 +80,7 @@ let currentSettings = {
 
 
 // ==============================
-// HTML取得用
+// HTML取得
 // ==============================
 
 function $(id) {
@@ -172,9 +153,6 @@ function formatTime(minutes) {
 
 // ==============================
 // スロットキー
-//
-// 09:00 → 09-00
-// 09:30 → 09-30
 // ==============================
 
 function slotKey(time) {
@@ -187,7 +165,7 @@ function slotKey(time) {
 
 
 // ==============================
-// 時間枠を作成
+// 時間枠作成
 // ==============================
 
 function createSlots() {
@@ -197,13 +175,13 @@ function createSlots() {
 
   const startMinutes =
     toMinutes(
-      FIXED_START
+      currentSettings.start
     );
 
 
   const endMinutes =
     toMinutes(
-      FIXED_END
+      currentSettings.end
     );
 
 
@@ -310,45 +288,10 @@ function escapeHtml(value) {
 
 
 // ==============================
-// 最大組数を画面に反映
-// ==============================
-
-function setupMaxGroups() {
-
-  const element =
-    $("maxGroups");
-
-
-  if (!element) {
-
-    return;
-  }
-
-
-  const value =
-    Number(
-      currentSettings.maxGroups
-    );
-
-
-  if (
-    value >= 1 &&
-    value <= 10
-  ) {
-
-    element.value =
-      String(value);
-  }
-}
-
-
-// ==============================
-// ページを更新
+// ページ更新
 // ==============================
 
 function render() {
-
-  setupMaxGroups();
 
   renderPaperSlots();
 
@@ -1130,356 +1073,6 @@ async function deleteReservation(
 
 
 // ==============================
-// ★ 全体リセット
-// ==============================
-//
-// リセット対象
-//
-// ・Queue/reservations
-// ・Queue/slots
-// ・Queue/reservationLast
-// ・Queue/resetAt
-//
-// 設定は残す
-//
-// ・09:00
-// ・15:00
-// ・1枠の時間
-// ・最大組数
-// ・受付状態
-//
-// ==============================
-
-async function resetAllData() {
-
-  // ============================
-  // 1回目の確認
-  // ============================
-
-  const firstConfirm =
-    confirm(
-      "予約データをすべてリセットします。\n\n" +
-      "Web予約・紙予約・予約番号がすべて消えます。\n\n" +
-      "本当に実行しますか？"
-    );
-
-
-  if (!firstConfirm) {
-
-    return;
-  }
-
-
-  // ============================
-  // 2回目の確認
-  // ============================
-
-  const secondConfirm =
-    confirm(
-      "【最終確認】\n\n" +
-      "現在の予約をすべて削除し、" +
-      "予約番号をDREAM001から再スタートします。\n\n" +
-      "実行しますか？"
-    );
-
-
-  if (!secondConfirm) {
-
-    return;
-  }
-
-
-  const resetButton =
-    $("resetAll");
-
-
-  const resetMessage =
-    $("resetMessage");
-
-
-  if (resetButton) {
-
-    resetButton.disabled =
-      true;
-
-    resetButton.textContent =
-      "リセットしています……";
-  }
-
-
-  if (resetMessage) {
-
-    resetMessage.textContent =
-      "データをリセットしています……";
-  }
-
-
-  try {
-
-    // ==========================
-    // 現在ログインしているか確認
-    // ==========================
-
-    if (!auth.currentUser) {
-
-      throw new Error(
-        "スタッフがログインしていません。"
-      );
-    }
-
-
-    // ==========================
-    // ① 予約データを削除
-    // ==========================
-
-    await set(
-      ref(
-        db,
-        "Queue/reservations"
-      ),
-      null
-    );
-
-
-    // ==========================
-    // ② 時間枠データを削除
-    // ==========================
-
-    await set(
-      ref(
-        db,
-        "Queue/slots"
-      ),
-      null
-    );
-
-
-    // ==========================
-    // ③ 予約番号を0へ戻す
-    // ==========================
-
-    await set(
-      ref(
-        db,
-        "Queue/reservationLast"
-      ),
-      0
-    );
-
-
-    // ==========================
-    // ④ リセット時刻を保存
-    // ==========================
-
-    await set(
-      ref(
-        db,
-        "Queue/resetAt"
-      ),
-      Date.now()
-    );
-
-
-    // ==========================
-    // 完了
-    // ==========================
-
-    if (resetMessage) {
-
-      resetMessage.textContent =
-        "予約データをリセットしました。";
-    }
-
-
-    alert(
-      "予約データをリセットしました。\n\n" +
-      "次の予約番号はDREAM001です。"
-    );
-
-
-    render();
-
-
-  } catch (error) {
-
-    console.error(
-      "全体リセットエラー:",
-      error
-    );
-
-
-    console.error(
-      "エラーコード:",
-      error?.code
-    );
-
-
-    console.error(
-      "エラーメッセージ:",
-      error?.message
-    );
-
-
-    if (resetMessage) {
-
-      resetMessage.textContent =
-        "リセットに失敗しました。";
-    }
-
-
-    // ==========================
-    // エラー内容を確認できるようにする
-    // ==========================
-
-    let detail =
-      error?.message ||
-      "原因不明のエラー";
-
-
-    if (
-      error?.code
-    ) {
-
-      detail =
-        `${error.code}\n${detail}`;
-    }
-
-
-    alert(
-      "リセットに失敗しました。\n\n" +
-      detail
-    );
-
-  } finally {
-
-    if (resetButton) {
-
-      resetButton.disabled =
-        false;
-
-      resetButton.textContent =
-        "全体リセット";
-    }
-  }
-}
-
-
-// ==============================
-// ログイン
-// ==============================
-
-$("login").addEventListener(
-  "click",
-  async () => {
-
-    const password =
-      $("password").value;
-
-
-    const loginMessage =
-      $("loginMessage");
-
-
-    if (!password) {
-
-      loginMessage.textContent =
-        "パスワードを入力してください。";
-
-      return;
-    }
-
-
-    loginMessage.textContent =
-      "ログインしています……";
-
-
-    try {
-
-      await signInWithEmailAndPassword(
-        auth,
-        STAFF_EMAIL,
-        password
-      );
-
-
-      loginMessage.textContent =
-        "";
-
-    } catch (error) {
-
-      console.error(
-        "ログインエラー:",
-        error
-      );
-
-
-      loginMessage.textContent =
-        "パスワードが違います。";
-    }
-  }
-);
-
-
-// ==============================
-// Enterキーでログイン
-// ==============================
-
-$("password").addEventListener(
-  "keydown",
-  event => {
-
-    if (
-      event.key === "Enter"
-    ) {
-
-      $("login").click();
-    }
-  }
-);
-
-
-// ==============================
-// 認証状態
-// ==============================
-
-onAuthStateChanged(
-  auth,
-  user => {
-
-    const loginArea =
-      $("loginArea");
-
-
-    const adminArea =
-      $("adminArea");
-
-
-    if (user) {
-
-      loginArea.style.display =
-        "none";
-
-
-      adminArea.style.display =
-        "block";
-
-
-      render();
-
-    } else {
-
-      loginArea.style.display =
-        "block";
-
-
-      adminArea.style.display =
-        "none";
-    }
-  }
-);
-
-
-// ==============================
 // Firebase設定を監視
 // ==============================
 
@@ -1503,10 +1096,12 @@ onValue(
       currentSettings = {
 
         start:
-          FIXED_START,
+          data.start ||
+          "09:00",
 
         end:
-          FIXED_END,
+          data.end ||
+          "15:00",
 
         slotMinutes:
           Number(
@@ -1521,86 +1116,6 @@ onValue(
         open:
           data.open !== false
       };
-    }
-
-
-    // ==========================
-    // 1枠の時間
-    // ==========================
-
-    const slotMinutes =
-      $("slotMinutes");
-
-
-    if (slotMinutes) {
-
-      slotMinutes.value =
-        String(
-          currentSettings.slotMinutes
-        );
-    }
-
-
-    // ==========================
-    // 最大組数
-    // ==========================
-
-    const maxGroups =
-      $("maxGroups");
-
-
-    if (maxGroups) {
-
-      maxGroups.value =
-        String(
-          currentSettings.maxGroups
-        );
-    }
-
-
-    // ==========================
-    // 受付状態
-    // ==========================
-
-    const receptionState =
-      $("receptionState");
-
-
-    const toggleOpen =
-      $("toggleOpen");
-
-
-    if (
-      currentSettings.open
-    ) {
-
-      if (receptionState) {
-
-        receptionState.textContent =
-          "受付中";
-      }
-
-
-      if (toggleOpen) {
-
-        toggleOpen.textContent =
-          "受付停止";
-      }
-
-    } else {
-
-      if (receptionState) {
-
-        receptionState.textContent =
-          "受付停止中";
-      }
-
-
-      if (toggleOpen) {
-
-        toggleOpen.textContent =
-          "受付再開";
-      }
     }
 
 
@@ -1632,202 +1147,15 @@ onValue(
 
 
 // ==============================
-// 受付停止・再開
+// 管理者設定ページを開く
 // ==============================
 
-$("toggleOpen").addEventListener(
+$("openAdminSettings").addEventListener(
   "click",
-  async () => {
+  () => {
 
-    const newOpen =
-      !currentSettings.open;
-
-
-    try {
-
-      await update(
-        ref(
-          db,
-          "Queue/settings"
-        ),
-        {
-          open:
-            newOpen
-        }
-      );
-
-    } catch (error) {
-
-      console.error(
-        "受付状態変更エラー:",
-        error
-      );
-
-
-      alert(
-        "受付状態の変更に失敗しました。"
-      );
-    }
-  }
-);
-
-
-// ==============================
-// 設定を保存
-// ==============================
-//
-// ・開始時刻 → 09:00固定
-// ・終了時刻 → 15:00固定
-// ・1枠の時間 → 変更可能
-// ・最大組数 → 変更可能
-// ==============================
-
-$("saveSettings").addEventListener(
-  "click",
-  async () => {
-
-    const settingsMessage =
-      $("settingsMessage");
-
-
-    const slotMinutes =
-      Number(
-        $("slotMinutes").value
-      );
-
-
-    const maxGroups =
-      Number(
-        $("maxGroups").value
-      );
-
-
-    if (
-      !Number.isInteger(
-        slotMinutes
-      ) ||
-      slotMinutes <= 0
-    ) {
-
-      settingsMessage.textContent =
-        "1枠の時間は1分以上の整数にしてください。";
-
-      return;
-    }
-
-
-    if (
-      !Number.isInteger(
-        maxGroups
-      ) ||
-      maxGroups < 1 ||
-      maxGroups > 10
-    ) {
-
-      settingsMessage.textContent =
-        "最大組数は1〜10組にしてください。";
-
-      return;
-    }
-
-
-    const totalMinutes =
-      toMinutes(FIXED_END) -
-      toMinutes(FIXED_START);
-
-
-    if (
-      slotMinutes >
-      totalMinutes
-    ) {
-
-      settingsMessage.textContent =
-        "1枠の時間が長すぎます。";
-
-      return;
-    }
-
-
-    if (
-      totalMinutes %
-      slotMinutes !== 0
-    ) {
-
-      settingsMessage.textContent =
-        "1枠の時間は、09:00〜15:00の6時間にきれいに収まる値にしてください。";
-
-      return;
-    }
-
-
-    settingsMessage.textContent =
-      "保存しています……";
-
-
-    try {
-
-      await update(
-        ref(
-          db,
-          "Queue/settings"
-        ),
-        {
-
-          start:
-            FIXED_START,
-
-          end:
-            FIXED_END,
-
-          slotMinutes:
-            slotMinutes,
-
-          maxGroups:
-            maxGroups,
-
-          open:
-            currentSettings.open
-        }
-      );
-
-
-      currentSettings = {
-
-        start:
-          FIXED_START,
-
-        end:
-          FIXED_END,
-
-        slotMinutes:
-          slotMinutes,
-
-        maxGroups:
-          maxGroups,
-
-        open:
-          currentSettings.open
-      };
-
-
-      settingsMessage.textContent =
-        "設定を保存しました。";
-
-
-      render();
-
-
-    } catch (error) {
-
-      console.error(
-        "設定保存エラー:",
-        error
-      );
-
-
-      settingsMessage.textContent =
-        "設定の保存に失敗しました。";
-    }
+    window.location.href =
+      "./管理者設定.html";
   }
 );
 
@@ -2035,7 +1363,6 @@ $("addPaper").addEventListener(
       reservationNumber =
         result.snapshot.val();
 
-
     } catch (error) {
 
       console.error(
@@ -2136,7 +1463,6 @@ $("addPaper").addEventListener(
 
       updatePaperSlotInfo();
 
-
     } catch (error) {
 
       console.error(
@@ -2169,7 +1495,7 @@ $("addPaper").addEventListener(
       ) {
 
         console.error(
-          "枠数ロールバックエラー:",
+          "ロールバックエラー:",
           rollbackError
         );
       }
@@ -2178,20 +1504,6 @@ $("addPaper").addEventListener(
       paperMessage.textContent =
         "紙予約の保存に失敗しました。";
     }
-  }
-);
-
-
-// ==============================
-// ★ 全体リセットボタン
-// ==============================
-
-$("resetAll").addEventListener(
-  "click",
-  async () => {
-
-    await resetAllData();
-
   }
 );
 
@@ -2221,6 +1533,47 @@ $("logout").addEventListener(
       alert(
         "ログアウトに失敗しました。"
       );
+    }
+  }
+);
+
+
+// ==============================
+// 認証状態
+// ==============================
+
+onAuthStateChanged(
+  auth,
+  user => {
+
+    const loginArea =
+      $("loginArea");
+
+
+    const adminArea =
+      $("adminArea");
+
+
+    if (user) {
+
+      loginArea.style.display =
+        "none";
+
+
+      adminArea.style.display =
+        "block";
+
+
+      render();
+
+    } else {
+
+      loginArea.style.display =
+        "block";
+
+
+      adminArea.style.display =
+        "none";
     }
   }
 );
