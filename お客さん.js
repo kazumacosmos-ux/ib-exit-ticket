@@ -182,6 +182,186 @@ function saveLocalResetAt(
 
 
 /* =========================================
+   画面内通知
+========================================= */
+
+function showReservationComplete(
+  number,
+  start,
+  end
+) {
+
+  const reservationArea =
+    $("reservationArea");
+
+
+  if (!reservationArea) {
+
+    /*
+     * reservationAreaが見つからない場合だけ
+     * 最終手段としてalertを使用する。
+     */
+
+    alert(
+      "🎫 予約が完了しました！\n\n" +
+      `予約番号：No.${number}\n` +
+      `ご来場時間：${start}～${end}`
+    );
+
+    return;
+  }
+
+
+  reservationArea.hidden =
+    false;
+
+
+  reservationArea.innerHTML = `
+
+    <div
+      class="reservation-complete"
+      style="
+        text-align:center;
+        padding:32px 20px;
+        margin:20px 0;
+        border-radius:20px;
+        background:linear-gradient(
+          180deg,
+          #eaf7ff 0%,
+          #ffffff 100%
+        );
+        border:2px solid #9bd8ff;
+        box-shadow:0 10px 30px rgba(0,80,140,0.12);
+      "
+    >
+
+      <div
+        style="
+          font-size:48px;
+          margin-bottom:10px;
+        "
+      >
+        🎫
+      </div>
+
+
+      <h2
+        style="
+          margin:0 0 12px;
+          color:#075985;
+          font-size:28px;
+        "
+      >
+        予約完了！
+      </h2>
+
+
+      <p
+        style="
+          margin:0 0 20px;
+          color:#334155;
+          font-size:16px;
+        "
+      >
+        ご予約ありがとうございます。
+      </p>
+
+
+      <div
+        style="
+          display:inline-block;
+          padding:16px 24px;
+          margin-bottom:16px;
+          border-radius:14px;
+          background:#ffffff;
+          border:1px solid #bfdbfe;
+        "
+      >
+
+        <div
+          style="
+            font-size:13px;
+            color:#64748b;
+            margin-bottom:4px;
+          "
+        >
+          予約番号
+        </div>
+
+
+        <strong
+          style="
+            display:block;
+            font-size:30px;
+            color:#0369a1;
+          "
+        >
+          No.${escapeHtml(number)}
+        </strong>
+
+      </div>
+
+
+      <div
+        style="
+          font-size:17px;
+          font-weight:bold;
+          color:#0f172a;
+          margin-bottom:24px;
+        "
+      >
+        ご来場時間
+        <br>
+        <span
+          style="
+            font-size:24px;
+            color:#0284c7;
+          "
+        >
+          ${escapeHtml(start)}
+          ～ 
+          ${escapeHtml(end)}
+        </span>
+      </div>
+
+
+      <p
+        style="
+          margin:0;
+          color:#64748b;
+          font-size:14px;
+        "
+      >
+        下に搭乗券を表示しています。
+      </p>
+
+    </div>
+
+  `;
+
+
+  /*
+   * 少し待ってから搭乗券を表示。
+   * 予約完了通知を一瞬でも確実に見せる。
+   */
+
+  setTimeout(
+    () => {
+
+      renderReservations();
+
+      reservationArea.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+
+    },
+    1200
+  );
+}
+
+
+/* =========================================
    時刻処理
 ========================================= */
 
@@ -490,11 +670,6 @@ function createSlots() {
     );
 
 
-  /*
-   * Firebase設定が不正だった場合でも
-   * 必ず時間帯を表示する。
-   */
-
   if (
     Object.keys(result).length === 0
   ) {
@@ -645,26 +820,14 @@ function renderSlots() {
     createSlots();
 
 
-  const slotList =
+  let finalSlotList =
     Object.values(
       generatedSlots
     );
 
 
-  /*
-   * 絶対に空欄のselectを残さない。
-   */
-
-  select.innerHTML = "";
-
-
-  /*
-   * 念のため、生成失敗時にも
-   * 標準時間帯をもう一度試す。
-   */
-
-  let finalSlotList =
-    slotList;
+  select.innerHTML =
+    "";
 
 
   if (
@@ -678,10 +841,6 @@ function renderSlots() {
   }
 
 
-  /*
-   * それでも0件ならエラー表示。
-   */
-
   if (
     finalSlotList.length === 0
   ) {
@@ -692,7 +851,8 @@ function renderSlots() {
       );
 
 
-    option.value = "";
+    option.value =
+      "";
 
 
     option.textContent =
@@ -791,10 +951,6 @@ function renderSlots() {
   );
 
 
-  /*
-   * 前回の選択がまだ空いているなら維持。
-   */
-
   if (
     previousStillAvailable
   ) {
@@ -810,11 +966,6 @@ function renderSlots() {
       firstAvailable;
 
   } else {
-
-    /*
-     * 全枠満員でも、
-     * select自体は表示する。
-     */
 
     select.selectedIndex =
       0;
@@ -1228,10 +1379,6 @@ if (reserveButton) {
       }
 
 
-      /*
-       * 既存予約チェック
-       */
-
       const existing =
         getLocalReservation();
 
@@ -1250,10 +1397,6 @@ if (reserveButton) {
         return;
       }
 
-
-      /*
-       * 受付状態
-       */
 
       if (
         settings.open === false
@@ -1544,7 +1687,7 @@ if (reserveButton) {
 
 
         /*
-         * 即座に画面へ反映
+         * 即座にローカルの予約一覧へ追加
          */
 
         reservations[
@@ -1565,21 +1708,16 @@ if (reserveButton) {
 
         /*
          * 予約完了通知
+         *
+         * alert()ではなく、
+         * 画面内に通知を表示する。
          */
 
-        alert(
-          "🎫 予約が完了しました！\n\n" +
-          `予約番号：No.${number}\n` +
-          `ご来場時間：${slot.start}～${slot.end}\n\n` +
-          "搭乗券を表示します。"
+        showReservationComplete(
+          number,
+          slot.start,
+          slot.end
         );
-
-
-        /*
-         * 搭乗券を表示
-         */
-
-        render();
 
 
       } catch (firebaseError) {
