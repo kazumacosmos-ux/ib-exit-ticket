@@ -27,11 +27,9 @@
 
       <h2>スタッフログイン</h2>
 
-
       <label for="password">
         パスワード
       </label>
-
 
       <input
         id="password"
@@ -40,11 +38,12 @@
         placeholder="パスワードを入力"
       >
 
-
-      <button id="login">
+      <button
+        id="login"
+        type="button"
+      >
         ログイン
       </button>
-
 
       <p
         id="loginMessage"
@@ -64,113 +63,26 @@
     >
 
       <!-- =======================
-           受付設定
+           管理者設定
       ======================== -->
 
-      <h2>受付設定</h2>
+      <section>
 
+        <h2>🔐 管理者設定</h2>
 
-      <p id="receptionState">
-        受付中
-      </p>
+        <p>
+          時間設定・最大組数・受付状態・全体リセットは、
+          管理者設定ページから変更できます。
+        </p>
 
-
-      <button id="toggleOpen">
-        受付停止
-      </button>
-
-
-      <!-- =======================
-           時間設定
-      ======================== -->
-
-      <h3>時間設定</h3>
-
-
-      <p>
-        開始時刻：
-        <strong>09:00</strong>
-      </p>
-
-
-      <p>
-        終了時刻：
-        <strong>15:00</strong>
-      </p>
-
-
-      <label>
-        1枠の時間
-
-        <input
-          id="slotMinutes"
-          type="number"
-          min="1"
-          step="1"
-          inputmode="numeric"
-          placeholder="例：30"
+        <button
+          id="openAdminSettings"
+          type="button"
         >
+          管理者設定を開く
+        </button>
 
-        分
-      </label>
-
-
-      <label>
-        1枠あたりの最大組数
-
-        <select id="maxGroups">
-
-          <option value="1">
-            1組
-          </option>
-
-          <option value="2">
-            2組
-          </option>
-
-          <option value="3">
-            3組
-          </option>
-
-          <option value="4">
-            4組
-          </option>
-
-          <option value="5">
-            5組
-          </option>
-
-          <option value="6">
-            6組
-          </option>
-
-          <option value="7">
-            7組
-          </option>
-
-          <option value="8">
-            8組
-          </option>
-
-          <option value="9">
-            9組
-          </option>
-
-          <option value="10">
-            10組
-          </option>
-
-        </select>
-
-      </label>
-
-
-      <button id="saveSettings">
-        設定を保存
-      </button>
-
-
-      <p id="settingsMessage"></p>
+      </section>
 
 
       <hr>
@@ -181,7 +93,6 @@
       ======================== -->
 
       <h2>紙予約を追加</h2>
-
 
       <label>
         名前
@@ -232,7 +143,10 @@
       <p id="paperSlotInfo"></p>
 
 
-      <button id="addPaper">
+      <button
+        id="addPaper"
+        type="button"
+      >
         紙予約を追加
       </button>
 
@@ -249,35 +163,7 @@
 
       <h2>予約一覧</h2>
 
-
       <div id="slotList"></div>
-
-
-      <hr>
-
-
-      <!-- =======================
-           全体リセット
-      ======================== -->
-
-      <h2>データ管理</h2>
-
-
-      <p>
-        文化祭開始前などに、
-        予約データをすべてリセットできます。
-      </p>
-
-
-      <button
-        id="resetAll"
-        type="button"
-      >
-        全体リセット
-      </button>
-
-
-      <p id="resetMessage"></p>
 
 
       <hr>
@@ -301,7 +187,7 @@
 
   <script
     type="module"
-    src="./スタッフ.js?v=20260909-reset1"
+    src="./スタッフ.js?v=20260909-admin1"
   ></script>
 
 </body>
