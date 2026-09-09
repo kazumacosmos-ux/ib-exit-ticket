@@ -146,10 +146,9 @@ function slotKey(time) {
 
   return time.replace(
     ":",
-    "-"
+    ""
   );
 }
-
 
 // ==============================
 // 時間枠作成
