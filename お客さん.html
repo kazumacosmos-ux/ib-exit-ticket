@@ -15,7 +15,7 @@
 
   <link
     rel="stylesheet"
-    href="./デザイン.css?v=20260909-7"
+    href="./デザイン.css?v=20260909-8"
   >
 
 
@@ -48,72 +48,128 @@
 
       color: #123a59;
 
+      /*
+       * 空港ターミナルをイメージした背景
+       */
       background:
+
+        /* ガラス天井の光 */
+        radial-gradient(
+          ellipse at 50% -10%,
+          rgba(255,255,255,0.95) 0%,
+          rgba(255,255,255,0.35) 35%,
+          transparent 65%
+        ),
+
+        /* 空港の照明 */
+        radial-gradient(
+          circle at 15% 30%,
+          rgba(255,255,255,0.75) 0%,
+          transparent 18%
+        ),
+
+        radial-gradient(
+          circle at 85% 45%,
+          rgba(255,255,255,0.60) 0%,
+          transparent 20%
+        ),
+
+        /* ターミナルガラス */
         linear-gradient(
-          180deg,
-          #5eb9ed 0%,
-          #bfe9ff 25%,
-          #eaf8ff 55%,
-          #ffffff 100%
+          110deg,
+          #b9e8fa 0%,
+          #e9f8ff 28%,
+          #c9ecfb 50%,
+          #f5fcff 72%,
+          #b7e3f5 100%
         );
 
       overflow-x: hidden;
+
+      position: relative;
     }
 
 
+    /*
+     * 空港ターミナルのガラス柱
+     */
     body::before {
 
       content: "";
 
       position: fixed;
 
-      top: -180px;
-      right: -120px;
-
-      width: 420px;
-      height: 420px;
-
-      border-radius: 50%;
-
-      background:
-        rgba(
-          255,
-          255,
-          255,
-          0.24
-        );
-
-      filter: blur(5px);
+      inset: 0;
 
       pointer-events: none;
+
+      opacity: 0.45;
+
+      background:
+
+        linear-gradient(
+          90deg,
+          transparent 0%,
+          transparent 11%,
+          rgba(255,255,255,0.35) 11.2%,
+          transparent 11.5%,
+          transparent 29%,
+          rgba(255,255,255,0.30) 29.2%,
+          transparent 29.5%,
+          transparent 52%,
+          rgba(255,255,255,0.35) 52.2%,
+          transparent 52.5%,
+          transparent 74%,
+          rgba(255,255,255,0.30) 74.2%,
+          transparent 74.5%,
+          transparent 91%,
+          rgba(255,255,255,0.35) 91.2%,
+          transparent 91.5%
+        );
+
+      z-index: 0;
     }
 
 
+    /*
+     * 空港の床・滑走路をイメージ
+     */
     body::after {
 
       content: "";
 
       position: fixed;
 
-      left: -180px;
-      bottom: -200px;
+      left: 0;
+      right: 0;
+      bottom: 0;
 
-      width: 500px;
-      height: 500px;
-
-      border-radius: 50%;
-
-      background:
-        rgba(
-          255,
-          255,
-          255,
-          0.45
-        );
-
-      filter: blur(35px);
+      height: 190px;
 
       pointer-events: none;
+
+      background:
+
+        /* 滑走路中央線 */
+        repeating-linear-gradient(
+          90deg,
+          transparent 0,
+          transparent 70px,
+          rgba(255,255,255,0.55) 70px,
+          rgba(255,255,255,0.55) 120px,
+          transparent 120px,
+          transparent 190px
+        ),
+
+        linear-gradient(
+          180deg,
+          transparent,
+          rgba(63,132,160,0.15)
+        );
+
+      opacity: 0.55;
+
+      z-index: 0;
     }
 
 
@@ -136,6 +192,10 @@
     }
 
 
+    /*
+     * 空港案内板っぽいヘッダー
+     */
+
     .airline-header {
 
       position: relative;
@@ -153,23 +213,38 @@
       color: #ffffff;
 
       background:
+
         linear-gradient(
           135deg,
-          #0869a8 0%,
-          #168bc9 48%,
-          #64c9ed 100%
+          #063e69 0%,
+          #0869a8 42%,
+          #1197ce 72%,
+          #66d0ee 100%
         );
 
       box-shadow:
-        0 14px 38px
+        0 18px 45px
         rgba(
           19,
           91,
           135,
-          0.24
+          0.30
+        );
+
+      border:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          0.25
         );
     }
 
+
+    /*
+     * 案内板の光
+     */
 
     .airline-header::before {
 
@@ -177,14 +252,14 @@
 
       position: absolute;
 
-      width: 240px;
-      height: 240px;
+      width: 400px;
+      height: 400px;
 
-      top: -140px;
-      right: -50px;
+      top: -260px;
+      right: -100px;
 
       border:
-        35px solid
+        45px solid
         rgba(
           255,
           255,
@@ -196,21 +271,25 @@
     }
 
 
+    /*
+     * 飛行機
+     */
+
     .airline-header::after {
 
       content: "✈";
 
       position: absolute;
 
-      right: 22px;
-      bottom: 15px;
+      right: 25px;
+      bottom: 13px;
 
-      font-size: 52px;
+      font-size: 58px;
 
-      opacity: 0.16;
+      opacity: 0.17;
 
       transform:
-        rotate(-10deg);
+        rotate(-12deg);
     }
 
 
@@ -218,7 +297,8 @@
 
       position: relative;
 
-      margin: 0 0 7px;
+      margin:
+        0 0 7px;
 
       font-size: 11px;
 
@@ -284,6 +364,84 @@
     }
 
 
+    /*
+     * 空港の案内表示
+     */
+
+    .airport-sign {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 10px;
+
+      margin:
+        0 0 14px;
+
+      padding:
+        9px 13px;
+
+      border-radius:
+        8px;
+
+      color: #ffffff;
+
+      background:
+        rgba(
+          0,
+          35,
+          65,
+          0.78
+        );
+
+      font-size: 10px;
+
+      font-weight: bold;
+
+      letter-spacing:
+        0.12em;
+
+      box-shadow:
+        0 5px 15px
+        rgba(
+          0,
+          35,
+          65,
+          0.18
+        );
+    }
+
+
+    .airport-sign::before {
+
+      content: "→";
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      width: 22px;
+      height: 22px;
+
+      border-radius: 50%;
+
+      background:
+        #ffffff;
+
+      color:
+        #075b91;
+
+      font-size: 14px;
+    }
+
+
+    /*
+     * メインの搭乗券
+     */
+
     .reservation-ticket {
 
       position: relative;
@@ -302,13 +460,16 @@
         22px;
 
       box-shadow:
-        0 18px 45px
+        0 20px 50px
         rgba(
           23,
           99,
           142,
-          0.20
+          0.24
         );
+
+      backdrop-filter:
+        blur(8px);
     }
 
 
@@ -318,16 +479,16 @@
 
       display: block;
 
-      height: 6px;
+      height: 7px;
 
       background:
         linear-gradient(
           90deg,
-          #075b96,
-          #22a6d8,
-          #8adcf5,
-          #22a6d8,
-          #075b96
+          #063e69,
+          #0b78b6,
+          #48c9eb,
+          #0b78b6,
+          #063e69
         );
     }
 
@@ -354,7 +515,8 @@
 
     .ticket-title {
 
-      margin: 0 0 5px;
+      margin:
+        0 0 5px;
 
       color: #07588d;
 
@@ -406,12 +568,16 @@
 
       color: #075b91;
 
-      font-size: 22px;
+      font-size: 16px;
 
       letter-spacing:
-        0.06em;
+        0.04em;
     }
 
+
+    /*
+     * 出発地・目的地
+     */
 
     .route-area {
 
@@ -433,7 +599,7 @@
       background:
         linear-gradient(
           180deg,
-          #f5fcff,
+          #f0faff,
           #ffffff
         );
     }
@@ -482,6 +648,10 @@
       font-size: 27px;
     }
 
+
+    /*
+     * 入力フォーム
+     */
 
     .booking-section {
 
@@ -544,7 +714,8 @@
 
     .section-heading p {
 
-      margin: 2px 0 0;
+      margin:
+        2px 0 0;
 
       color: #89a0af;
 
@@ -654,6 +825,10 @@
     }
 
 
+    /*
+     * 予約ボタン
+     */
+
     #reserve {
 
       position: relative;
@@ -676,7 +851,7 @@
       background:
         linear-gradient(
           135deg,
-          #0a73b2,
+          #064d80,
           #078fc9
         );
 
@@ -692,12 +867,12 @@
       cursor: pointer;
 
       box-shadow:
-        0 8px 20px
+        0 9px 23px
         rgba(
           7,
           111,
           171,
-          0.25
+          0.30
         );
     }
 
@@ -748,6 +923,10 @@
     }
 
 
+    /*
+     * チケット下部
+     */
+
     .ticket-footer {
 
       display: flex;
@@ -767,7 +946,7 @@
         1px dashed #a8cfe2;
 
       background:
-        #f4fbff;
+        #f1faff;
     }
 
 
@@ -790,6 +969,10 @@
       font-size: 11px;
     }
 
+
+    /*
+     * バーコード
+     */
 
     .barcode {
 
@@ -900,6 +1083,10 @@
     }
 
 
+    /*
+     * 受付停止
+     */
+
     #closedArea {
 
       position: relative;
@@ -959,6 +1146,10 @@
     }
 
 
+    /*
+     * 予約後の搭乗券
+     */
+
     .boarding-pass {
 
       position: relative;
@@ -1002,9 +1193,9 @@
       background:
         linear-gradient(
           90deg,
-          #075b96,
+          #063e69,
           #39b9e6,
-          #075b96
+          #063e69
         );
     }
 
@@ -1244,6 +1435,10 @@
     }
 
 
+    /*
+     * スマホ
+     */
+
     @media (
       max-width: 600px
     ) {
@@ -1300,7 +1495,7 @@
 
       .flight-number strong {
 
-        font-size: 18px;
+        font-size: 14px;
       }
 
 
@@ -1414,19 +1609,29 @@
   <main class="container">
 
 
-    <header class="Skyline-header">
+    <!-- 空港案内板 -->
 
-      <p class="Skyline-small">
+    <header class="airline-header">
+
+      <div class="airport-sign">
+        DEGUCHI DREAM SKYLINE AIRPORT
+      </div>
+
+
+      <p class="airline-small">
         DEGUCHI Dream
       </p>
+
 
       <h1>
         1-B出口 搭乗券予約
       </h1>
 
+
       <p class="airline-name">
         出口DreamSkyline
       </p>
+
 
       <p class="airline-slogan">
         YOUR JOURNEY STARTS HERE
@@ -1434,6 +1639,8 @@
 
     </header>
 
+
+    <!-- 予約チケット -->
 
     <section class="reservation-ticket">
 
@@ -1460,7 +1667,7 @@
           </span>
 
           <strong>
-            出口Dream Skyline
+            DREAM000
           </strong>
 
         </div>
@@ -1491,11 +1698,11 @@
         <div class="route-block">
 
           <span class="route-label">
-            TO
+            DESTINATION
           </span>
 
           <span class="route-value">
-            ???
+            EXIT
           </span>
 
         </div>
@@ -1531,193 +1738,3 @@
 
           <label for="name">
             搭乗者代表名
-          </label>
-
-          <input
-            id="name"
-            type="text"
-            maxlength="30"
-            placeholder="代表者の名前を入力"
-          >
-
-        </div>
-
-
-        <div class="form-field">
-
-          <label for="size">
-            搭乗人数
-          </label>
-
-          <select id="size">
-
-            <option value="1">
-              1名
-            </option>
-
-            <option value="2">
-              2名
-            </option>
-
-            <option value="3">
-              3名
-            </option>
-
-            <option value="4">
-              4名
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="form-field">
-
-          <label for="slot">
-            搭乗時間
-          </label>
-
-          <!--
-            JSが正常に動けばFirebaseの設定に合わせて
-            この中身は自動的に書き換えられます。
-
-            最初から完全な空欄にしないための予備表示です。
-          -->
-
-          <select id="slot">
-
-            <option value="09-00">
-              09:00 ～ 10:00
-            </option>
-
-            <option value="10-00">
-              10:00 ～ 11:00
-            </option>
-
-            <option value="11-00">
-              11:00 ～ 12:00
-            </option>
-
-            <option value="12-00">
-              12:00 ～ 13:00
-            </option>
-
-            <option value="13-00">
-              13:00 ～ 14:00
-            </option>
-
-            <option value="14-00">
-              14:00 ～ 15:00
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <p
-          id="slotInfo"
-          class="slot-info"
-        ></p>
-
-
-        <button
-          id="reserve"
-          type="button"
-        >
-          搭乗券を予約する
-        </button>
-
-
-        <p
-          id="error"
-          class="error"
-        ></p>
-
-
-      </div>
-
-
-      <footer class="ticket-footer">
-
-        <div class="ticket-footer-text">
-
-          <strong>
-            DEGUCHI DREAM SKYLINE
-          </strong>
-
-          1-B GATE　｜　BOARDING PASS
-
-        </div>
-
-
-        <div
-          class="barcode"
-          aria-hidden="true"
-        >
-
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-
-        </div>
-
-      </footer>
-
-
-    </section>
-
-
-    <section
-      id="reservationArea"
-      hidden
-    ></section>
-
-
-    <section
-      id="closedArea"
-      hidden
-    >
-
-      <h2>
-        現在受付停止中です
-      </h2>
-
-      <p>
-        スタッフから案内があるまでお待ちください。
-      </p>
-
-    </section>
-
-
-  </main>
-
-
-  <script
-    type="module"
-    src="./お客さん.js?v=20260909-7"
-  ></script>
-
-
-</body>
-
-</html>
