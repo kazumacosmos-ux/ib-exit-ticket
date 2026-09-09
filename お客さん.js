@@ -40,11 +40,7 @@ const $ =
 
 
 // ==============================
-// 設定
-// ==============================
-//
-// スタッフ側と同じく
-// 09:00～15:00固定
+// 固定設定
 // ==============================
 
 const FIXED_START = "09:00";
@@ -75,16 +71,14 @@ let settings = {
 
 
 // ==============================
-// 時間枠
+// Firebaseデータ
 // ==============================
 
 let slots = {};
 
-let selectedSlot;
-
 
 // ==============================
-// 複数予約
+// このスマホの予約一覧
 // ==============================
 
 let reservations = [];
@@ -225,11 +219,6 @@ function createSlots() {
 // 搭乗時刻
 //
 // 予約枠終了の5分後
-//
-// 例
-// 10:00～10:30
-// ↓
-// 搭乗時刻 10:35
 // ==============================
 
 function getBoardingTime(endTime) {
@@ -242,9 +231,6 @@ function getBoardingTime(endTime) {
 
 // ==============================
 // 今日の日付
-//
-// 例
-// 2026/09/08
 // ==============================
 
 function getToday() {
@@ -302,6 +288,44 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+
+// ==============================
+// 予約を端末に保存
+// ==============================
+
+function saveReservations() {
+
+  localStorage.setItem(
+    "ib_reservations",
+    JSON.stringify(
+      reservations
+    )
+  );
+}
+
+
+// ==============================
+// 予約を端末から削除
+// ==============================
+
+function removeLocalReservation(
+  number
+) {
+
+  reservations =
+    reservations.filter(
+      reservation =>
+        Number(
+          reservation.number
+        ) !== Number(number)
+    );
+
+
+  saveReservations();
+
+  renderReservations();
 }
 
 
@@ -403,7 +427,7 @@ function updateInfo() {
   }
 
 
-  selectedSlot =
+  const selectedSlot =
     createSlots()[
       slotElement.value
     ];
@@ -439,235 +463,7 @@ function updateInfo() {
 
 
 // ==============================
-// Firebase
-// 設定監視
-// ==============================
-
-onValue(
-  ref(
-    db,
-    "Queue/settings"
-  ),
-  snapshot => {
-
-    const data =
-      snapshot.val();
-
-
-    if (data) {
-
-      settings = {
-
-        // スタッフ側と同じく固定
-        start:
-          FIXED_START,
-
-        end:
-          FIXED_END,
-
-        slotMinutes:
-          Number(
-            data.slotMinutes
-          ) || 30,
-
-        maxGroups:
-          Number(
-            data.maxGroups
-          ) || 5,
-
-        open:
-          data.open !== false
-      };
-    }
-
-
-    const reserveArea =
-      $("reserveArea");
-
-    const closedArea =
-      $("closedArea");
-
-
-    if (reserveArea) {
-
-      // 複数予約があっても
-      // 受付中なら予約フォームを表示
-      reserveArea.hidden =
-        !settings.open;
-    }
-
-
-    if (closedArea) {
-
-      closedArea.hidden =
-        !!settings.open;
-    }
-
-
-    render();
-  }
-);
-
-
-// ==============================
-// Firebase
-// 時間枠監視
-// ==============================
-
-onValue(
-  ref(
-    db,
-    "Queue/slots"
-  ),
-  snapshot => {
-
-    slots =
-      snapshot.val() || {};
-
-
-    render();
-  }
-);
-
-
-// ==============================
-// 時間枠変更
-// ==============================
-
-if ($("slot")) {
-
-  $("slot").onchange =
-    updateInfo;
-}
-
-
-// ==============================
-// 以前の予約を取得
-// ==============================
-//
-// 新方式：
-// ib_reservations
-//
-// 旧方式：
-// ib_reservation
-//
-// 旧方式があれば自動的に
-// 新方式へ移行する
-// ==============================
-
-function loadReservations() {
-
-  const newSaved =
-    localStorage.getItem(
-      "ib_reservations"
-    );
-
-
-  if (newSaved) {
-
-    try {
-
-      const data =
-        JSON.parse(
-          newSaved
-        );
-
-
-      if (
-        Array.isArray(data)
-      ) {
-
-        reservations =
-          data.filter(
-            reservation =>
-              reservation &&
-              reservation.number
-          );
-
-      } else {
-
-        reservations = [];
-      }
-
-    } catch (error) {
-
-      console.error(
-        "複数予約の読み込みエラー:",
-        error
-      );
-
-      reservations = [];
-    }
-
-  } else {
-
-    // ==========================
-    // 旧形式から移行
-    // ==========================
-
-    const oldSaved =
-      localStorage.getItem(
-        "ib_reservation"
-      );
-
-
-    if (oldSaved) {
-
-      try {
-
-        const oldReservation =
-          JSON.parse(
-            oldSaved
-          );
-
-
-        if (
-          oldReservation &&
-          oldReservation.number
-        ) {
-
-          reservations = [
-            oldReservation
-          ];
-
-
-          saveReservations();
-        }
-
-      } catch (error) {
-
-        console.error(
-          "旧予約の読み込みエラー:",
-          error
-        );
-
-        reservations = [];
-      }
-    }
-  }
-
-
-  renderReservations();
-}
-
-
-// ==============================
-// 予約を保存
-// ==============================
-
-function saveReservations() {
-
-  localStorage.setItem(
-    "ib_reservations",
-    JSON.stringify(
-      reservations
-    )
-  );
-}
-
-
-// ==============================
-// 搭乗券一覧を表示
+// 搭乗券一覧表示
 // ==============================
 
 function renderReservations() {
@@ -686,18 +482,21 @@ function renderReservations() {
   // ==========================
 
   if (
-    !reservations.length
+    reservations.length === 0
   ) {
 
     area.hidden =
       true;
+
+    area.innerHTML =
+      "";
 
     return;
   }
 
 
   // ==========================
-  // 搭乗券を全部作成
+  // 搭乗券一覧
   // ==========================
 
   area.innerHTML = `
@@ -873,6 +672,17 @@ function renderReservations() {
 
           </p>
 
+
+          <button
+            type="button"
+            class="cancel-reservation"
+            data-number="${escapeHtml(
+              reservation.number
+            )}"
+          >
+            この予約をキャンセル
+          </button>
+
         </div>
 
       `;
@@ -885,8 +695,486 @@ function renderReservations() {
   );
 
 
+  // ==========================
+  // キャンセルボタン
+  // ==========================
+
+  document
+    .querySelectorAll(
+      ".cancel-reservation"
+    )
+    .forEach(
+      button => {
+
+        button.onclick =
+          () => {
+
+            const number =
+              Number(
+                button.dataset.number
+              );
+
+
+            cancelReservation(
+              number
+            );
+          };
+      }
+    );
+
+
   area.hidden =
     false;
+}
+
+
+// ==============================
+// 予約キャンセル
+// ==============================
+
+async function cancelReservation(
+  reservationNumber
+) {
+
+  const reservation =
+    reservations.find(
+      item =>
+        Number(
+          item.number
+        ) ===
+        Number(
+          reservationNumber
+        )
+    );
+
+
+  if (!reservation) {
+
+    return;
+  }
+
+
+  // ==========================
+  // 確認
+  // ==========================
+
+  const confirmed =
+    window.confirm(
+      "この予約をキャンセルしますか？\n\n" +
+      `${reservation.start}～${reservation.end}\n` +
+      `${reservation.name}さん・${reservation.size}名`
+    );
+
+
+  if (!confirmed) {
+
+    return;
+  }
+
+
+  try {
+
+    // ========================
+    // 予約データをFirebaseから
+    // 原子的に削除
+    // ========================
+
+    const reservationRef =
+      ref(
+        db,
+        `Queue/reservations/${reservationNumber}`
+      );
+
+
+    let existed =
+      false;
+
+
+    const result =
+      await runTransaction(
+        reservationRef,
+        current => {
+
+          if (
+            current === null
+          ) {
+
+            return;
+          }
+
+
+          existed =
+            true;
+
+          return null;
+        }
+      );
+
+
+    // ========================
+    // すでに削除されていた場合
+    // ========================
+
+    if (
+      !result.committed ||
+      !existed
+    ) {
+
+      removeLocalReservation(
+        reservationNumber
+      );
+
+      alert(
+        "この予約はすでにキャンセルされています。"
+      );
+
+      return;
+    }
+
+
+    // ========================
+    // 時間枠を1組戻す
+    // ========================
+
+    const countRef =
+      ref(
+        db,
+        `Queue/slots/${reservation.slot}/count`
+      );
+
+
+    await runTransaction(
+      countRef,
+      current => {
+
+        const count =
+          Number(
+            current || 0
+          );
+
+
+        return Math.max(
+          0,
+          count - 1
+        );
+      }
+    );
+
+
+    // ========================
+    // 端末からも削除
+    // ========================
+
+    removeLocalReservation(
+      reservationNumber
+    );
+
+
+    alert(
+      "予約をキャンセルしました。"
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "予約キャンセルエラー:",
+      error
+    );
+
+
+    alert(
+      "予約のキャンセルに失敗しました。\n" +
+      "通信状態を確認して、もう一度お試しください。"
+    );
+  }
+}
+
+
+// ==============================
+// Firebase
+// 設定監視
+// ==============================
+
+onValue(
+  ref(
+    db,
+    "Queue/settings"
+  ),
+  snapshot => {
+
+    const data =
+      snapshot.val();
+
+
+    if (data) {
+
+      settings = {
+
+        start:
+          FIXED_START,
+
+        end:
+          FIXED_END,
+
+        slotMinutes:
+          Number(
+            data.slotMinutes
+          ) || 30,
+
+        maxGroups:
+          Number(
+            data.maxGroups
+          ) || 5,
+
+        open:
+          data.open !== false
+      };
+    }
+
+
+    const reserveArea =
+      $("reserveArea");
+
+    const closedArea =
+      $("closedArea");
+
+
+    if (reserveArea) {
+
+      reserveArea.hidden =
+        !settings.open;
+    }
+
+
+    if (closedArea) {
+
+      closedArea.hidden =
+        !!settings.open;
+    }
+
+
+    render();
+  }
+);
+
+
+// ==============================
+// Firebase
+// 時間枠監視
+// ==============================
+
+onValue(
+  ref(
+    db,
+    "Queue/slots"
+  ),
+  snapshot => {
+
+    slots =
+      snapshot.val() || {};
+
+
+    render();
+  }
+);
+
+
+// ==============================
+// Firebase
+// 予約監視
+// ==============================
+//
+// このスマホで保存している予約だけを確認。
+// Firebaseから削除された予約は
+// このスマホからも自動的に削除する。
+// ==============================
+
+onValue(
+  ref(
+    db,
+    "Queue/reservations"
+  ),
+  snapshot => {
+
+    const firebaseReservations =
+      snapshot.val() || {};
+
+
+    // ========================
+    // Firebaseに存在する予約番号
+    // ========================
+
+    const existingNumbers =
+      new Set(
+        Object.keys(
+          firebaseReservations
+        ).map(
+          Number
+        )
+      );
+
+
+    // ========================
+    // この端末の予約だけ確認
+    // ========================
+
+    const beforeCount =
+      reservations.length;
+
+
+    reservations =
+      reservations.filter(
+        reservation =>
+          existingNumbers.has(
+            Number(
+              reservation.number
+            )
+          )
+      );
+
+
+    // ========================
+    // 削除された予約があれば
+    // 保存内容も更新
+    // ========================
+
+    if (
+      reservations.length !==
+      beforeCount
+    ) {
+
+      saveReservations();
+    }
+
+
+    renderReservations();
+  }
+);
+
+
+// ==============================
+// 時間枠変更
+// ==============================
+
+if ($("slot")) {
+
+  $("slot").onchange =
+    updateInfo;
+}
+
+
+// ==============================
+// 以前の予約を読み込む
+// ==============================
+
+function loadReservations() {
+
+  // ==========================
+  // 新方式
+  // ==========================
+
+  const newSaved =
+    localStorage.getItem(
+      "ib_reservations"
+    );
+
+
+  if (newSaved) {
+
+    try {
+
+      const data =
+        JSON.parse(
+          newSaved
+        );
+
+
+      if (
+        Array.isArray(data)
+      ) {
+
+        reservations =
+          data.filter(
+            reservation =>
+              reservation &&
+              reservation.number
+          );
+
+      } else {
+
+        reservations = [];
+      }
+
+    } catch (error) {
+
+      console.error(
+        "予約読み込みエラー:",
+        error
+      );
+
+      reservations = [];
+    }
+
+  } else {
+
+    // ==========================
+    // 旧方式から移行
+    // ==========================
+
+    const oldSaved =
+      localStorage.getItem(
+        "ib_reservation"
+      );
+
+
+    if (oldSaved) {
+
+      try {
+
+        const oldReservation =
+          JSON.parse(
+            oldSaved
+          );
+
+
+        if (
+          oldReservation &&
+          oldReservation.number
+        ) {
+
+          reservations = [
+            oldReservation
+          ];
+
+
+          saveReservations();
+        }
+
+      } catch (error) {
+
+        console.error(
+          "旧予約読み込みエラー:",
+          error
+        );
+
+        reservations = [];
+      }
+    }
+  }
+
+
+  renderReservations();
+}
+
+
+// ==============================
+// 予約一覧を表示
+// ==============================
+
+function showReservation() {
+
+  renderReservations();
 }
 
 
@@ -895,29 +1183,6 @@ function renderReservations() {
 // ==============================
 
 loadReservations();
-
-
-// ==============================
-// 予約画面を表示
-// ==============================
-//
-// 1件だけ表示する方式は廃止。
-// 複数予約を renderReservations()
-// でまとめて表示する。
-// ==============================
-
-function showReservation() {
-
-  renderReservations();
-
-
-  // 受付停止表示は隠す
-  if ($("closedArea")) {
-
-    $("closedArea").hidden =
-      true;
-  }
-}
 
 
 // ==============================
@@ -940,7 +1205,10 @@ if ($("reserve")) {
       }
 
 
+      // ========================
       // 二重クリック防止
+      // ========================
+
       $("reserve").disabled =
         true;
 
@@ -1244,7 +1512,7 @@ if ($("reserve")) {
 
 
         // ========================
-        // 複数予約に追加
+        // この端末の予約一覧に追加
         // ========================
 
         reservations.push(
@@ -1260,7 +1528,7 @@ if ($("reserve")) {
 
 
         // ========================
-        // 搭乗券一覧を更新
+        // 搭乗券を更新
         // ========================
 
         showReservation();
@@ -1291,8 +1559,9 @@ if ($("reserve")) {
         if (error) {
 
           error.textContent =
-            "予約しました。下に搭乗券が表示されています。";
+            "予約しました。搭乗券を下に表示しています。";
         }
+
 
       } catch (reservationError) {
 
@@ -1307,6 +1576,7 @@ if ($("reserve")) {
           error.textContent =
             "予約に失敗しました。もう一度お試しください。";
         }
+
 
       } finally {
 
