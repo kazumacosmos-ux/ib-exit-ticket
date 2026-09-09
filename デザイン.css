@@ -1,1 +1,343 @@
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;background:#f5f5f5;color:#222}.container{max-width:760px;margin:auto;padding:20px}h1{font-size:28px}section{background:#fff;padding:20px;border-radius:14px;margin:16px 0;box-shadow:0 2px 8px #0001}label{display:block;margin:14px 0 6px;font-weight:700}input,select,button{width:100%;min-height:44px;font-size:16px;padding:9px;border:1px solid #bbb;border-radius:8px}button{margin-top:14px;background:#222;color:#fff;border:0;font-weight:700}.secondary{background:#666}.danger{background:#b00020}.error{color:#b00020}.message{color:#176b2c}.slot-info{font-weight:700}.slot-box{border:1px solid #ddd;border-radius:10px;padding:12px;margin:12px 0}.reservation-row{display:flex;gap:10px;justify-content:space-between;align-items:center;border-top:1px solid #eee;padding:10px 0}.reservation-row button{width:auto;margin:0;padding:7px 12px}@media(max-width:600px){.container{padding:12px}.reservation-row{display:block}.reservation-row button{margin:8px 6px 0 0}}
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans JP",
+    sans-serif;
+  background: #f5f5f5;
+  color: #222;
+}
+
+.container {
+  max-width: 760px;
+  margin: auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 28px;
+}
+
+section {
+  background: #fff;
+  padding: 20px;
+  border-radius: 14px;
+  margin: 16px 0;
+  box-shadow: 0 2px 8px #0001;
+}
+
+label {
+  display: block;
+  margin: 14px 0 6px;
+  font-weight: 700;
+}
+
+input,
+select,
+button {
+  width: 100%;
+  min-height: 44px;
+  font-size: 16px;
+  padding: 9px;
+  border: 1px solid #bbb;
+  border-radius: 8px;
+}
+
+button {
+  margin-top: 14px;
+  background: #222;
+  color: #fff;
+  border: 0;
+  font-weight: 700;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+.secondary {
+  background: #666;
+}
+
+.danger {
+  background: #b00020;
+}
+
+.error {
+  color: #b00020;
+}
+
+.message {
+  color: #176b2c;
+}
+
+.slot-info {
+  font-weight: 700;
+}
+
+.slot-box {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.reservation-row {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #eee;
+  padding: 10px 0;
+}
+
+.reservation-row button {
+  width: auto;
+  margin: 0;
+  padding: 7px 12px;
+}
+
+
+/* ==============================
+   搭乗券
+   ============================== */
+
+.boarding-pass {
+  background: #fff;
+  border: 2px solid #222;
+  border-radius: 16px;
+  overflow: hidden;
+  margin: 18px 0;
+  box-shadow: 0 3px 10px #0002;
+}
+
+
+/* ==============================
+   搭乗券 ヘッダー
+   ============================== */
+
+.boarding-pass-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding: 18px 20px;
+  background: #222;
+  color: #fff;
+}
+
+.boarding-pass-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.boarding-pass-header p {
+  margin: 5px 0 0;
+  font-size: 13px;
+}
+
+.boarding-pass-header strong {
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+
+/* ==============================
+   搭乗券 本体
+   ============================== */
+
+.boarding-pass-main {
+  padding: 22px 20px;
+}
+
+
+/* ==============================
+   ご来場時間
+   ============================== */
+
+.boarding-arrival {
+  text-align: center;
+  padding: 12px;
+  border-bottom: 1px dashed #999;
+}
+
+.boarding-arrival span {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.boarding-arrival strong {
+  display: block;
+  font-size: 28px;
+}
+
+
+/* ==============================
+   搭乗券情報
+   ============================== */
+
+.boarding-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 12px;
+  padding: 20px 0;
+}
+
+.boarding-info-grid div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.boarding-info-grid span {
+  font-size: 12px;
+  color: #666;
+  font-weight: 700;
+}
+
+.boarding-info-grid strong {
+  font-size: 18px;
+}
+
+
+/* ==============================
+   代表者
+   ============================== */
+
+.boarding-pass-passenger {
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+.boarding-pass-passenger span {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  font-weight: 700;
+}
+
+.boarding-pass-passenger strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+
+/* ==============================
+   搭乗券 フッター
+   ============================== */
+
+.boarding-pass-footer {
+  border-top: 2px dashed #aaa;
+  padding: 16px 20px 20px;
+  background: #fafafa;
+}
+
+
+/* ==============================
+   案内文
+   ============================== */
+
+.boarding-note {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.7;
+  font-weight: 700;
+}
+
+
+/* ==============================
+   キャンセルボタン
+   ============================== */
+
+.cancel-reservation {
+  display: block;
+  width: 100%;
+  min-height: 46px;
+  margin-top: 14px;
+  padding: 10px 14px;
+
+  background: #b00020;
+  color: #fff;
+
+  border: 0;
+  border-radius: 8px;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.cancel-reservation:hover {
+  opacity: 0.9;
+}
+
+.cancel-reservation:active {
+  opacity: 0.75;
+}
+
+
+/* ==============================
+   スマホ表示
+   ============================== */
+
+@media (max-width: 600px) {
+
+  .container {
+    padding: 12px;
+  }
+
+  .reservation-row {
+    display: block;
+  }
+
+  .reservation-row button {
+    margin: 8px 6px 0 0;
+  }
+
+  .boarding-pass-header {
+    padding: 16px;
+  }
+
+  .boarding-pass-header h2 {
+    font-size: 18px;
+  }
+
+  .boarding-pass-header strong {
+    font-size: 17px;
+  }
+
+  .boarding-pass-main {
+    padding: 18px 16px;
+  }
+
+  .boarding-arrival strong {
+    font-size: 24px;
+  }
+
+  .boarding-info-grid {
+    gap: 15px 10px;
+  }
+
+  .boarding-info-grid strong {
+    font-size: 16px;
+  }
+
+  .boarding-pass-footer {
+    padding: 14px 16px 18px;
+  }
+
+  .cancel-reservation {
+    min-height: 48px;
+    font-size: 16px;
+  }
+}
