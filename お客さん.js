@@ -1,8 +1,11 @@
+// ==============================
+// お客さん予約ページ
+// お客さん.js
+// ==============================
+
 import {
-  getDatabase,
-  ref,
-  ...
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 
 import {
   getDatabase,
@@ -24,36 +27,53 @@ import {
 } from "./Firebase設定.js";
 
 
-/* =========================
-   Firebase
-========================= */
+// ==============================
+// Firebase
+// ==============================
 
-const app = initializeApp(firebaseConfig);
+const app =
+  initializeApp(firebaseConfig);
 
-const db = getDatabase(app);
+const db =
+  getDatabase(app);
 
-const auth = getAuth(app);
+const auth =
+  getAuth(app);
 
 
-/* =========================
-   初期設定
-========================= */
+// ==============================
+// 初期設定
+// ==============================
 
 let settings = {
-  start: "09:00",
-  end: "15:00",
-  slotMinutes: 60,
-  maxGroups: 1,
-  open: true
+
+  start:
+    "09:00",
+
+  end:
+    "15:00",
+
+  slotMinutes:
+    60,
+
+  maxGroups:
+    1,
+
+  open:
+    true
 };
+
 
 let slots = {};
 
 let reservations = {};
 
-let selfCancelInProgress = false;
+let selfCancelInProgress =
+  false;
 
-let lastResetAt = 0;
+let lastResetAt =
+  0;
+
 
 const RESERVATION_KEY =
   "ib_reservation";
@@ -62,9 +82,9 @@ const RESET_KEY =
   "ib_resetAt";
 
 
-/* =========================
-   localStorage
-========================= */
+// ==============================
+// localStorage
+// ==============================
 
 function getLocalReservation() {
 
@@ -125,18 +145,38 @@ function saveLocalResetAt(value) {
 }
 
 
-/* =========================
-   共通関数
-========================= */
+// ==============================
+// 共通関数
+// ==============================
 
 function escapeHtml(value) {
 
   return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
 
@@ -144,9 +184,14 @@ function escapeHtml(value) {
 function timeToMinutes(time) {
 
   const [h, m] =
-    time.split(":").map(Number);
+    time
+      .split(":")
+      .map(Number);
 
-  return h * 60 + m;
+  return (
+    h * 60 +
+    m
+  );
 
 }
 
@@ -154,15 +199,23 @@ function timeToMinutes(time) {
 function minutesToTime(minutes) {
 
   const h =
-    Math.floor(minutes / 60);
+    Math.floor(
+      minutes / 60
+    );
 
   const m =
     minutes % 60;
 
   return (
-    String(h).padStart(2, "0") +
+    String(h).padStart(
+      2,
+      "0"
+    ) +
     ":" +
-    String(m).padStart(2, "0")
+    String(m).padStart(
+      2,
+      "0"
+    )
   );
 
 }
@@ -173,15 +226,24 @@ function generateSlots() {
   const result = [];
 
   const start =
-    timeToMinutes(settings.start);
+    timeToMinutes(
+      settings.start
+    );
 
   const end =
-    timeToMinutes(settings.end);
+    timeToMinutes(
+      settings.end
+    );
 
   const step =
-    Number(settings.slotMinutes);
+    Number(
+      settings.slotMinutes
+    );
 
-  if (!step || step <= 0) {
+  if (
+    !step ||
+    step <= 0
+  ) {
 
     return result;
 
@@ -190,12 +252,16 @@ function generateSlots() {
 
   for (
     let current = start;
+
     current + step <= end;
+
     current += step
   ) {
 
     const startTime =
-      minutesToTime(current);
+      minutesToTime(
+        current
+      );
 
     const endTime =
       minutesToTime(
@@ -203,19 +269,26 @@ function generateSlots() {
       );
 
     const key =
-      startTime.replace(":", "");
+      startTime.replace(
+        ":",
+        ""
+      );
 
     result.push({
 
-      key: key,
+      key:
+        key,
 
-      start: startTime,
+      start:
+        startTime,
 
-      end: endTime,
+      end:
+        endTime,
 
-      count: Number(
-        slots[key]?.count || 0
-      )
+      count:
+        Number(
+          slots[key]?.count || 0
+        )
 
     });
 
@@ -229,7 +302,8 @@ function generateSlots() {
 
 function getToday() {
 
-  const now = new Date();
+  const now =
+    new Date();
 
   const y =
     now.getFullYear();
@@ -237,14 +311,22 @@ function getToday() {
   const m =
     String(
       now.getMonth() + 1
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
   const d =
     String(
       now.getDate()
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
-  return `${y}/${m}/${d}`;
+  return (
+    `${y}/${m}/${d}`
+  );
 
 }
 
@@ -252,9 +334,13 @@ function getToday() {
 function getBoardingTime(endTime) {
 
   const minutes =
-    timeToMinutes(endTime) + 5;
+    timeToMinutes(
+      endTime
+    ) + 5;
 
-  return minutesToTime(minutes);
+  return minutesToTime(
+    minutes
+  );
 
 }
 
@@ -264,20 +350,101 @@ function getFlightNumber(number) {
   const numeric =
     Number(
       String(number)
-        .replace(/\D/g, "")
+        .replace(
+          /\D/g,
+          ""
+        )
     );
 
   return (
     "DREAM" +
-    String(numeric).padStart(3, "0")
+    String(numeric).padStart(
+      3,
+      "0"
+    )
   );
 
 }
 
 
-/* =========================
-   予約フォーム表示
-========================= */
+// ==============================
+// 時間枠の状態
+// ==============================
+
+function getSlotStatus(
+  count,
+  max
+) {
+
+  const remaining =
+    Math.max(
+      0,
+      max - count
+    );
+
+
+  if (
+    remaining <= 0
+  ) {
+
+    return {
+      type:
+        "full",
+
+      icon:
+        "🔴",
+
+      text:
+        "満員",
+
+      disabled:
+        true
+    };
+
+  }
+
+
+  if (
+    remaining <= 2
+  ) {
+
+    return {
+      type:
+        "low",
+
+      icon:
+        "🟡",
+
+      text:
+        `残り${remaining}枠`,
+
+      disabled:
+        false
+    };
+
+  }
+
+
+  return {
+    type:
+      "available",
+
+    icon:
+      "🟢",
+
+    text:
+      `残り${remaining}枠`,
+
+    disabled:
+      false
+  };
+
+}
+
+
+// ==============================
+// 予約フォーム表示
+// ==============================
 
 function showBookingArea() {
 
@@ -288,9 +455,11 @@ function showBookingArea() {
 
   if (!area) return;
 
-  area.hidden = false;
+  area.hidden =
+    false;
 
-  area.style.display = "";
+  area.style.display =
+    "";
 
 
   const button =
@@ -300,7 +469,8 @@ function showBookingArea() {
 
   if (button) {
 
-    button.disabled = false;
+    button.disabled =
+      false;
 
     button.textContent =
       "搭乗券を予約する";
@@ -315,9 +485,9 @@ function showBookingArea() {
 }
 
 
-/* =========================
-   予約フォーム非表示
-========================= */
+// ==============================
+// 予約フォーム非表示
+// ==============================
 
 function hideBookingArea() {
 
@@ -328,16 +498,18 @@ function hideBookingArea() {
 
   if (!area) return;
 
-  area.hidden = true;
+  area.hidden =
+    true;
 
-  area.style.display = "none";
+  area.style.display =
+    "none";
 
 }
 
 
-/* =========================
-   搭乗券エリア非表示
-========================= */
+// ==============================
+// 搭乗券エリア非表示
+// ==============================
 
 function hideReservationArea() {
 
@@ -348,18 +520,21 @@ function hideReservationArea() {
 
   if (!area) return;
 
-  area.hidden = true;
+  area.hidden =
+    true;
 
-  area.style.display = "none";
+  area.style.display =
+    "none";
 
-  area.innerHTML = "";
+  area.innerHTML =
+    "";
 
 }
 
 
-/* =========================
-   予約完了表示
-========================= */
+// ==============================
+// 予約完了表示
+// ==============================
 
 function showReservationComplete(
   number,
@@ -375,9 +550,11 @@ function showReservationComplete(
   if (!area) return;
 
 
-  area.hidden = false;
+  area.hidden =
+    false;
 
-  area.style.display = "";
+  area.style.display =
+    "";
 
 
   area.innerHTML = `
@@ -418,9 +595,9 @@ function showReservationComplete(
 }
 
 
-/* =========================
-   時間枠表示
-========================= */
+// ==============================
+// 時間枠表示
+// ==============================
 
 function renderSlots() {
 
@@ -453,15 +630,21 @@ function renderSlots() {
     slot => {
 
       const count =
-        Number(slot.count || 0);
+        Number(
+          slot.count || 0
+        );
 
       const max =
         Number(
           settings.maxGroups || 0
         );
 
-      const full =
-        count >= max;
+
+      const status =
+        getSlotStatus(
+          count,
+          max
+        );
 
 
       const option =
@@ -475,16 +658,13 @@ function renderSlots() {
 
 
       option.textContent =
+        `${status.icon} ` +
         `${slot.start} ～ ${slot.end}` +
-        (
-          full
-            ? "（満員）"
-            : `（残り${max - count}枠）`
-        );
+        `（${status.text}）`;
 
 
       option.disabled =
-        full;
+        status.disabled;
 
 
       select.appendChild(
@@ -513,9 +693,9 @@ function renderSlots() {
 }
 
 
-/* =========================
-   枠情報
-========================= */
+// ==============================
+// 枠情報
+// ==============================
 
 function updateInfo() {
 
@@ -559,9 +739,9 @@ function updateInfo() {
 }
 
 
-/* =========================
-   予約ボタン状態
-========================= */
+// ==============================
+// 予約ボタン状態
+// ==============================
 
 function updateReserveButton() {
 
@@ -579,7 +759,8 @@ function updateReserveButton() {
 
   if (localReservation) {
 
-    button.disabled = true;
+    button.disabled =
+      true;
 
     button.textContent =
       "予約済み";
@@ -589,7 +770,8 @@ function updateReserveButton() {
   }
 
 
-  button.disabled = false;
+  button.disabled =
+    false;
 
   button.textContent =
     "搭乗券を予約する";
@@ -597,9 +779,9 @@ function updateReserveButton() {
 }
 
 
-/* =========================
-   搭乗券表示
-========================= */
+// ==============================
+// 搭乗券表示
+// ==============================
 
 function renderReservations() {
 
@@ -691,9 +873,11 @@ function renderReservations() {
   hideBookingArea();
 
 
-  area.hidden = false;
+  area.hidden =
+    false;
 
-  area.style.display = "";
+  area.style.display =
+    "";
 
 
   const number =
@@ -724,11 +908,15 @@ function renderReservations() {
 
 
   const flight =
-    getFlightNumber(number);
+    getFlightNumber(
+      number
+    );
 
 
   const boardingTime =
-    getBoardingTime(end);
+    getBoardingTime(
+      end
+    );
 
 
   area.innerHTML = `
@@ -922,9 +1110,9 @@ function renderReservations() {
 }
 
 
-/* =========================
-   予約処理
-========================= */
+// ==============================
+// 予約処理
+// ==============================
 
 async function reserve() {
 
@@ -936,7 +1124,8 @@ async function reserve() {
 
   if (error) {
 
-    error.textContent = "";
+    error.textContent =
+      "";
 
   }
 
@@ -949,7 +1138,9 @@ async function reserve() {
 
     try {
 
-      await signInAnonymously(auth);
+      await signInAnonymously(
+        auth
+      );
 
     } catch (e) {
 
@@ -1025,7 +1216,8 @@ async function reserve() {
 
 
   const name =
-    nameInput?.value.trim() || "";
+    nameInput?.value.trim() ||
+    "";
 
 
   const size =
@@ -1035,7 +1227,8 @@ async function reserve() {
 
 
   const slotKey =
-    slotSelect?.value || "";
+    slotSelect?.value ||
+    "";
 
 
   /*
@@ -1102,7 +1295,8 @@ async function reserve() {
   const selectedSlot =
     generatedSlots.find(
       slot =>
-        slot.key === slotKey
+        slot.key ===
+        slotKey
     );
 
 
@@ -1120,16 +1314,43 @@ async function reserve() {
   }
 
 
-  const slotRef =
-    ref(
-      db,
-      `Queue/slots/${slotKey}/count`
-    );
+  /*
+   * すでに満員になっていないか確認
+   */
 
+  const latestCount =
+    Number(
+      slots[slotKey]?.count || 0
+    );
 
   const maxGroups =
     Number(
       settings.maxGroups || 0
+    );
+
+
+  if (
+    latestCount >= maxGroups
+  ) {
+
+    if (error) {
+
+      error.textContent =
+        "申し訳ありません。この時間枠は満員になりました。";
+
+    }
+
+    renderSlots();
+
+    return;
+
+  }
+
+
+  const slotRef =
+    ref(
+      db,
+      `Queue/slots/${slotKey}/count`
     );
 
 
@@ -1145,7 +1366,8 @@ async function reserve() {
 
   if (button) {
 
-    button.disabled = true;
+    button.disabled =
+      true;
 
     button.textContent =
       "予約処理中…";
@@ -1169,11 +1391,14 @@ async function reserve() {
         current => {
 
           const count =
-            Number(current || 0);
+            Number(
+              current || 0
+            );
 
 
           if (
-            count >= maxGroups
+            count >=
+            maxGroups
           ) {
 
             return;
@@ -1198,7 +1423,8 @@ async function reserve() {
     }
 
 
-    slotIncremented = true;
+    slotIncremented =
+      true;
 
 
     /*
@@ -1216,8 +1442,21 @@ async function reserve() {
       await runTransaction(
         lastRef,
         current =>
-          Number(current || 0) + 1
+          Number(
+            current || 0
+          ) + 1
       );
+
+
+    if (
+      !numberResult.committed
+    ) {
+
+      throw new Error(
+        "予約番号の発行に失敗しました。"
+      );
+
+    }
 
 
     const reservationNumber =
@@ -1286,7 +1525,8 @@ async function reserve() {
 
     reservations[
       reservationNumber
-    ] = reservation;
+    ] =
+      reservation;
 
 
     /*
@@ -1295,7 +1535,8 @@ async function reserve() {
 
     if (nameInput) {
 
-      nameInput.value = "";
+      nameInput.value =
+        "";
 
     }
 
@@ -1362,6 +1603,9 @@ async function reserve() {
     }
 
 
+    renderSlots();
+
+
   } finally {
 
     /*
@@ -1382,9 +1626,9 @@ async function reserve() {
 }
 
 
-/* =========================
-   キャンセル
-========================= */
+// ==============================
+// キャンセル
+// ==============================
 
 async function cancelReservation() {
 
@@ -1505,9 +1749,9 @@ async function cancelReservation() {
 }
 
 
-/* =========================
-   Firebase：設定
-========================= */
+// ==============================
+// Firebase：設定
+// ==============================
 
 onValue(
   ref(
@@ -1523,8 +1767,11 @@ onValue(
     if (data) {
 
       settings = {
+
         ...settings,
+
         ...data
+
       };
 
     }
@@ -1540,9 +1787,9 @@ onValue(
 );
 
 
-/* =========================
-   Firebase：時間枠
-========================= */
+// ==============================
+// Firebase：時間枠
+// ==============================
 
 onValue(
   ref(
@@ -1552,7 +1799,8 @@ onValue(
   snapshot => {
 
     slots =
-      snapshot.val() || {};
+      snapshot.val() ||
+      {};
 
 
     renderSlots();
@@ -1563,9 +1811,9 @@ onValue(
 );
 
 
-/* =========================
-   Firebase：予約
-========================= */
+// ==============================
+// Firebase：予約
+// ==============================
 
 onValue(
   ref(
@@ -1575,7 +1823,8 @@ onValue(
   snapshot => {
 
     reservations =
-      snapshot.val() || {};
+      snapshot.val() ||
+      {};
 
 
     const localReservation =
@@ -1619,9 +1868,9 @@ onValue(
 );
 
 
-/* =========================
-   Firebase：予約削除
-========================= */
+// ==============================
+// Firebase：予約削除
+// ==============================
 
 onChildRemoved(
   ref(
@@ -1675,9 +1924,9 @@ onChildRemoved(
 );
 
 
-/* =========================
-   Firebase：全体リセット
-========================= */
+// ==============================
+// Firebase：全体リセット
+// ==============================
 
 onValue(
   ref(
@@ -1688,7 +1937,8 @@ onValue(
 
     const value =
       Number(
-        snapshot.val() || 0
+        snapshot.val() ||
+        0
       );
 
 
@@ -1723,9 +1973,9 @@ onValue(
 );
 
 
-/* =========================
-   予約ボタン
-========================= */
+// ==============================
+// 予約ボタン
+// ==============================
 
 const reserveButton =
   document.getElementById(
@@ -1743,9 +1993,9 @@ if (reserveButton) {
 }
 
 
-/* =========================
-   初期表示
-========================= */
+// ==============================
+// 初期表示
+// ==============================
 
 const localReservation =
   getLocalReservation();
