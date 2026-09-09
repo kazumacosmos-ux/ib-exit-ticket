@@ -84,6 +84,13 @@ let selectedSlot;
 
 
 // ==============================
+// 複数予約
+// ==============================
+
+let reservations = [];
+
+
+// ==============================
 // 分に変換
 // ==============================
 
@@ -284,7 +291,22 @@ function getFlightNumber(number) {
 
 
 // ==============================
-// 予約画面表示
+// HTMLエスケープ
+// ==============================
+
+function escapeHtml(value) {
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+
+// ==============================
+// 時間枠表示
 // ==============================
 
 function render() {
@@ -468,6 +490,8 @@ onValue(
 
     if (reserveArea) {
 
+      // 複数予約があっても
+      // 受付中なら予約フォームを表示
       reserveArea.hidden =
         !settings.open;
     }
@@ -520,137 +544,378 @@ if ($("slot")) {
 // ==============================
 // 以前の予約を取得
 // ==============================
+//
+// 新方式：
+// ib_reservations
+//
+// 旧方式：
+// ib_reservation
+//
+// 旧方式があれば自動的に
+// 新方式へ移行する
+// ==============================
 
-const saved =
-  localStorage.getItem(
-    "ib_reservation"
-  );
+function loadReservations() {
 
-
-if (saved) {
-
-  try {
-
-    const reservation =
-      JSON.parse(saved);
-
-
-    showReservation(
-      reservation
+  const newSaved =
+    localStorage.getItem(
+      "ib_reservations"
     );
 
-  } catch (error) {
 
-    console.error(
-      "保存された予約の読み込みエラー:",
-      error
-    );
+  if (newSaved) {
+
+    try {
+
+      const data =
+        JSON.parse(
+          newSaved
+        );
+
+
+      if (
+        Array.isArray(data)
+      ) {
+
+        reservations =
+          data.filter(
+            reservation =>
+              reservation &&
+              reservation.number
+          );
+
+      } else {
+
+        reservations = [];
+      }
+
+    } catch (error) {
+
+      console.error(
+        "複数予約の読み込みエラー:",
+        error
+      );
+
+      reservations = [];
+    }
+
+  } else {
+
+    // ==========================
+    // 旧形式から移行
+    // ==========================
+
+    const oldSaved =
+      localStorage.getItem(
+        "ib_reservation"
+      );
+
+
+    if (oldSaved) {
+
+      try {
+
+        const oldReservation =
+          JSON.parse(
+            oldSaved
+          );
+
+
+        if (
+          oldReservation &&
+          oldReservation.number
+        ) {
+
+          reservations = [
+            oldReservation
+          ];
+
+
+          saveReservations();
+        }
+
+      } catch (error) {
+
+        console.error(
+          "旧予約の読み込みエラー:",
+          error
+        );
+
+        reservations = [];
+      }
+    }
   }
+
+
+  renderReservations();
 }
 
 
 // ==============================
-// 予約確認画面を表示
+// 予約を保存
 // ==============================
 
-function showReservation(
-  reservation
-) {
+function saveReservations() {
 
-  if (!reservation) {
+  localStorage.setItem(
+    "ib_reservations",
+    JSON.stringify(
+      reservations
+    )
+  );
+}
+
+
+// ==============================
+// 搭乗券一覧を表示
+// ==============================
+
+function renderReservations() {
+
+  const area =
+    $("reservationArea");
+
+
+  if (!area) {
     return;
   }
 
 
-  // 予約番号
-  if ($("myNumber")) {
+  // ==========================
+  // 予約がない場合
+  // ==========================
 
-    $("myNumber").textContent =
-      reservation.number;
-  }
+  if (
+    !reservations.length
+  ) {
 
-
-  // 名前
-  if ($("myName")) {
-
-    $("myName").textContent =
-      reservation.name || "";
-  }
-
-
-  // ご来場時間
-  if ($("mySlot")) {
-
-    $("mySlot").textContent =
-      `${reservation.start}～${reservation.end}`;
-  }
-
-
-  // 人数
-  if ($("mySize")) {
-
-    $("mySize").textContent =
-      `${reservation.size}名`;
-  }
-
-
-  // 便名
-  if ($("myFlight")) {
-
-    $("myFlight").textContent =
-      getFlightNumber(
-        reservation.number
-      );
-  }
-
-
-  // 搭乗ゲート
-  if ($("myGate")) {
-
-    $("myGate").textContent =
-      "1-B";
-  }
-
-
-  // 搭乗時刻
-  if ($("myBoardingTime")) {
-
-    $("myBoardingTime").textContent =
-      getBoardingTime(
-        reservation.end
-      );
-  }
-
-
-  // 日付
-  if ($("myDate")) {
-
-    $("myDate").textContent =
-      getToday();
-  }
-
-
-  // 予約画面を隠す
-  if ($("reserveArea")) {
-
-    $("reserveArea").hidden =
+    area.hidden =
       true;
+
+    return;
   }
 
 
-  // 受付停止表示を隠す
+  // ==========================
+  // 搭乗券を全部作成
+  // ==========================
+
+  area.innerHTML = `
+
+    <h2>予約済みの搭乗券</h2>
+
+    <div id="boardingPassList"></div>
+
+  `;
+
+
+  const list =
+    $("boardingPassList");
+
+
+  if (!list) {
+    return;
+  }
+
+
+  reservations.forEach(
+    reservation => {
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+
+      card.className =
+        "boarding-pass";
+
+
+      const flight =
+        getFlightNumber(
+          reservation.number
+        );
+
+
+      const boardingTime =
+        getBoardingTime(
+          reservation.end
+        );
+
+
+      card.innerHTML = `
+
+        <div class="boarding-pass-header">
+
+          <div>
+
+            <h2>
+              1-B出口搭乗券
+            </h2>
+
+            <p>
+              出口ドリームスカイライン
+            </p>
+
+          </div>
+
+          <strong>
+            ${escapeHtml(flight)}
+          </strong>
+
+        </div>
+
+
+        <div class="boarding-pass-main">
+
+          <div class="boarding-arrival">
+
+            <span>
+              ご来場時間
+            </span>
+
+            <strong>
+              ${escapeHtml(
+                reservation.start
+              )}
+              ～
+              ${escapeHtml(
+                reservation.end
+              )}
+            </strong>
+
+          </div>
+
+
+          <div class="boarding-info-grid">
+
+            <div>
+
+              <span>
+                日付
+              </span>
+
+              <strong>
+                ${getToday()}
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                ゲート
+              </span>
+
+              <strong>
+                1-B
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                搭乗時刻
+              </span>
+
+              <strong>
+                ${escapeHtml(
+                  boardingTime
+                )}
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                人数
+              </span>
+
+              <strong>
+                ${escapeHtml(
+                  reservation.size
+                )}名
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="boarding-pass-passenger">
+
+            <span>
+              代表者
+            </span>
+
+            <strong>
+              ${escapeHtml(
+                reservation.name
+              )}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div class="boarding-pass-footer">
+
+          <p class="boarding-note">
+
+            ご来場時間になりましたら<br>
+            1-B出口へお越しください。
+
+          </p>
+
+        </div>
+
+      `;
+
+
+      list.appendChild(
+        card
+      );
+    }
+  );
+
+
+  area.hidden =
+    false;
+}
+
+
+// ==============================
+// 最初に予約を読み込む
+// ==============================
+
+loadReservations();
+
+
+// ==============================
+// 予約画面を表示
+// ==============================
+//
+// 1件だけ表示する方式は廃止。
+// 複数予約を renderReservations()
+// でまとめて表示する。
+// ==============================
+
+function showReservation() {
+
+  renderReservations();
+
+
+  // 受付停止表示は隠す
   if ($("closedArea")) {
 
     $("closedArea").hidden =
       true;
-  }
-
-
-  // 搭乗券を表示
-  if ($("reservationArea")) {
-
-    $("reservationArea").hidden =
-      false;
   }
 }
 
@@ -979,24 +1244,55 @@ if ($("reserve")) {
 
 
         // ========================
-        // この端末に予約を保存
+        // 複数予約に追加
         // ========================
 
-        localStorage.setItem(
-          "ib_reservation",
-          JSON.stringify(
-            reservation
-          )
-        );
-
-
-        // ========================
-        // 搭乗券表示
-        // ========================
-
-        showReservation(
+        reservations.push(
           reservation
         );
+
+
+        // ========================
+        // 端末に保存
+        // ========================
+
+        saveReservations();
+
+
+        // ========================
+        // 搭乗券一覧を更新
+        // ========================
+
+        showReservation();
+
+
+        // ========================
+        // 入力欄をリセット
+        // ========================
+
+        if ($("name")) {
+
+          $("name").value =
+            "";
+        }
+
+
+        if ($("size")) {
+
+          $("size").value =
+            "1";
+        }
+
+
+        // ========================
+        // 完了メッセージ
+        // ========================
+
+        if (error) {
+
+          error.textContent =
+            "予約しました。下に搭乗券が表示されています。";
+        }
 
       } catch (reservationError) {
 
