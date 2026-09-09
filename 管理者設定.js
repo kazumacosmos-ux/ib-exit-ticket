@@ -20,28 +20,11 @@ import {
 
 import { firebaseConfig } from "./Firebase設定.js";
 
-
-// =========================
-// Firebase
-// =========================
-
 const app = initializeApp(firebaseConfig);
-
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-
-// =========================
-// 管理者パスワード
-// =========================
-
-const ADMIN_PASSWORD =
-  "kazuma";
-
-
-// =========================
-// DOM
-// =========================
+const ADMIN_PASSWORD = "kazuma";
 
 const loginArea =
   document.getElementById("loginArea");
@@ -88,11 +71,6 @@ const backToStaffButton =
 const logoutButton =
   document.getElementById("logout");
 
-
-// =========================
-// 現在の設定
-// =========================
-
 let currentSettings = {
   start: "09:00",
   end: "15:00",
@@ -101,27 +79,18 @@ let currentSettings = {
   open: true
 };
 
-
-// =========================
-// 管理者ログイン状態
-// =========================
-
 let adminAuthenticated = false;
-
 let firebaseSigningIn = false;
 
 
-// =========================
-// 初期状態
-// =========================
-
+// 最初はログイン画面
 loginArea.style.display = "block";
 settingsArea.style.display = "none";
 
 
-// =========================
+// ==============================
 // 管理者ログイン
-// =========================
+// ==============================
 
 loginButton.addEventListener(
   "click",
@@ -138,51 +107,38 @@ loginButton.addEventListener(
         "パスワードを入力してください。";
 
       return;
-
     }
 
-
-    // パスワードが違う
+    // 管理者パスワード
     if (password !== ADMIN_PASSWORD) {
 
       loginMessage.textContent =
         "ログインに失敗しました。";
 
       passwordInput.value = "";
-
       passwordInput.focus();
 
       return;
-
     }
 
-
-    // 二重ログイン防止
     if (firebaseSigningIn) {
-
       return;
-
     }
-
 
     firebaseSigningIn = true;
-
     loginButton.disabled = true;
-
 
     try {
 
-      // Firebase匿名ログイン
+      // Firebaseには匿名ユーザーとしてログイン
       await signInAnonymously(auth);
 
       adminAuthenticated = true;
 
       loginArea.style.display = "none";
-
       settingsArea.style.display = "block";
 
       loginMessage.textContent = "";
-
       passwordInput.value = "";
 
     } catch (error) {
@@ -192,73 +148,57 @@ loginButton.addEventListener(
       adminAuthenticated = false;
 
       settingsArea.style.display = "none";
-
       loginArea.style.display = "block";
 
       loginMessage.textContent =
         "ログインに失敗しました。";
-
     }
 
-
     firebaseSigningIn = false;
-
     loginButton.disabled = false;
-
   }
 );
 
 
-// =========================
+// ==============================
 // Firebaseログイン状態
-// =========================
+// ==============================
 
 onAuthStateChanged(
   auth,
   (user) => {
 
-    // 管理者ログイン済み
     if (user && adminAuthenticated) {
 
       loginArea.style.display = "none";
-
       settingsArea.style.display = "block";
 
       return;
-
     }
 
-
-    // 未ログイン
     if (!user) {
 
       adminAuthenticated = false;
 
       loginArea.style.display = "block";
-
       settingsArea.style.display = "none";
-
     }
-
   }
 );
 
 
-// =========================
-// 設定読み込み
-// =========================
+// ==============================
+// 設定を読み込む
+// ==============================
 
 onValue(
   ref(db, "Queue/settings"),
   (snapshot) => {
 
-    const data =
-      snapshot.val();
+    const data = snapshot.val();
 
     if (!data) {
-
       return;
-
     }
 
     currentSettings = {
@@ -267,19 +207,17 @@ onValue(
     };
 
     updateSettingsScreen();
-
   },
   (error) => {
 
     console.error(error);
-
   }
 );
 
 
-// =========================
-// 設定画面更新
-// =========================
+// ==============================
+// 設定画面を更新
+// ==============================
 
 function updateSettingsScreen() {
 
@@ -288,7 +226,6 @@ function updateSettingsScreen() {
 
   maxGroupsInput.value =
     currentSettings.maxGroups;
-
 
   if (currentSettings.open) {
 
@@ -305,24 +242,20 @@ function updateSettingsScreen() {
 
     toggleOpen.textContent =
       "受付再開";
-
   }
-
 }
 
 
-// =========================
-// 受付停止・再開
-// =========================
+// ==============================
+// 受付ON / OFF
+// ==============================
 
 toggleOpen.addEventListener(
   "click",
   async () => {
 
     if (!adminAuthenticated) {
-
       return;
-
     }
 
     const nextOpen =
@@ -353,34 +286,28 @@ toggleOpen.addEventListener(
         "設定変更に失敗しました。";
 
       console.error(error);
-
     }
-
   }
 );
 
 
-// =========================
-// 設定保存
-// =========================
+// ==============================
+// 枠設定を保存
+// ==============================
 
 saveSettingsButton.addEventListener(
   "click",
   async () => {
 
     if (!adminAuthenticated) {
-
       return;
-
     }
-
 
     const slotMinutes =
       Number(slotMinutesInput.value);
 
     const maxGroups =
       Number(maxGroupsInput.value);
-
 
     if (
       !Number.isInteger(slotMinutes) ||
@@ -391,9 +318,7 @@ saveSettingsButton.addEventListener(
         "1枠の時間を正しく入力してください。";
 
       return;
-
     }
-
 
     if (
       !Number.isInteger(maxGroups) ||
@@ -405,9 +330,7 @@ saveSettingsButton.addEventListener(
         "最大組数は1〜10組で設定してください。";
 
       return;
-
     }
-
 
     try {
 
@@ -428,27 +351,22 @@ saveSettingsButton.addEventListener(
         "設定の保存に失敗しました。";
 
       console.error(error);
-
     }
-
   }
 );
 
 
-// =========================
-// 全体リセット
-// =========================
+// ==============================
+// 全予約データリセット
+// ==============================
 
 resetAllButton.addEventListener(
   "click",
   async () => {
 
     if (!adminAuthenticated) {
-
       return;
-
     }
-
 
     const first =
       confirm(
@@ -456,11 +374,8 @@ resetAllButton.addEventListener(
       );
 
     if (!first) {
-
       return;
-
     }
-
 
     const second =
       confirm(
@@ -468,11 +383,8 @@ resetAllButton.addEventListener(
       );
 
     if (!second) {
-
       return;
-
     }
-
 
     try {
 
@@ -505,16 +417,14 @@ resetAllButton.addEventListener(
         "リセットに失敗しました。";
 
       console.error(error);
-
     }
-
   }
 );
 
 
-// =========================
-// スタッフ画面へ戻る
-// =========================
+// ==============================
+// スタッフ画面へ
+// ==============================
 
 backToStaffButton.addEventListener(
   "click",
@@ -522,14 +432,13 @@ backToStaffButton.addEventListener(
 
     window.location.href =
       "./スタッフ.html";
-
   }
 );
 
 
-// =========================
+// ==============================
 // ログアウト
-// =========================
+// ==============================
 
 logoutButton.addEventListener(
   "click",
@@ -542,7 +451,6 @@ logoutButton.addEventListener(
     } catch (error) {
 
       console.error(error);
-
     }
 
     adminAuthenticated = false;
@@ -556,6 +464,5 @@ logoutButton.addEventListener(
     passwordInput.value = "";
 
     loginMessage.textContent = "";
-
   }
 );
