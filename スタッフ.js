@@ -690,7 +690,7 @@ function renderReservations() {
 
 
             // ========================
-            // 搭乗済みにするボタン
+            // 搭乗状態変更ボタン
             // ========================
 
             if (!isCompleted) {
@@ -714,26 +714,15 @@ function renderReservations() {
                 "click",
                 async () => {
 
-                  // ----------------------
-                  // 確認
-                  // ----------------------
-
                   const confirmed =
                     confirm(
                       `予約番号 ${reservation.number} を搭乗済みにしますか？`
                     );
 
-
-                  // キャンセルされた場合
                   if (!confirmed) {
 
                     return;
                   }
-
-
-                  // ----------------------
-                  // Firebase更新
-                  // ----------------------
 
                   completeButton.disabled =
                     true;
@@ -768,6 +757,76 @@ function renderReservations() {
 
               item.appendChild(
                 completeButton
+              );
+
+            } else {
+
+              // ========================
+              // 搭乗済みを取り消す
+              // ========================
+
+              const undoButton =
+                document.createElement(
+                  "button"
+                );
+
+              undoButton.type =
+                "button";
+
+              undoButton.className =
+                "complete-reservation-button";
+
+              undoButton.textContent =
+                "搭乗済みを取り消す";
+
+
+              undoButton.addEventListener(
+                "click",
+                async () => {
+
+                  const confirmed =
+                    confirm(
+                      `予約番号 ${reservation.number} の搭乗済みを取り消しますか？`
+                    );
+
+                  if (!confirmed) {
+
+                    return;
+                  }
+
+                  undoButton.disabled =
+                    true;
+
+                  undoButton.textContent =
+                    "変更中…";
+
+
+                  const success =
+                    await markReservationReserved(
+                      reservation
+                    );
+
+
+                  if (!success) {
+
+                    undoButton.disabled =
+                      false;
+
+                    undoButton.textContent =
+                      "搭乗済みを取り消す";
+                  }
+                }
+              );
+
+
+              item.appendChild(
+                document.createElement(
+                  "br"
+                )
+              );
+
+              item.appendChild(
+                undoButton
               );
             }
 
@@ -957,6 +1016,62 @@ async function markReservationCompleted(
 
     alert(
       "搭乗済みへの変更に失敗しました。"
+    );
+
+    return false;
+  }
+}
+
+
+// ==============================
+// 搭乗済みを取り消す
+// ==============================
+
+async function markReservationReserved(
+  reservation
+) {
+
+  const number =
+    reservation.number;
+
+  if (
+    number === undefined
+  ) {
+
+    return false;
+  }
+
+  const reservationRef =
+    ref(
+      db,
+      `Queue/reservations/${number}`
+    );
+
+  try {
+
+    await update(
+      reservationRef,
+      {
+
+        status:
+          "reserved",
+
+        completedAt:
+          null
+      }
+    );
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      "搭乗済み取り消しエラー:",
+      error
+    );
+
+    alert(
+      "搭乗済みの取り消しに失敗しました。"
     );
 
     return false;
