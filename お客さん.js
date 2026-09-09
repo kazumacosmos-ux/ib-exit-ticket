@@ -1132,19 +1132,6 @@ function renderReservations() {
           <div>
 
             <span>
-              TO
-            </span>
-
-            <strong>
-              ？？？
-            </strong>
-
-          </div>
-
-
-          <div>
-
-            <span>
               搭乗時刻
             </span>
 
