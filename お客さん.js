@@ -24,19 +24,16 @@ import {
 // Firebase 初期化
 // ==============================
 
-const app =
-  initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
-const db =
-  getDatabase(app);
+const db = getDatabase(app);
 
 
 // ==============================
 // HTML取得
 // ==============================
 
-const $ =
-  id => document.getElementById(id);
+const $ = id => document.getElementById(id);
 
 
 // ==============================
@@ -52,21 +49,11 @@ const FIXED_END = "15:00";
 // ==============================
 
 let settings = {
-
-  start:
-    FIXED_START,
-
-  end:
-    FIXED_END,
-
-  slotMinutes:
-    30,
-
-  maxGroups:
-    5,
-
-  open:
-    true
+  start: FIXED_START,
+  end: FIXED_END,
+  slotMinutes: 20,
+  maxGroups: 1,
+  open: true
 };
 
 
@@ -94,18 +81,12 @@ function toMin(time) {
     return 0;
   }
 
-  const [
-    hour,
-    minute
-  ] =
-    time
-      .split(":")
-      .map(Number);
+  const parts = time.split(":");
 
-  return (
-    hour * 60 +
-    minute
-  );
+  const hour = Number(parts[0]);
+  const minute = Number(parts[1]);
+
+  return hour * 60 + minute;
 }
 
 
@@ -115,11 +96,8 @@ function toMin(time) {
 
 function formatTime(minutes) {
 
-  const hour =
-    Math.floor(minutes / 60);
-
-  const minute =
-    minutes % 60;
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
 
   return (
     String(hour).padStart(2, "0") +
@@ -133,18 +111,19 @@ function formatTime(minutes) {
 // 時間枠キー
 //
 // 09:00 → 09-00
+// 09:20 → 09-20
+// 09:40 → 09-40
 // ==============================
 
-function key(minutes) {
+function slotKey(minutes) {
+
+  const hour = Math.floor(minutes / 60);
+  const minute = minutes % 60;
 
   return (
-    String(
-      Math.floor(minutes / 60)
-    ).padStart(2, "0") +
+    String(hour).padStart(2, "0") +
     "-" +
-    String(
-      minutes % 60
-    ).padStart(2, "0")
+    String(minute).padStart(2, "0")
   );
 }
 
@@ -157,56 +136,55 @@ function createSlots() {
 
   const result = {};
 
-  const start =
-    toMin(FIXED_START);
+  const start = toMin(FIXED_START);
+  const end = toMin(FIXED_END);
 
-  const end =
-    toMin(FIXED_END);
-
-  const slotMinutes =
-    Number(
-      settings.slotMinutes
-    );
+  const slotMinutes = Number(settings.slotMinutes);
 
 
+  // おかしな設定の場合
   if (
     !Number.isInteger(slotMinutes) ||
     slotMinutes <= 0
   ) {
-
     return result;
   }
 
 
+  // ==========================
+  // 20分ずつ増やす
+  // ==========================
+
   for (
     let minutes = start;
-
-    minutes + slotMinutes <= end;
-
+    minutes < end;
     minutes += slotMinutes
   ) {
 
-    const slotStart =
+    const slotEndMinutes =
+      minutes + slotMinutes;
+
+
+    // 最後が15:00を超える場合は作らない
+    if (slotEndMinutes > end) {
+      break;
+    }
+
+
+    const startTime =
       formatTime(minutes);
 
-    const slotEnd =
-      formatTime(
-        minutes + slotMinutes
-      );
+    const endTime =
+      formatTime(slotEndMinutes);
+
+    const id =
+      slotKey(minutes);
 
 
-    result[
-      key(minutes)
-    ] = {
-
-      key:
-        key(minutes),
-
-      start:
-        slotStart,
-
-      end:
-        slotEnd
+    result[id] = {
+      key: id,
+      start: startTime,
+      end: endTime
     };
   }
 
@@ -235,36 +213,25 @@ function getBoardingTime(endTime) {
 
 function getToday() {
 
-  const now =
-    new Date();
-
+  const now = new Date();
 
   const year =
     now.getFullYear();
 
   const month =
-    String(
-      now.getMonth() + 1
-    ).padStart(2, "0");
+    String(now.getMonth() + 1)
+      .padStart(2, "0");
 
   const day =
-    String(
-      now.getDate()
-    ).padStart(2, "0");
+    String(now.getDate())
+      .padStart(2, "0");
 
-
-  return (
-    `${year}/${month}/${day}`
-  );
+  return `${year}/${month}/${day}`;
 }
 
 
 // ==============================
 // 便名
-//
-// 予約番号 1
-// ↓
-// DREAM001
 // ==============================
 
 function getFlightNumber(number) {
@@ -299,29 +266,23 @@ function saveReservations() {
 
   localStorage.setItem(
     "ib_reservations",
-    JSON.stringify(
-      reservations
-    )
+    JSON.stringify(reservations)
   );
 }
 
 
 // ==============================
-// 予約を端末から削除
+// 端末から予約を削除
 // ==============================
 
-function removeLocalReservation(
-  number
-) {
+function removeLocalReservation(number) {
 
   reservations =
     reservations.filter(
       reservation =>
-        Number(
-          reservation.number
-        ) !== Number(number)
+        Number(reservation.number) !==
+        Number(number)
     );
-
 
   saveReservations();
 
@@ -335,27 +296,38 @@ function removeLocalReservation(
 
 function render() {
 
-  const slotElement =
-    $("slot");
-
+  const slotElement = $("slot");
 
   if (!slotElement) {
     return;
   }
 
 
+  // ==========================
+  // 現在選択している値を保存
+  // ==========================
+
+  const oldValue =
+    slotElement.value;
+
+
+  // ==========================
+  // 時間枠を作成
+  // ==========================
+
   const generated =
     createSlots();
 
 
-  slotElement.innerHTML =
-    "";
+  slotElement.innerHTML = "";
 
 
-  Object.values(
-    generated
-  ).forEach(
-    slot => {
+  // ==========================
+  // 時間枠を表示
+  // ==========================
+
+  Object.values(generated)
+    .forEach(slot => {
 
       const count =
         Number(
@@ -364,9 +336,7 @@ function render() {
 
 
       const max =
-        Number(
-          settings.maxGroups
-        );
+        Number(settings.maxGroups);
 
 
       const remaining =
@@ -377,9 +347,7 @@ function render() {
 
 
       const option =
-        document.createElement(
-          "option"
-        );
+        document.createElement("option");
 
 
       option.value =
@@ -391,15 +359,50 @@ function render() {
         `（残り ${remaining}組）`;
 
 
+      // 満員なら選択不可
       option.disabled =
         count >= max;
 
 
-      slotElement.appendChild(
-        option
+      slotElement.appendChild(option);
+    });
+
+
+  // ==========================
+  // 前に選択していた時間を復元
+  // ==========================
+
+  const oldOption =
+    [...slotElement.options]
+      .find(
+        option =>
+          option.value === oldValue &&
+          !option.disabled
       );
+
+
+  if (oldOption) {
+
+    slotElement.value =
+      oldValue;
+
+  } else {
+
+    // 選択可能な最初の枠を選択
+    const firstAvailable =
+      [...slotElement.options]
+        .find(
+          option =>
+            !option.disabled
+        );
+
+
+    if (firstAvailable) {
+
+      slotElement.value =
+        firstAvailable.value;
     }
-  );
+  }
 
 
   updateInfo();
@@ -412,31 +415,26 @@ function render() {
 
 function updateInfo() {
 
-  const slotElement =
-    $("slot");
-
-  const info =
-    $("slotInfo");
+  const slotElement = $("slot");
+  const info = $("slotInfo");
 
 
-  if (
-    !slotElement ||
-    !info
-  ) {
+  if (!slotElement || !info) {
     return;
   }
 
 
+  const generated =
+    createSlots();
+
+
   const selectedSlot =
-    createSlots()[
-      slotElement.value
-    ];
+    generated[slotElement.value];
 
 
   if (!selectedSlot) {
 
-    info.textContent =
-      "";
+    info.textContent = "";
 
     return;
   }
@@ -444,16 +442,12 @@ function updateInfo() {
 
   const count =
     Number(
-      slots[
-        selectedSlot.key
-      ]?.count || 0
+      slots[selectedSlot.key]?.count || 0
     );
 
 
   const max =
-    Number(
-      settings.maxGroups
-    );
+    Number(settings.maxGroups);
 
 
   info.textContent =
@@ -477,34 +471,19 @@ function renderReservations() {
   }
 
 
-  // ==========================
-  // 予約がない場合
-  // ==========================
+  if (reservations.length === 0) {
 
-  if (
-    reservations.length === 0
-  ) {
+    area.hidden = true;
 
-    area.hidden =
-      true;
-
-    area.innerHTML =
-      "";
+    area.innerHTML = "";
 
     return;
   }
 
 
-  // ==========================
-  // 搭乗券一覧
-  // ==========================
-
   area.innerHTML = `
-
     <h2>予約済みの搭乗券</h2>
-
     <div id="boardingPassList"></div>
-
   `;
 
 
@@ -521,9 +500,7 @@ function renderReservations() {
     reservation => {
 
       const card =
-        document.createElement(
-          "div"
-        );
+        document.createElement("div");
 
 
       card.className =
@@ -688,9 +665,7 @@ function renderReservations() {
       `;
 
 
-      list.appendChild(
-        card
-      );
+      list.appendChild(card);
     }
   );
 
@@ -700,31 +675,22 @@ function renderReservations() {
   // ==========================
 
   document
-    .querySelectorAll(
-      ".cancel-reservation"
-    )
-    .forEach(
-      button => {
+    .querySelectorAll(".cancel-reservation")
+    .forEach(button => {
 
-        button.onclick =
-          () => {
+      button.onclick = () => {
 
-            const number =
-              Number(
-                button.dataset.number
-              );
+        const number =
+          Number(
+            button.dataset.number
+          );
 
-
-            cancelReservation(
-              number
-            );
-          };
-      }
-    );
+        cancelReservation(number);
+      };
+    });
 
 
-  area.hidden =
-    false;
+  area.hidden = false;
 }
 
 
@@ -739,24 +705,15 @@ async function cancelReservation(
   const reservation =
     reservations.find(
       item =>
-        Number(
-          item.number
-        ) ===
-        Number(
-          reservationNumber
-        )
+        Number(item.number) ===
+        Number(reservationNumber)
     );
 
 
   if (!reservation) {
-
     return;
   }
 
-
-  // ==========================
-  // 確認
-  // ==========================
 
   const confirmed =
     window.confirm(
@@ -767,7 +724,6 @@ async function cancelReservation(
 
 
   if (!confirmed) {
-
     return;
   }
 
@@ -775,8 +731,7 @@ async function cancelReservation(
   try {
 
     // ========================
-    // 予約データをFirebaseから
-    // 原子的に削除
+    // Firebaseから予約削除
     // ========================
 
     const reservationRef =
@@ -786,8 +741,7 @@ async function cancelReservation(
       );
 
 
-    let existed =
-      false;
+    let existed = false;
 
 
     const result =
@@ -795,16 +749,11 @@ async function cancelReservation(
         reservationRef,
         current => {
 
-          if (
-            current === null
-          ) {
-
+          if (current === null) {
             return;
           }
 
-
-          existed =
-            true;
+          existed = true;
 
           return null;
         }
@@ -812,7 +761,7 @@ async function cancelReservation(
 
 
     // ========================
-    // すでに削除されていた場合
+    // すでに削除されている
     // ========================
 
     if (
@@ -833,7 +782,7 @@ async function cancelReservation(
 
 
     // ========================
-    // 時間枠を1組戻す
+    // 枠を1つ戻す
     // ========================
 
     const countRef =
@@ -848,10 +797,7 @@ async function cancelReservation(
       current => {
 
         const count =
-          Number(
-            current || 0
-          );
-
+          Number(current || 0);
 
         return Math.max(
           0,
@@ -862,7 +808,7 @@ async function cancelReservation(
 
 
     // ========================
-    // 端末からも削除
+    // 端末から削除
     // ========================
 
     removeLocalReservation(
@@ -897,10 +843,7 @@ async function cancelReservation(
 // ==============================
 
 onValue(
-  ref(
-    db,
-    "Queue/settings"
-  ),
+  ref(db, "Queue/settings"),
   snapshot => {
 
     const data =
@@ -918,14 +861,10 @@ onValue(
           FIXED_END,
 
         slotMinutes:
-          Number(
-            data.slotMinutes
-          ) || 30,
+          Number(data.slotMinutes) || 20,
 
         maxGroups:
-          Number(
-            data.maxGroups
-          ) || 5,
+          Number(data.maxGroups) || 1,
 
         open:
           data.open !== false
@@ -950,7 +889,7 @@ onValue(
     if (closedArea) {
 
       closedArea.hidden =
-        !!settings.open;
+        settings.open;
     }
 
 
@@ -965,15 +904,11 @@ onValue(
 // ==============================
 
 onValue(
-  ref(
-    db,
-    "Queue/slots"
-  ),
+  ref(db, "Queue/slots"),
   snapshot => {
 
     slots =
       snapshot.val() || {};
-
 
     render();
   }
@@ -984,40 +919,22 @@ onValue(
 // Firebase
 // 予約監視
 // ==============================
-//
-// このスマホで保存している予約だけを確認。
-// Firebaseから削除された予約は
-// このスマホからも自動的に削除する。
-// ==============================
 
 onValue(
-  ref(
-    db,
-    "Queue/reservations"
-  ),
+  ref(db, "Queue/reservations"),
   snapshot => {
 
     const firebaseReservations =
       snapshot.val() || {};
 
 
-    // ========================
-    // Firebaseに存在する予約番号
-    // ========================
-
     const existingNumbers =
       new Set(
         Object.keys(
           firebaseReservations
-        ).map(
-          Number
-        )
+        ).map(Number)
       );
 
-
-    // ========================
-    // この端末の予約だけ確認
-    // ========================
 
     const beforeCount =
       reservations.length;
@@ -1027,17 +944,10 @@ onValue(
       reservations.filter(
         reservation =>
           existingNumbers.has(
-            Number(
-              reservation.number
-            )
+            Number(reservation.number)
           )
       );
 
-
-    // ========================
-    // 削除された予約があれば
-    // 保存内容も更新
-    // ========================
 
     if (
       reservations.length !==
@@ -1070,10 +980,6 @@ if ($("slot")) {
 
 function loadReservations() {
 
-  // ==========================
-  // 新方式
-  // ==========================
-
   const newSaved =
     localStorage.getItem(
       "ib_reservations"
@@ -1085,14 +991,10 @@ function loadReservations() {
     try {
 
       const data =
-        JSON.parse(
-          newSaved
-        );
+        JSON.parse(newSaved);
 
 
-      if (
-        Array.isArray(data)
-      ) {
+      if (Array.isArray(data)) {
 
         reservations =
           data.filter(
@@ -1133,9 +1035,7 @@ function loadReservations() {
       try {
 
         const oldReservation =
-          JSON.parse(
-            oldSaved
-          );
+          JSON.parse(oldSaved);
 
 
         if (
@@ -1146,7 +1046,6 @@ function loadReservations() {
           reservations = [
             oldReservation
           ];
-
 
           saveReservations();
         }
@@ -1169,7 +1068,7 @@ function loadReservations() {
 
 
 // ==============================
-// 予約一覧を表示
+// 予約一覧表示
 // ==============================
 
 function showReservation() {
@@ -1200,8 +1099,7 @@ if ($("reserve")) {
 
       if (error) {
 
-        error.textContent =
-          "";
+        error.textContent = "";
       }
 
 
@@ -1209,8 +1107,7 @@ if ($("reserve")) {
       // 二重クリック防止
       // ========================
 
-      $("reserve").disabled =
-        true;
+      $("reserve").disabled = true;
 
 
       try {
@@ -1231,13 +1128,13 @@ if ($("reserve")) {
           );
 
 
-        const slotKey =
+        const selectedKey =
           $("slot").value;
 
 
         const slot =
           createSlots()[
-            slotKey
+            selectedKey
           ];
 
 
@@ -1337,9 +1234,7 @@ if ($("reserve")) {
                 );
 
 
-              if (
-                count >= max
-              ) {
+              if (count >= max) {
 
                 return;
               }
@@ -1415,7 +1310,8 @@ if ($("reserve")) {
           );
 
 
-          // 枠数を戻す
+          // 枠を戻す
+
           await runTransaction(
             countRef,
             current =>
@@ -1490,7 +1386,8 @@ if ($("reserve")) {
           );
 
 
-          // 枠数を戻す
+          // 枠を戻す
+
           await runTransaction(
             countRef,
             current =>
@@ -1528,27 +1425,25 @@ if ($("reserve")) {
 
 
         // ========================
-        // 搭乗券を更新
+        // 搭乗券表示
         // ========================
 
         showReservation();
 
 
         // ========================
-        // 入力欄をリセット
+        // 入力欄リセット
         // ========================
 
         if ($("name")) {
 
-          $("name").value =
-            "";
+          $("name").value = "";
         }
 
 
         if ($("size")) {
 
-          $("size").value =
-            "1";
+          $("size").value = "1";
         }
 
 
@@ -1580,8 +1475,7 @@ if ($("reserve")) {
 
       } finally {
 
-        $("reserve").disabled =
-          false;
+        $("reserve").disabled = false;
       }
     };
 }
