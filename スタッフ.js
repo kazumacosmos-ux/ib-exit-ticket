@@ -411,22 +411,12 @@ function renderDashboard(
       "staffDashboard";
 
     dashboard.style.cssText = `
-      margin: 0 0 24px 0;
+      margin: 24px 0 24px 0;
       padding: 18px;
       border-radius: 16px;
       background: #f4f8fb;
       border: 1px solid #d5e1e9;
     `;
-
-
-    /*
-     * adminAreaの先頭に追加
-     */
-
-    adminArea.insertBefore(
-      dashboard,
-      adminArea.firstChild
-    );
   }
 
 
@@ -714,6 +704,31 @@ function renderDashboard(
     </div>
 
   `;
+
+
+  /*
+   * 現在の予約状況を
+   * 予約一覧の一番下へ移動
+   */
+
+  const slotList =
+    $("slotList");
+
+  if (
+    slotList &&
+    slotList.parentElement
+  ) {
+
+    slotList.parentElement.appendChild(
+      dashboard
+    );
+
+  } else {
+
+    adminArea.appendChild(
+      dashboard
+    );
+  }
 
 }
 
