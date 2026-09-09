@@ -1390,4 +1390,828 @@ if (reserveButton) {
 
         if (error) {
 
-          error.text
+          error.textContent =
+            "すでに予約があります。";
+        }
+
+
+        render();
+
+        return;
+      }
+
+
+      if (
+        settings.open === false
+      ) {
+
+        if (error) {
+
+          error.textContent =
+            "現在受付停止中です。";
+        }
+
+        return;
+      }
+
+
+      const nameInput =
+        $("name");
+
+      const sizeInput =
+        $("size");
+
+      const slotInput =
+        $("slot");
+
+
+      if (
+        !nameInput ||
+        !sizeInput ||
+        !slotInput
+      ) {
+
+        if (error) {
+
+          error.textContent =
+            "予約フォームの読み込みに失敗しました。";
+        }
+
+        return;
+      }
+
+
+      const name =
+        nameInput.value.trim();
+
+
+      const size =
+        Number(
+          sizeInput.value
+        );
+
+
+      const selectedSlotKey =
+        slotInput.value;
+
+
+      const generatedSlots =
+        createSlots();
+
+
+      const slot =
+        generatedSlots[
+          selectedSlotKey
+        ];
+
+
+      if (!name) {
+
+        if (error) {
+
+          error.textContent =
+            "代表者の名前を入力してください。";
+        }
+
+        return;
+      }
+
+
+      if (!slot) {
+
+        if (error) {
+
+          error.textContent =
+            "搭乗時刻を選択してください。";
+        }
+
+        return;
+      }
+
+
+      if (
+        size < 1 ||
+        size > 4
+      ) {
+
+        if (error) {
+
+          error.textContent =
+            "人数は1～4人で入力してください。";
+        }
+
+        return;
+      }
+
+
+      const currentCount =
+        Number(
+          slots[
+            slot.key
+          ]?.count || 0
+        );
+
+
+      const maxGroups =
+        getMaxGroups();
+
+
+      if (
+        currentCount >= maxGroups
+      ) {
+
+        if (error) {
+
+          error.textContent =
+            "その時間帯は満員になりました。";
+        }
+
+
+        render();
+
+        return;
+      }
+
+
+      reserveButton.disabled =
+        true;
+
+
+      let countReserved =
+        false;
+
+
+      try {
+
+        /*
+         * 枠を確保
+         */
+
+        const countRef =
+          ref(
+            db,
+            `Queue/slots/${slot.key}/count`
+          );
+
+
+        const countResult =
+          await runTransaction(
+            countRef,
+            (value) => {
+
+              const count =
+                Number(
+                  value || 0
+                );
+
+
+              const max =
+                getMaxGroups();
+
+
+              if (
+                count >= max
+              ) {
+
+                return undefined;
+              }
+
+
+              return count + 1;
+            }
+          );
+
+
+        if (
+          !countResult.committed
+        ) {
+
+          if (error) {
+
+            error.textContent =
+              "その時間帯は満員になりました。";
+          }
+
+
+          render();
+
+          return;
+        }
+
+
+        countReserved =
+          true;
+
+
+        /*
+         * 予約番号
+         */
+
+        const lastRef =
+          ref(
+            db,
+            "Queue/reservationLast"
+          );
+
+
+        const lastResult =
+          await runTransaction(
+            lastRef,
+            (value) =>
+              Number(
+                value || 0
+              ) + 1
+          );
+
+
+        if (
+          !lastResult.committed
+        ) {
+
+          throw new Error(
+            "予約番号の取得に失敗しました。"
+          );
+        }
+
+
+        const number =
+          lastResult.snapshot.val();
+
+
+        /*
+         * 予約データ
+         */
+
+        const reservation = {
+
+          number,
+
+          name,
+
+          slot:
+            slot.key,
+
+          start:
+            slot.start,
+
+          end:
+            slot.end,
+
+          size,
+
+          type:
+            "web",
+
+          createdAt:
+            Date.now()
+        };
+
+
+        /*
+         * Firebase保存
+         */
+
+        await set(
+          ref(
+            db,
+            `Queue/reservations/${number}`
+          ),
+          reservation
+        );
+
+
+        /*
+         * ローカル保存
+         */
+
+        saveLocalReservation(
+          reservation
+        );
+
+
+        /*
+         * 即座にローカルの予約一覧へ追加
+         */
+
+        reservations[
+          String(number)
+        ] = reservation;
+
+
+        cancellationMessageNumber =
+          null;
+
+
+        if ($("name")) {
+
+          $("name").value =
+            "";
+        }
+
+
+        /*
+         * 予約完了通知
+         */
+
+        showReservationComplete(
+          number,
+          slot.start,
+          slot.end
+        );
+
+
+      } catch (firebaseError) {
+
+        console.error(
+          "予約保存エラー:",
+          firebaseError
+        );
+
+
+        if (countReserved) {
+
+          try {
+
+            await runTransaction(
+              ref(
+                db,
+                `Queue/slots/${slot.key}/count`
+              ),
+              (value) =>
+                Math.max(
+                  0,
+                  Number(
+                    value || 0
+                  ) - 1
+                )
+            );
+
+          } catch (rollbackError) {
+
+            console.error(
+              "枠の戻し処理に失敗しました:",
+              rollbackError
+            );
+          }
+        }
+
+
+        if (error) {
+
+          error.textContent =
+            "予約に失敗しました。もう一度お試しください。";
+        }
+
+
+        render();
+
+
+      } finally {
+
+        if (
+          !getLocalReservation()
+        ) {
+
+          reserveButton.disabled =
+            false;
+        }
+      }
+    };
+}
+
+
+/* =========================================
+   キャンセル
+========================================= */
+
+async function cancelReservation(
+  reservation
+) {
+
+  if (!reservation) {
+    return;
+  }
+
+
+  const ok =
+    confirm(
+      "予約をキャンセルしますか？"
+    );
+
+
+  if (!ok) {
+    return;
+  }
+
+
+  selfCancelInProgress =
+    true;
+
+
+  try {
+
+    await remove(
+      ref(
+        db,
+        `Queue/reservations/${reservation.number}`
+      )
+    );
+
+
+    await runTransaction(
+      ref(
+        db,
+        `Queue/slots/${reservation.slot}/count`
+      ),
+      (value) =>
+        Math.max(
+          0,
+          Number(
+            value || 0
+          ) - 1
+        )
+    );
+
+
+    clearLocalReservation();
+
+
+    const reservationArea =
+      $("reservationArea");
+
+
+    if (reservationArea) {
+
+      reservationArea.hidden =
+        true;
+
+      reservationArea.innerHTML =
+        "";
+    }
+
+
+    render();
+
+
+  } catch (error) {
+
+    console.error(
+      "キャンセル処理に失敗しました:",
+      error
+    );
+
+
+    alert(
+      "キャンセルに失敗しました。もう一度お試しください。"
+    );
+
+
+    render();
+
+  } finally {
+
+    setTimeout(
+      () => {
+
+        selfCancelInProgress =
+          false;
+
+      },
+      1500
+    );
+  }
+}
+
+
+/* =========================================
+   Firebase：設定
+========================================= */
+
+onValue(
+  ref(
+    db,
+    "Queue/settings"
+  ),
+  (snapshot) => {
+
+    const data =
+      snapshot.val();
+
+
+    if (
+      data &&
+      typeof data === "object"
+    ) {
+
+      settings = {
+
+        start:
+          typeof data.start === "string" &&
+          toMinutes(data.start) >= 0
+            ? data.start
+            : "09:00",
+
+        end:
+          typeof data.end === "string" &&
+          toMinutes(data.end) > 0
+            ? data.end
+            : "15:00",
+
+        slotMinutes:
+          Number(data.slotMinutes) > 0
+            ? Number(data.slotMinutes)
+            : 60,
+
+        maxGroups:
+          Number(data.maxGroups) > 0
+            ? Number(data.maxGroups)
+            : 1,
+
+        open:
+          data.open !== false
+      };
+
+    }
+
+
+    render();
+  }
+);
+
+
+/* =========================================
+   Firebase：枠
+========================================= */
+
+onValue(
+  ref(
+    db,
+    "Queue/slots"
+  ),
+  (snapshot) => {
+
+    slots =
+      snapshot.val() || {};
+
+
+    render();
+  }
+);
+
+
+/* =========================================
+   Firebase：予約
+========================================= */
+
+onValue(
+  ref(
+    db,
+    "Queue/reservations"
+  ),
+  (snapshot) => {
+
+    reservations =
+      snapshot.val() || {};
+
+
+    render();
+  }
+);
+
+
+/* =========================================
+   Firebase：予約削除
+========================================= */
+
+onChildRemoved(
+  ref(
+    db,
+    "Queue/reservations"
+  ),
+  (snapshot) => {
+
+    const removedReservation =
+      snapshot.val();
+
+
+    if (!removedReservation) {
+      return;
+    }
+
+
+    if (
+      selfCancelInProgress
+    ) {
+
+      return;
+    }
+
+
+    const localReservation =
+      getLocalReservation();
+
+
+    if (!localReservation) {
+      return;
+    }
+
+
+    if (
+      String(
+        localReservation.number
+      ) !==
+      String(
+        removedReservation.number
+      )
+    ) {
+
+      return;
+    }
+
+
+    clearLocalReservation();
+
+
+    const reservationArea =
+      $("reservationArea");
+
+
+    if (reservationArea) {
+
+      reservationArea.hidden =
+        true;
+
+      reservationArea.innerHTML =
+        "";
+    }
+
+
+    alert(
+      "予約がキャンセルされました。"
+    );
+
+
+    render();
+  }
+);
+
+
+/* =========================================
+   Firebase：全体リセット
+========================================= */
+
+onValue(
+  ref(
+    db,
+    "Queue/resetAt"
+  ),
+  (snapshot) => {
+
+    const resetAt =
+      Number(
+        snapshot.val() || 0
+      );
+
+
+    if (!resetAt) {
+      return;
+    }
+
+
+    const savedResetAt =
+      getLocalResetAt();
+
+
+    if (
+      savedResetAt === 0
+    ) {
+
+      saveLocalResetAt(
+        resetAt
+      );
+
+      lastResetAt =
+        resetAt;
+
+      return;
+    }
+
+
+    if (
+      resetAt > savedResetAt
+    ) {
+
+      saveLocalResetAt(
+        resetAt
+      );
+
+
+      lastResetAt =
+        resetAt;
+
+
+      clearLocalReservation();
+
+
+      cancellationMessageNumber =
+        null;
+
+
+      render();
+
+      return;
+    }
+
+
+    lastResetAt =
+      resetAt;
+  }
+);
+
+
+/* =========================================
+   画面描画
+========================================= */
+
+function render() {
+
+  const localReservation =
+    getLocalReservation();
+
+
+  /*
+   * 予約済み
+   */
+
+  if (localReservation) {
+
+    renderReservations();
+
+    return;
+  }
+
+
+  /*
+   * 予約前
+   */
+
+  renderSlots();
+
+  updateInfo();
+
+  updateReserveButton();
+
+
+  const closedArea =
+    $("closedArea");
+
+
+  if (closedArea) {
+
+    closedArea.hidden =
+      settings.open !== false;
+  }
+
+
+  const reservationArea =
+    $("reservationArea");
+
+
+  if (reservationArea) {
+
+    reservationArea.hidden =
+      true;
+
+    reservationArea.innerHTML =
+      "";
+  }
+}
+
+
+/* =========================================
+   時間変更
+========================================= */
+
+const slotSelect =
+  $("slot");
+
+
+if (slotSelect) {
+
+  slotSelect.addEventListener(
+    "change",
+    () => {
+
+      updateInfo();
+
+      updateReserveButton();
+    }
+  );
+}
+
+
+/* =========================================
+   初回描画
+========================================= */
+
+render();
