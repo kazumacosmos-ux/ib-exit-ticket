@@ -1,22 +1,14 @@
-// ==============================
-// 管理者設定ページ
-// 管理者設定.js
-// ==============================
-
-
 import { initializeApp } from
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
 
 import {
   getDatabase,
   ref,
   onValue,
-  set,
-  update
+  update,
+  set
 } from
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
 
 import {
   getAuth,
@@ -26,841 +18,450 @@ import {
 } from
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-
 import { firebaseConfig } from "./Firebase設定.js";
 
 
-// ==============================
-// Firebase初期化
-// ==============================
+// =========================
+// Firebase
+// =========================
 
-const app =
-  initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
-
-const db =
-  getDatabase(app);
+const db = getDatabase(app);
+const auth = getAuth(app);
 
 
-const auth =
-  getAuth(app);
+// =========================
+// 設定
+// =========================
+
+const STAFF_EMAIL =
+  "kazuma.cosmos@gmail.com";
+
+const ADMIN_PASSWORD =
+  "kazuma";
 
 
-// ==============================
-// ★ 管理者Firebaseアカウント
-// ==============================
-//
-// Firebase Authenticationで
-// 管理者専用アカウントを作って、
-// そのメールアドレスをここに入れる。
-//
-// 例:
-// admin@ib-exit.example
-//
-// ==============================
+// =========================
+// DOM
+// =========================
 
-const ADMIN_EMAIL =
-  "ここに管理者用メールアドレスを入れる";
+const loginArea =
+  document.getElementById("loginArea");
+
+const settingsArea =
+  document.getElementById("settingsArea");
+
+const passwordInput =
+  document.getElementById("password");
+
+const loginButton =
+  document.getElementById("login");
+
+const loginMessage =
+  document.getElementById("loginMessage");
+
+const receptionState =
+  document.getElementById("receptionState");
+
+const toggleOpen =
+  document.getElementById("toggleOpen");
+
+const slotMinutesInput =
+  document.getElementById("slotMinutes");
+
+const maxGroupsInput =
+  document.getElementById("maxGroups");
+
+const saveSettingsButton =
+  document.getElementById("saveSettings");
+
+const settingsMessage =
+  document.getElementById("settingsMessage");
+
+const resetAllButton =
+  document.getElementById("resetAll");
+
+const resetMessage =
+  document.getElementById("resetMessage");
+
+const backToStaffButton =
+  document.getElementById("backToStaff");
+
+const logoutButton =
+  document.getElementById("logout");
 
 
-// ==============================
-// 固定時刻
-// ==============================
-
-const FIXED_START =
-  "09:00";
-
-
-const FIXED_END =
-  "15:00";
-
-
-// ==============================
+// =========================
 // 現在の設定
-// ==============================
+// =========================
 
 let currentSettings = {
-
-  start:
-    FIXED_START,
-
-  end:
-    FIXED_END,
-
-  slotMinutes:
-    30,
-
-  maxGroups:
-    5,
-
-  open:
-    true
+  start: "09:00",
+  end: "15:00",
+  slotMinutes: 30,
+  maxGroups: 5,
+  open: true
 };
 
 
-// ==============================
-// HTML取得
-// ==============================
-
-function $(id) {
-
-  return document.getElementById(id);
-
-}
-
-
-// ==============================
-// 時刻 → 分
-// ==============================
-
-function toMinutes(time) {
-
-  if (!time) {
-
-    return 0;
-  }
-
-
-  const parts =
-    time.split(":");
-
-
-  const hour =
-    Number(parts[0]);
-
-
-  const minute =
-    Number(parts[1]);
-
-
-  return (
-    hour * 60 +
-    minute
-  );
-}
-
-
-// ==============================
+// =========================
 // ログイン
-// ==============================
+// =========================
 
-$("login").addEventListener(
+loginButton.addEventListener(
   "click",
   async () => {
 
     const password =
-      $("password").value;
+      passwordInput.value.trim();
 
-
-    const loginMessage =
-      $("loginMessage");
-
+    loginMessage.textContent = "";
 
     if (!password) {
-
       loginMessage.textContent =
-        "管理者パスワードを入力してください。";
-
+        "パスワードを入力してください。";
       return;
     }
 
-
-    loginMessage.textContent =
-      "認証しています……";
-
-
+    // Firebaseスタッフアカウントでログイン
     try {
 
-      const result =
-        await signInWithEmailAndPassword(
-          auth,
-          ADMIN_EMAIL,
-          password
-        );
-
-
-      if (
-        result.user.email !==
-        ADMIN_EMAIL
-      ) {
-
-        await signOut(auth);
-
-        throw new Error(
-          "管理者アカウントではありません。"
-        );
-      }
-
-
-      loginMessage.textContent =
-        "";
+      await signInWithEmailAndPassword(
+        auth,
+        STAFF_EMAIL,
+        password
+      );
 
     } catch (error) {
 
-      console.error(
-        "管理者ログインエラー:",
-        error
-      );
-
-
       loginMessage.textContent =
-        "管理者パスワードが違います。";
+        "ログインに失敗しました。";
+
+      console.error(error);
+
     }
+
   }
 );
 
 
-// ==============================
-// Enterキー
-// ==============================
-
-$("password").addEventListener(
-  "keydown",
-  event => {
-
-    if (
-      event.key === "Enter"
-    ) {
-
-      $("login").click();
-    }
-  }
-);
-
-
-// ==============================
-// 認証状態
-// ==============================
+// =========================
+// Firebaseログイン状態
+// =========================
 
 onAuthStateChanged(
   auth,
-  user => {
+  (user) => {
 
-    const loginArea =
-      $("loginArea");
+    if (user && user.email === STAFF_EMAIL) {
 
+      loginArea.style.display = "none";
 
-    const settingsArea =
-      $("settingsArea");
-
-
-    if (
-      user &&
-      user.email ===
-      ADMIN_EMAIL
-    ) {
-
-      loginArea.style.display =
-        "none";
-
-
-      settingsArea.style.display =
-        "block";
-
-
-      loadSettings();
+      // Firebaseログイン後、
+      // さらに管理者用パスワードを要求
+      showAdminPassword();
 
     } else {
 
-      loginArea.style.display =
-        "block";
+      loginArea.style.display = "block";
 
+      settingsArea.style.display = "none";
 
-      settingsArea.style.display =
-        "none";
     }
+
   }
 );
 
 
-// ==============================
-// 設定読み込み
-// ==============================
+// =========================
+// 管理者パスワード
+// =========================
 
-function loadSettings() {
+function showAdminPassword() {
 
-  const settingsRef =
-    ref(
-      db,
-      "Queue/settings"
+  const entered =
+    window.prompt(
+      "管理者用パスワードを入力してください。"
     );
 
+  if (entered !== ADMIN_PASSWORD) {
 
-  onValue(
-    settingsRef,
-    snapshot => {
+    alert(
+      "管理者用パスワードが違います。"
+    );
 
-      const data =
-        snapshot.val();
+    signOut(auth);
 
+    return;
 
-      if (data) {
+  }
 
-        currentSettings = {
+  settingsArea.style.display = "block";
 
-          start:
-            FIXED_START,
+  loginMessage.textContent = "";
 
-          end:
-            FIXED_END,
-
-          slotMinutes:
-            Number(
-              data.slotMinutes
-            ) || 30,
-
-          maxGroups:
-            Number(
-              data.maxGroups
-            ) || 5,
-
-          open:
-            data.open !== false
-        };
-      }
-
-
-      updateScreen();
-    }
-  );
 }
 
 
-// ==============================
-// 画面更新
-// ==============================
+// =========================
+// 設定読み込み
+// =========================
 
-function updateScreen() {
+onValue(
+  ref(db, "Queue/settings"),
+  (snapshot) => {
 
-  const slotMinutes =
-    $("slotMinutes");
+    const data =
+      snapshot.val();
 
-
-  const maxGroups =
-    $("maxGroups");
-
-
-  const receptionState =
-    $("receptionState");
-
-
-  const toggleOpen =
-    $("toggleOpen");
-
-
-  if (slotMinutes) {
-
-    slotMinutes.value =
-      String(
-        currentSettings.slotMinutes
-      );
-  }
-
-
-  if (maxGroups) {
-
-    maxGroups.value =
-      String(
-        currentSettings.maxGroups
-      );
-  }
-
-
-  if (
-    currentSettings.open
-  ) {
-
-    if (receptionState) {
-
-      receptionState.textContent =
-        "受付中";
-    }
-
-
-    if (toggleOpen) {
-
-      toggleOpen.textContent =
-        "受付停止";
-    }
-
-  } else {
-
-    if (receptionState) {
-
-      receptionState.textContent =
-        "受付停止中";
-    }
-
-
-    if (toggleOpen) {
-
-      toggleOpen.textContent =
-        "受付再開";
-    }
-  }
-}
-
-
-// ==============================
-// 受付停止・再開
-// ==============================
-
-$("toggleOpen").addEventListener(
-  "click",
-  async () => {
-
-    if (
-      !auth.currentUser ||
-      auth.currentUser.email !==
-      ADMIN_EMAIL
-    ) {
-
-      alert(
-        "管理者としてログインしてください。"
-      );
-
+    if (!data) {
       return;
     }
 
+    currentSettings = {
+      ...currentSettings,
+      ...data
+    };
 
-    const newOpen =
+    updateSettingsScreen();
+
+  }
+);
+
+
+// =========================
+// 設定画面更新
+// =========================
+
+function updateSettingsScreen() {
+
+  slotMinutesInput.value =
+    currentSettings.slotMinutes;
+
+  maxGroupsInput.value =
+    currentSettings.maxGroups;
+
+  if (currentSettings.open) {
+
+    receptionState.textContent =
+      "受付中";
+
+    toggleOpen.textContent =
+      "受付停止";
+
+  } else {
+
+    receptionState.textContent =
+      "受付停止中";
+
+    toggleOpen.textContent =
+      "受付再開";
+
+  }
+
+}
+
+
+// =========================
+// 受付停止・再開
+// =========================
+
+toggleOpen.addEventListener(
+  "click",
+  async () => {
+
+    const nextOpen =
       !currentSettings.open;
-
 
     try {
 
       await update(
-        ref(
-          db,
-          "Queue/settings"
-        ),
+        ref(db, "Queue/settings"),
         {
-          open:
-            newOpen
+          open: nextOpen
         }
       );
 
+      settingsMessage.textContent =
+        nextOpen
+          ? "受付を再開しました。"
+          : "受付を停止しました。";
+
     } catch (error) {
 
-      console.error(
-        "受付状態変更エラー:",
-        error
-      );
+      settingsMessage.textContent =
+        "設定変更に失敗しました。";
 
+      console.error(error);
 
-      alert(
-        "受付状態の変更に失敗しました。"
-      );
     }
+
   }
 );
 
 
-// ==============================
+// =========================
 // 設定保存
-// ==============================
+// =========================
 
-$("saveSettings").addEventListener(
+saveSettingsButton.addEventListener(
   "click",
   async () => {
 
-    if (
-      !auth.currentUser ||
-      auth.currentUser.email !==
-      ADMIN_EMAIL
-    ) {
-
-      alert(
-        "管理者としてログインしてください。"
-      );
-
-      return;
-    }
-
-
-    const settingsMessage =
-      $("settingsMessage");
-
-
     const slotMinutes =
-      Number(
-        $("slotMinutes").value
-      );
-
+      Number(slotMinutesInput.value);
 
     const maxGroups =
-      Number(
-        $("maxGroups").value
-      );
-
+      Number(maxGroupsInput.value);
 
     if (
-      !Number.isInteger(
-        slotMinutes
-      ) ||
-      slotMinutes <= 0
+      !Number.isInteger(slotMinutes) ||
+      slotMinutes < 1
     ) {
 
       settingsMessage.textContent =
-        "1枠の時間は1分以上の整数にしてください。";
+        "1枠の時間を正しく入力してください。";
 
       return;
+
     }
 
-
     if (
-      !Number.isInteger(
-        maxGroups
-      ) ||
+      !Number.isInteger(maxGroups) ||
       maxGroups < 1 ||
       maxGroups > 10
     ) {
 
       settingsMessage.textContent =
-        "最大組数は1〜10組にしてください。";
+        "最大組数は1〜10組で設定してください。";
 
       return;
+
     }
-
-
-    const totalMinutes =
-      toMinutes(FIXED_END) -
-      toMinutes(FIXED_START);
-
-
-    if (
-      slotMinutes >
-      totalMinutes
-    ) {
-
-      settingsMessage.textContent =
-        "1枠の時間が長すぎます。";
-
-      return;
-    }
-
-
-    if (
-      totalMinutes %
-      slotMinutes !== 0
-    ) {
-
-      settingsMessage.textContent =
-        "1枠の時間は、09:00〜15:00の6時間にきれいに収まる値にしてください。";
-
-      return;
-    }
-
-
-    settingsMessage.textContent =
-      "保存しています……";
-
 
     try {
 
       await update(
-        ref(
-          db,
-          "Queue/settings"
-        ),
+        ref(db, "Queue/settings"),
         {
-
-          start:
-            FIXED_START,
-
-          end:
-            FIXED_END,
-
-          slotMinutes:
-            slotMinutes,
-
-          maxGroups:
-            maxGroups,
-
-          open:
-            currentSettings.open
+          slotMinutes,
+          maxGroups
         }
       );
-
-
-      currentSettings = {
-
-        start:
-          FIXED_START,
-
-        end:
-          FIXED_END,
-
-        slotMinutes:
-          slotMinutes,
-
-        maxGroups:
-          maxGroups,
-
-        open:
-          currentSettings.open
-      };
-
 
       settingsMessage.textContent =
         "設定を保存しました。";
 
     } catch (error) {
 
-      console.error(
-        "設定保存エラー:",
-        error
-      );
-
-
       settingsMessage.textContent =
         "設定の保存に失敗しました。";
+
+      console.error(error);
+
     }
+
   }
 );
 
 
-// ==============================
-// ★ 全体リセット
-// ==============================
+// =========================
+// 全体リセット
+// =========================
 
-$("resetAll").addEventListener(
+resetAllButton.addEventListener(
   "click",
   async () => {
 
-    if (
-      !auth.currentUser ||
-      auth.currentUser.email !==
-      ADMIN_EMAIL
-    ) {
-
-      alert(
-        "管理者としてログインしてください。"
-      );
-
-      return;
-    }
-
-
-    // ============================
-    // 1回目の確認
-    // ============================
-
-    const firstConfirm =
+    const first =
       confirm(
-        "予約データをすべてリセットします。\n\n" +
-        "Web予約・紙予約・予約番号がすべて消えます。\n\n" +
-        "本当に実行しますか？"
+        "本当に全ての予約データを削除しますか？"
       );
 
-
-    if (!firstConfirm) {
-
+    if (!first) {
       return;
     }
 
-
-    // ============================
-    // 2回目の確認
-    // ============================
-
-    const secondConfirm =
+    const second =
       confirm(
-        "【最終確認】\n\n" +
-        "現在の予約をすべて削除し、" +
-        "予約番号をDREAM001から再スタートします。\n\n" +
-        "実行しますか？"
+        "この操作は取り消せません。本当に実行しますか？"
       );
 
-
-    if (!secondConfirm) {
-
+    if (!second) {
       return;
     }
-
-
-    const resetButton =
-      $("resetAll");
-
-
-    const resetMessage =
-      $("resetMessage");
-
-
-    if (resetButton) {
-
-      resetButton.disabled =
-        true;
-
-      resetButton.textContent =
-        "リセットしています……";
-    }
-
-
-    if (resetMessage) {
-
-      resetMessage.textContent =
-        "データをリセットしています……";
-    }
-
 
     try {
 
-      // ==========================
-      // ① 予約削除
-      // ==========================
-
       await set(
-        ref(
-          db,
-          "Queue/reservations"
-        ),
+        ref(db, "Queue/reservations"),
         null
       );
 
-
-      // ==========================
-      // ② 時間枠データ削除
-      // ==========================
-
       await set(
-        ref(
-          db,
-          "Queue/slots"
-        ),
+        ref(db, "Queue/slots"),
         null
       );
 
-
-      // ==========================
-      // ③ 予約番号リセット
-      // ==========================
-
       await set(
-        ref(
-          db,
-          "Queue/reservationLast"
-        ),
+        ref(db, "Queue/reservationLast"),
         0
       );
 
-
-      // ==========================
-      // ④ リセット時刻
-      // ==========================
-
       await set(
-        ref(
-          db,
-          "Queue/resetAt"
-        ),
+        ref(db, "Queue/resetAt"),
         Date.now()
       );
 
-
-      if (resetMessage) {
-
-        resetMessage.textContent =
-          "予約データをリセットしました。";
-      }
-
-
-      alert(
-        "予約データをリセットしました。\n\n" +
-        "次の予約番号はDREAM001です。"
-      );
+      resetMessage.textContent =
+        "予約データをすべてリセットしました。";
 
     } catch (error) {
 
-      console.error(
-        "全体リセットエラー:",
-        error
-      );
+      resetMessage.textContent =
+        "リセットに失敗しました。";
 
+      console.error(error);
 
-      if (resetMessage) {
-
-        resetMessage.textContent =
-          "リセットに失敗しました。";
-      }
-
-
-      let detail =
-        error?.message ||
-        "原因不明のエラー";
-
-
-      if (
-        error?.code
-      ) {
-
-        detail =
-          `${error.code}\n${detail}`;
-      }
-
-
-      alert(
-        "リセットに失敗しました。\n\n" +
-        detail
-      );
-
-    } finally {
-
-      if (resetButton) {
-
-        resetButton.disabled =
-          false;
-
-        resetButton.textContent =
-          "全体リセット";
-      }
     }
+
   }
 );
 
 
-// ==============================
+// =========================
 // スタッフ画面へ戻る
-// ==============================
+// =========================
 
-$("backToStaff").addEventListener(
+backToStaffButton.addEventListener(
   "click",
   () => {
 
     window.location.href =
       "./スタッフ.html";
+
   }
 );
 
 
-// ==============================
+// =========================
 // ログアウト
-// ==============================
+// =========================
 
-$("logout").addEventListener(
+logoutButton.addEventListener(
   "click",
   async () => {
 
-    try {
+    await signOut(auth);
 
-      await signOut(
-        auth
-      );
+    settingsArea.style.display =
+      "none";
 
-      window.location.href =
-        "./スタッフ.html";
+    loginArea.style.display =
+      "block";
 
-    } catch (error) {
+    passwordInput.value = "";
 
-      console.error(
-        "ログアウトエラー:",
-        error
-      );
-
-
-      alert(
-        "ログアウトに失敗しました。"
-      );
-    }
   }
 );
