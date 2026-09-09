@@ -810,7 +810,9 @@ function renderSlots() {
         count >= maxGroups;
 
       const option =
-        document.createElement("option");
+        document.createElement(
+          "option"
+        );
 
       option.value =
         slot.key;
@@ -989,6 +991,84 @@ function updateReserveButton() {
 
 
 /* =========================================
+   予約フォームを表示
+========================================= */
+
+function showBookingArea() {
+
+  const bookingArea =
+    $("bookingArea");
+
+  if (bookingArea) {
+
+    bookingArea.hidden =
+      settings.open === false;
+
+    bookingArea.style.display =
+      settings.open === false
+        ? "none"
+        : "";
+  }
+
+  const button =
+    $("reserve");
+
+  if (button) {
+
+    button.disabled =
+      false;
+
+    button.textContent =
+      "予約する";
+  }
+
+  renderSlots();
+  updateInfo();
+  updateReserveButton();
+}
+
+
+/* =========================================
+   予約フォームを完全に隠す
+========================================= */
+
+function hideBookingArea() {
+
+  const bookingArea =
+    $("bookingArea");
+
+  if (bookingArea) {
+
+    bookingArea.hidden =
+      true;
+
+    bookingArea.style.display =
+      "none";
+  }
+}
+
+
+/* =========================================
+   搭乗券を消す
+========================================= */
+
+function hideReservationArea() {
+
+  const reservationArea =
+    $("reservationArea");
+
+  if (reservationArea) {
+
+    reservationArea.hidden =
+      true;
+
+    reservationArea.innerHTML =
+      "";
+  }
+}
+
+
+/* =========================================
    搭乗券表示
 ========================================= */
 
@@ -1004,74 +1084,24 @@ function renderReservations() {
   const localReservation =
     getLocalReservation();
 
+
   /* =====================================
-     予約がない場合
+     予約がない
   ===================================== */
 
   if (!localReservation) {
 
-    reservationArea.hidden =
-      true;
+    hideReservationArea();
 
-    reservationArea.innerHTML =
-      "";
-
-    const bookingArea =
-      $("bookingArea");
-
-    if (bookingArea) {
-
-      bookingArea.hidden =
-        settings.open === false;
-    }
-
-    const button =
-      $("reserve");
-
-    if (button) {
-
-      button.disabled =
-        false;
-
-      button.textContent =
-        "予約する";
-    }
+    showBookingArea();
 
     return;
   }
 
 
   /* =====================================
-     予約がある場合
+     Firebase側の予約を確認
   ===================================== */
-
-  const bookingArea =
-    $("bookingArea");
-
-  if (bookingArea) {
-
-    bookingArea.hidden =
-      true;
-  }
-
-
-  /*
-   * ここが今回の重要部分。
-   * 「予約処理中…」を確実に終了させる。
-   */
-
-  const reserveButton =
-    $("reserve");
-
-  if (reserveButton) {
-
-    reserveButton.disabled =
-      true;
-
-    reserveButton.textContent =
-      "予約済み";
-  }
-
 
   const number =
     String(
@@ -1081,23 +1111,51 @@ function renderReservations() {
   const remoteReservation =
     reservations[number];
 
-  const reservation =
-    remoteReservation ||
-    localReservation;
 
-  if (!reservation) {
+  /*
+   * 搭乗済みになったら、
+   * お客さん側ではキャンセルと同じ扱い。
+   *
+   * 予約データ自体はFirebaseに残す。
+   */
 
-    reservationArea.hidden =
-      true;
+  if (
+    remoteReservation &&
+    remoteReservation.status === "completed"
+  ) {
 
-    reservationArea.innerHTML =
-      "";
+    console.log(
+      "搭乗済みを検知しました。予約フォームを復活します。"
+    );
+
+    clearLocalReservation();
+
+    hideReservationArea();
+
+    showBookingArea();
 
     return;
   }
 
+
+  /* =====================================
+     予約がある
+  ===================================== */
+
+  hideBookingArea();
+
+
+  const reservation =
+    remoteReservation ||
+    localReservation;
+
+
   reservationArea.hidden =
     false;
+
+  reservationArea.style.display =
+    "";
+
 
   const boardingTime =
     getBoardingTime(
@@ -1108,6 +1166,7 @@ function renderReservations() {
     getFlightNumber(
       reservation.number
     );
+
 
   reservationArea.innerHTML = `
 
@@ -1296,8 +1355,6 @@ async function reserve() {
   }
 
 
-  /* Firebase確認 */
-
   if (!firebaseReady || !db) {
 
     if (error) {
@@ -1306,34 +1363,20 @@ async function reserve() {
         "予約システムの接続に失敗しています。ページを再読み込みしてください。";
     }
 
-    console.error(
-      "Firebaseが初期化されていません。"
-    );
-
     return;
   }
 
-
-  /* 既存予約 */
 
   const existing =
     getLocalReservation();
 
   if (existing) {
 
-    if (error) {
-
-      error.textContent =
-        "すでに予約があります。";
-    }
-
     render();
 
     return;
   }
 
-
-  /* 受付状態 */
 
   if (
     settings.open === false
@@ -1371,15 +1414,6 @@ async function reserve() {
         "予約フォームの読み込みに失敗しました。";
     }
 
-    console.error(
-      "予約フォームの要素が見つかりません。",
-      {
-        name: !!nameInput,
-        size: !!sizeInput,
-        slot: !!slotInput
-      }
-    );
-
     return;
   }
 
@@ -1405,8 +1439,6 @@ async function reserve() {
     ];
 
 
-  /* 名前確認 */
-
   if (!name) {
 
     if (error) {
@@ -1419,8 +1451,6 @@ async function reserve() {
   }
 
 
-  /* 時間確認 */
-
   if (!slot) {
 
     if (error) {
@@ -1432,8 +1462,6 @@ async function reserve() {
     return;
   }
 
-
-  /* 人数確認 */
 
   if (
     size < 1 ||
@@ -1449,8 +1477,6 @@ async function reserve() {
     return;
   }
 
-
-  /* 現在の空き確認 */
 
   const currentCount =
     Number(
@@ -1482,6 +1508,7 @@ async function reserve() {
   const button =
     $("reserve");
 
+
   if (button) {
 
     button.disabled =
@@ -1498,9 +1525,9 @@ async function reserve() {
 
   try {
 
-    /* ===============================
+    /* =================================
        枠を確保
-    =============================== */
+    ================================= */
 
     const countRef =
       ref(
@@ -1556,9 +1583,9 @@ async function reserve() {
       true;
 
 
-    /* ===============================
+    /* =================================
        予約番号
-    =============================== */
+    ================================= */
 
     const lastRef =
       ref(
@@ -1591,9 +1618,9 @@ async function reserve() {
       lastResult.snapshot.val();
 
 
-    /* ===============================
+    /* =================================
        予約データ
-    =============================== */
+    ================================= */
 
     const reservation = {
 
@@ -1615,14 +1642,17 @@ async function reserve() {
       type:
         "web",
 
+      status:
+        "reserved",
+
       createdAt:
         Date.now()
     };
 
 
-    /* ===============================
+    /* =================================
        Firebase保存
-    =============================== */
+    ================================= */
 
     await set(
       ref(
@@ -1633,9 +1663,9 @@ async function reserve() {
     );
 
 
-    /* ===============================
+    /* =================================
        ローカル保存
-    =============================== */
+    ================================= */
 
     saveLocalReservation(
       reservation
@@ -1661,18 +1691,15 @@ async function reserve() {
 
 
     /* =================================
-       予約成功直後に画面を切り替える
+       ここで即座に画面を切り替える
     ================================= */
 
-    const bookingArea =
-      $("bookingArea");
+    hideBookingArea();
 
-    if (bookingArea) {
 
-      bookingArea.hidden =
-        true;
-    }
-
+    /*
+     * 「予約処理中…」が残らないようにする
+     */
 
     if (button) {
 
@@ -1685,23 +1712,10 @@ async function reserve() {
 
 
     /*
-     * FirebaseのonValueを待たず、
-     * この場で搭乗券を表示する。
+     * 搭乗券を表示
      */
 
     renderReservations();
-
-
-    /*
-     * 予約完了表示を少しだけ見せる。
-     * その後、搭乗券に切り替える。
-     */
-
-    showReservationComplete(
-      number,
-      slot.start,
-      slot.end
-    );
 
 
   } catch (firebaseError) {
@@ -1712,9 +1726,9 @@ async function reserve() {
     );
 
 
-    /* ===============================
+    /* =================================
        枠を戻す
-    =============================== */
+    ================================= */
 
     if (countReserved) {
 
@@ -1762,24 +1776,29 @@ async function reserve() {
     }
 
 
+    /*
+     * 失敗した場合だけ予約フォームを復活
+     */
+
+    showBookingArea();
+
+
   } finally {
 
     /*
-     * 予約成功時は
-     * renderReservations() が「予約済み」にするので
-     * ここでは「予約処理中…」に戻さない。
+     * 成功している場合は
+     * 「予約処理中…」に戻さない。
      */
 
     if (
-      button &&
-      !getLocalReservation()
+      getLocalReservation()
     ) {
 
-      button.disabled =
-        false;
+      hideBookingArea();
 
-      button.textContent =
-        "予約する";
+    } else {
+
+      showBookingArea();
     }
   }
 }
@@ -1883,21 +1902,14 @@ async function cancelReservation(
     clearLocalReservation();
 
 
-    const reservationArea =
-      $("reservationArea");
+    hideReservationArea();
 
 
-    if (reservationArea) {
+    /*
+     * キャンセル後は予約フォーム復活
+     */
 
-      reservationArea.hidden =
-        true;
-
-      reservationArea.innerHTML =
-        "";
-    }
-
-
-    render();
+    showBookingArea();
 
 
   } catch (error) {
@@ -2044,6 +2056,14 @@ if (firebaseReady) {
       reservations =
         snapshot.val() || {};
 
+      /*
+       * 予約が「搭乗済み」に変更された瞬間に
+       * render() → renderReservations() が呼ばれる。
+       *
+       * renderReservations() が completed を検知すると
+       * LocalStorageを消して予約フォームを復活する。
+       */
+
       render();
     },
     (error) => {
@@ -2108,19 +2128,7 @@ if (firebaseReady) {
 
       clearLocalReservation();
 
-
-      const reservationArea =
-        $("reservationArea");
-
-
-      if (reservationArea) {
-
-        reservationArea.hidden =
-          true;
-
-        reservationArea.innerHTML =
-          "";
-      }
+      hideReservationArea();
 
 
       alert(
@@ -2128,7 +2136,11 @@ if (firebaseReady) {
       );
 
 
-      render();
+      /*
+       * キャンセルされたのでフォーム復活
+       */
+
+      showBookingArea();
     }
   );
 
@@ -2187,7 +2199,9 @@ if (firebaseReady) {
 
         clearLocalReservation();
 
-        render();
+        hideReservationArea();
+
+        showBookingArea();
 
         return;
       }
@@ -2222,19 +2236,15 @@ function render() {
 
 
   /* =====================================
-     予約済み
+     ローカル予約あり
   ===================================== */
 
   if (localReservation) {
 
-    const bookingArea =
-      $("bookingArea");
-
-    if (bookingArea) {
-
-      bookingArea.hidden =
-        true;
-    }
+    /*
+     * completedならrenderReservations側で
+     * LocalStorageを消してフォームを復活する。
+     */
 
     renderReservations();
 
@@ -2243,24 +2253,12 @@ function render() {
 
 
   /* =====================================
-     予約前
+     予約なし
   ===================================== */
 
-  const bookingArea =
-    $("bookingArea");
+  showBookingArea();
 
-  if (bookingArea) {
-
-    bookingArea.hidden =
-      settings.open === false;
-  }
-
-
-  renderSlots();
-
-  updateInfo();
-
-  updateReserveButton();
+  hideReservationArea();
 
 
   const closedArea =
@@ -2271,20 +2269,6 @@ function render() {
 
     closedArea.hidden =
       settings.open !== false;
-  }
-
-
-  const reservationArea =
-    $("reservationArea");
-
-
-  if (reservationArea) {
-
-    reservationArea.hidden =
-      true;
-
-    reservationArea.innerHTML =
-      "";
   }
 }
 
