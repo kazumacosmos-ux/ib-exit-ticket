@@ -15,95 +15,67 @@ import { firebaseConfig } from "./Firebase設定.js";
 
 /* =========================================
    Firebase
-========================================= */
+   ========================================= */
 
-const app =
-  initializeApp(firebaseConfig);
-
-const db =
-  getDatabase(app);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 
 /* =========================================
-   DOM
-========================================= */
+   共通
+   ========================================= */
 
-const $ =
-  (id) => document.getElementById(id);
+const $ = (id) => document.getElementById(id);
 
 
 /* =========================================
-   データ
-========================================= */
+   設定
+   ========================================= */
 
 let settings = {
-
   start: "09:00",
-
   end: "15:00",
-
   slotMinutes: 60,
-
   maxGroups: 1,
-
   open: true
-
 };
 
 
-let slots = {};
+/* =========================================
+   Firebaseデータ
+   ========================================= */
 
+let slots = {};
 let reservations = {};
 
 
 /* =========================================
-   キャンセル状態
-========================================= */
-
-/*
-  お客さん自身がキャンセルしている途中かどうか。
-
-  true の間は onChildRemoved() では
-  メッセージを表示しません。
-
-  キャンセル処理が終わったあと、
-  cancelReservation() 側では
-  メッセージを表示しません。
-
-  → Firebase削除監視だけが
-    メッセージを表示します。
-*/
+   キャンセル関連
+   ========================================= */
 
 let selfCancelInProgress = false;
-
-
-/*
-  同じ削除について
-  メッセージを複数回出さないための番号。
-*/
-
 let cancellationMessageNumber = null;
 
 
 /* =========================================
-   localStorage
-========================================= */
+   リセット関連
+   ========================================= */
 
-const RESERVATION_KEY =
-  "ib_reservation";
+let lastResetAt = 0;
+
+
+/* =========================================
+   LocalStorage
+   ========================================= */
+
+const RESERVATION_KEY = "ib_reservation";
 
 
 function getLocalReservation() {
-
   try {
-
-    const value =
-      localStorage.getItem(
-        RESERVATION_KEY
-      );
+    const value = localStorage.getItem(RESERVATION_KEY);
 
     if (!value) {
-
       return null;
     }
 
@@ -121,17 +93,12 @@ function getLocalReservation() {
 }
 
 
-function saveLocalReservation(
-  reservation
-) {
-
+function saveLocalReservation(reservation) {
   try {
 
     localStorage.setItem(
       RESERVATION_KEY,
-      JSON.stringify(
-        reservation
-      )
+      JSON.stringify(reservation)
     );
 
   } catch (error) {
@@ -145,7 +112,6 @@ function saveLocalReservation(
 
 
 function clearLocalReservation() {
-
   try {
 
     localStorage.removeItem(
@@ -163,36 +129,21 @@ function clearLocalReservation() {
 
 
 /* =========================================
-   キャンセル完了メッセージ
-========================================= */
+   キャンセルメッセージ
+   ========================================= */
 
-function showCancellationMessage(
-  number
-) {
+function showCancellationMessage(number) {
 
-  const currentNumber =
-    String(number);
-
-
-  /*
-    同じ予約番号について
-    すでに表示していたら何もしない。
-  */
+  const currentNumber = String(number);
 
   if (
     cancellationMessageNumber !== null &&
-    String(
-      cancellationMessageNumber
-    ) === currentNumber
+    String(cancellationMessageNumber) === currentNumber
   ) {
-
     return;
   }
 
-
-  cancellationMessageNumber =
-    currentNumber;
-
+  cancellationMessageNumber = currentNumber;
 
   alert(
     "予約がキャンセルされました。"
@@ -201,140 +152,95 @@ function showCancellationMessage(
 
 
 /* =========================================
-   時間計算
-========================================= */
+   時刻処理
+   ========================================= */
 
-function toMinutes(
-  time
-) {
+function toMinutes(time) {
 
   if (
     !time ||
     typeof time !== "string"
   ) {
-
     return 0;
   }
 
+  const parts = time.split(":");
 
-  const parts =
-    time.split(":");
-
-
-  const hour =
-    Number(parts[0]);
-
-
-  const minute =
-    Number(parts[1]);
-
+  const hour = Number(parts[0]);
+  const minute = Number(parts[1]);
 
   if (
     Number.isNaN(hour) ||
     Number.isNaN(minute)
   ) {
-
     return 0;
   }
 
-
-  return (
-    hour * 60 +
-    minute
-  );
+  return hour * 60 + minute;
 }
 
 
-function formatTime(
-  totalMinutes
-) {
+function formatTime(totalMinutes) {
 
   const hour =
-    Math.floor(
-      totalMinutes / 60
-    );
-
+    Math.floor(totalMinutes / 60);
 
   const minute =
     totalMinutes % 60;
 
-
   return (
-    String(hour).padStart(
-      2,
-      "0"
-    ) +
+    String(hour).padStart(2, "0") +
     ":" +
-    String(minute).padStart(
-      2,
-      "0"
-    )
-  );
-}
-
-
-function slotKey(
-  minutes
-) {
-
-  return (
-    String(
-      Math.floor(
-        minutes / 60
-      )
-    ).padStart(
-      2,
-      "0"
-    ) +
-    "-" +
-    String(
-      minutes % 60
-    ).padStart(
-      2,
-      "0"
-    )
+    String(minute).padStart(2, "0")
   );
 }
 
 
 /* =========================================
-   時間帯作成
-========================================= */
+   スロットキー
+   ========================================= */
+
+function slotKey(minutes) {
+
+  return (
+    String(
+      Math.floor(minutes / 60)
+    ).padStart(2, "0") +
+    "-" +
+    String(minutes % 60).padStart(2, "0")
+  );
+}
+
+
+/* =========================================
+   時間帯生成
+   ========================================= */
 
 function createSlots() {
 
   const result = {};
 
-
   const start =
     toMinutes(
-      settings.start ||
-      "09:00"
+      settings.start || "09:00"
     );
-
 
   const end =
     toMinutes(
-      settings.end ||
-      "15:00"
+      settings.end || "15:00"
     );
-
 
   const slotMinutes =
     Number(
-      settings.slotMinutes ||
-      60
+      settings.slotMinutes || 60
     );
-
 
   if (
     slotMinutes <= 0 ||
     end <= start
   ) {
-
     return result;
   }
-
 
   for (
     let minutes = start;
@@ -343,41 +249,21 @@ function createSlots() {
   ) {
 
     const slotEnd =
-      minutes +
-      slotMinutes;
+      minutes + slotMinutes;
 
-
-    if (
-      slotEnd > end
-    ) {
-
+    if (slotEnd > end) {
       break;
     }
 
-
     const key =
-      slotKey(
-        minutes
-      );
-
+      slotKey(minutes);
 
     result[key] = {
-
       key,
-
-      start:
-        formatTime(
-          minutes
-        ),
-
-      end:
-        formatTime(
-          slotEnd
-        )
-
+      start: formatTime(minutes),
+      end: formatTime(slotEnd)
     };
   }
-
 
   return result;
 }
@@ -385,35 +271,24 @@ function createSlots() {
 
 /* =========================================
    今日の日付
-========================================= */
+   ========================================= */
 
 function getToday() {
 
-  const now =
-    new Date();
-
+  const now = new Date();
 
   const year =
     now.getFullYear();
 
-
   const month =
     String(
       now.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    );
-
+    ).padStart(2, "0");
 
   const day =
     String(
       now.getDate()
-    ).padStart(
-      2,
-      "0"
-    );
-
+    ).padStart(2, "0");
 
   return (
     `${year}/${month}/${day}`
@@ -423,17 +298,12 @@ function getToday() {
 
 /* =========================================
    搭乗時刻
-========================================= */
+   ========================================= */
 
-function getBoardingTime(
-  endTime
-) {
+function getBoardingTime(endTime) {
 
   const minutes =
-    toMinutes(
-      endTime
-    );
-
+    toMinutes(endTime);
 
   return formatTime(
     minutes + 5
@@ -442,83 +312,59 @@ function getBoardingTime(
 
 
 /* =========================================
-   予約番号
-========================================= */
+   便名
+   ========================================= */
 
-function getFlightNumber(
-  number
-) {
+function getFlightNumber(number) {
 
   return (
     "DREAM" +
-    String(
-      number
-    ).padStart(
-      3,
-      "0"
-    )
+    String(number).padStart(3, "0")
   );
 }
 
 
 /* =========================================
    HTMLエスケープ
-========================================= */
+   ========================================= */
 
-function escapeHtml(
-  value
-) {
+function escapeHtml(value) {
 
-  return String(
-    value
-  ).replace(
+  return String(value).replace(
     /[&<>"']/g,
     (character) => ({
-
       "&": "&amp;",
-
       "<": "&lt;",
-
       ">": "&gt;",
-
       '"': "&quot;",
-
       "'": "&#039;"
-
     }[character])
   );
 }
 
 
 /* =========================================
-   時間帯セレクト
-========================================= */
+   予約フォームの時間帯表示
+   ========================================= */
 
 function renderSlots() {
 
   const select =
     $("slot");
 
-
   if (!select) {
-
     return;
   }
 
-
-  select.innerHTML =
-    "";
-
+  select.innerHTML = "";
 
   const generatedSlots =
     createSlots();
-
 
   const slotList =
     Object.values(
       generatedSlots
     );
-
 
   if (
     slotList.length === 0
@@ -529,92 +375,66 @@ function renderSlots() {
         "option"
       );
 
-
-    option.value =
-      "";
-
+    option.value = "";
 
     option.textContent =
       "時間帯を設定できません";
 
-
-    option.disabled =
-      true;
-
-
-    option.selected =
-      true;
-
+    option.disabled = true;
+    option.selected = true;
 
     select.appendChild(
       option
     );
 
-
     return;
   }
 
-
-  let firstAvailable =
-    null;
-
+  let firstAvailable = null;
 
   slotList.forEach(
     (slot) => {
 
       const count =
         Number(
-          slots[
-            slot.key
-          ]?.count || 0
+          slots[slot.key]?.count || 0
         );
-
 
       const maxGroups =
         Number(
-          settings.maxGroups ||
-          1
+          settings.maxGroups || 1
         );
-
 
       const isFull =
         count >= maxGroups;
-
 
       const option =
         document.createElement(
           "option"
         );
 
-
       option.value =
         slot.key;
-
 
       option.textContent =
         `${slot.start}～${slot.end}`;
 
-
       option.disabled =
         isFull;
-
 
       if (
         !isFull &&
         firstAvailable === null
       ) {
-
         firstAvailable =
           slot.key;
       }
-
 
       select.appendChild(
         option
       );
     }
   );
-
 
   if (
     firstAvailable !== null
@@ -632,61 +452,48 @@ function renderSlots() {
 
 
 /* =========================================
-   選択中の時間帯情報
-========================================= */
+   時間帯情報
+   ========================================= */
 
 function updateInfo() {
 
   const select =
     $("slot");
 
-
   const info =
     $("slotInfo");
-
 
   if (
     !select ||
     !info
   ) {
-
     return;
   }
 
-
   const generatedSlots =
     createSlots();
-
 
   const slot =
     generatedSlots[
       select.value
     ];
 
-
   if (!slot) {
 
-    info.textContent =
-      "";
+    info.textContent = "";
 
     return;
   }
 
-
   const count =
     Number(
-      slots[
-        slot.key
-      ]?.count || 0
+      slots[slot.key]?.count || 0
     );
-
 
   const maxGroups =
     Number(
-      settings.maxGroups ||
-      1
+      settings.maxGroups || 1
     );
-
 
   if (
     count >= maxGroups
@@ -698,9 +505,7 @@ function updateInfo() {
   } else {
 
     const remaining =
-      maxGroups -
-      count;
-
+      maxGroups - count;
 
     info.textContent =
       `残り ${remaining} 組`;
@@ -710,177 +515,147 @@ function updateInfo() {
 
 /* =========================================
    予約ボタン状態
-========================================= */
+   ========================================= */
 
 function updateReserveButton() {
 
   const button =
     $("reserve");
 
-
   if (!button) {
-
     return;
   }
-
 
   const select =
     $("slot");
 
-
   if (!select) {
-
     return;
   }
 
-
   const generatedSlots =
     createSlots();
-
 
   const slot =
     generatedSlots[
       select.value
     ];
 
-
   if (!slot) {
 
-    button.disabled =
-      true;
+    button.disabled = true;
 
     return;
   }
 
-
   const count =
     Number(
-      slots[
-        slot.key
-      ]?.count || 0
+      slots[slot.key]?.count || 0
     );
-
 
   const maxGroups =
     Number(
-      settings.maxGroups ||
-      1
+      settings.maxGroups || 1
     );
-
 
   if (
     settings.open === false ||
     count >= maxGroups
   ) {
 
-    button.disabled =
-      true;
+    button.disabled = true;
 
   } else {
 
-    button.disabled =
-      false;
+    button.disabled = false;
   }
 }
 
 
 /* =========================================
-   予約表示
-========================================= */
+   搭乗券表示
+   ========================================= */
 
 function renderReservations() {
 
   const reservationArea =
     $("reservationArea");
 
-
   const reserveArea =
     $("reserveArea");
-
 
   if (
     !reservationArea ||
     !reserveArea
   ) {
-
     return;
   }
 
-
   const localReservation =
     getLocalReservation();
-
 
   if (!localReservation) {
 
     reservationArea.hidden =
       true;
 
-
     reservationArea.innerHTML =
       "";
-
 
     reserveArea.hidden =
       settings.open === false;
 
-
     return;
   }
-
 
   const number =
     String(
       localReservation.number
     );
 
+  /*
+   * 重要：
+   * Firebaseからまだ reservations が
+   * 更新されていない場合でも、
+   * localStorageに保存されている予約を
+   * 一時的に使えるようにする。
+   */
 
   const remoteReservation =
     reservations[number];
 
+  const reservation =
+    remoteReservation ||
+    localReservation;
 
-  /*
-    Firebaseから消えた直後は
-    onChildRemoved()が処理する。
-
-    ここではalertを出さない。
-  */
-
-  if (!remoteReservation) {
+  if (!reservation) {
 
     reservationArea.hidden =
       true;
 
+    reserveArea.hidden =
+      settings.open === false;
+
     return;
   }
-
-
-  const reservation =
-    remoteReservation;
-
 
   reservationArea.hidden =
     false;
 
-
   reserveArea.hidden =
     true;
-
 
   const boardingTime =
     getBoardingTime(
       reservation.end
     );
 
-
   const flightNumber =
     getFlightNumber(
       reservation.number
     );
 
-
   reservationArea.innerHTML = `
-
     <div class="boarding-pass">
 
       <div class="boarding-pass-header">
@@ -896,7 +671,6 @@ function renderReservations() {
           </p>
 
         </div>
-
 
         <strong>
           ${escapeHtml(
@@ -915,19 +689,14 @@ function renderReservations() {
             ご来場時間
           </span>
 
-
           <strong>
-
             ${escapeHtml(
               reservation.start
             )}
-
             ～
-
             ${escapeHtml(
               reservation.end
             )}
-
           </strong>
 
         </div>
@@ -935,13 +704,11 @@ function renderReservations() {
 
         <div class="boarding-info-grid">
 
-
           <div>
 
             <span>
               日付
             </span>
-
 
             <strong>
               ${getToday()}
@@ -956,7 +723,6 @@ function renderReservations() {
               ゲート
             </span>
 
-
             <strong>
               1-B
             </strong>
@@ -969,7 +735,6 @@ function renderReservations() {
             <span>
               搭乗時刻
             </span>
-
 
             <strong>
               ${escapeHtml(
@@ -986,7 +751,6 @@ function renderReservations() {
               人数
             </span>
 
-
             <strong>
               ${escapeHtml(
                 reservation.size
@@ -994,7 +758,6 @@ function renderReservations() {
             </strong>
 
           </div>
-
 
         </div>
 
@@ -1005,7 +768,6 @@ function renderReservations() {
             代表者
           </span>
 
-
           <strong>
             ${escapeHtml(
               reservation.name ||
@@ -1015,18 +777,14 @@ function renderReservations() {
 
         </div>
 
-
       </div>
 
 
       <div class="boarding-pass-footer">
 
-
         <p class="boarding-note">
-
           ご来場時間になりましたら<br>
           1-B出口へお越しください。
-
         </p>
 
 
@@ -1038,33 +796,32 @@ function renderReservations() {
           この予約をキャンセル
         </button>
 
-
       </div>
 
-
     </div>
-
   `;
 
 
   const cancelButton =
     $("cancelReservation");
 
-
   if (cancelButton) {
 
     cancelButton.onclick =
-      () =>
+      () => {
+
         cancelReservation(
           reservation
         );
+
+      };
   }
 }
 
 
 /* =========================================
-   予約
-========================================= */
+   予約処理
+   ========================================= */
 
 if ($("reserve")) {
 
@@ -1074,17 +831,18 @@ if ($("reserve")) {
       const error =
         $("error");
 
-
       if (error) {
-
         error.textContent =
           "";
       }
 
 
+      /* -------------------------
+         既存予約チェック
+         ------------------------- */
+
       const existing =
         getLocalReservation();
-
 
       if (existing) {
 
@@ -1092,11 +850,18 @@ if ($("reserve")) {
 
           error.textContent =
             "すでに予約があります。";
+
         }
+
+        render();
 
         return;
       }
 
+
+      /* -------------------------
+         受付状態
+         ------------------------- */
 
       if (
         settings.open === false
@@ -1106,31 +871,30 @@ if ($("reserve")) {
 
           error.textContent =
             "現在受付停止中です。";
+
         }
 
         return;
       }
 
 
-      const name =
-        $("name")
-          .value
-          .trim();
+      /* -------------------------
+         入力取得
+         ------------------------- */
 
+      const name =
+        $("name").value.trim();
 
       const size =
         Number(
           $("size").value
         );
 
-
       const selectedSlotKey =
         $("slot").value;
 
-
       const generatedSlots =
         createSlots();
-
 
       const slot =
         generatedSlots[
@@ -1138,12 +902,17 @@ if ($("reserve")) {
         ];
 
 
+      /* -------------------------
+         入力チェック
+         ------------------------- */
+
       if (!name) {
 
         if (error) {
 
           error.textContent =
             "代表者の名前を入力してください。";
+
         }
 
         return;
@@ -1156,6 +925,7 @@ if ($("reserve")) {
 
           error.textContent =
             "時間帯を選択してください。";
+
         }
 
         return;
@@ -1171,153 +941,162 @@ if ($("reserve")) {
 
           error.textContent =
             "人数は1～4人で入力してください。";
+
         }
 
         return;
       }
 
 
-      /* -----------------------------
-         時間枠を確保
-      ----------------------------- */
+      /* -------------------------
+         ボタン連打防止
+         ------------------------- */
 
-      const countRef =
-        ref(
-          db,
-          `Queue/slots/${slot.key}/count`
-        );
+      const reserveButton =
+        $("reserve");
 
+      if (reserveButton) {
 
-      const countResult =
-        await runTransaction(
-          countRef,
-          (value) => {
-
-            const count =
-              Number(
-                value || 0
-              );
-
-
-            const maxGroups =
-              Number(
-                settings.maxGroups ||
-                1
-              );
-
-
-            if (
-              count >= maxGroups
-            ) {
-
-              return undefined;
-            }
-
-
-            return count + 1;
-          }
-        );
-
-
-      if (
-        !countResult.committed
-      ) {
-
-        if (error) {
-
-          error.textContent =
-            "その時間帯は満員になりました。";
-        }
-
-
-        render();
-
-        return;
+        reserveButton.disabled =
+          true;
       }
 
-
-      /* -----------------------------
-         予約番号取得
-      ----------------------------- */
-
-      const lastRef =
-        ref(
-          db,
-          "Queue/reservationLast"
-        );
-
-
-      const lastResult =
-        await runTransaction(
-          lastRef,
-          (value) =>
-            Number(
-              value || 0
-            ) + 1
-        );
-
-
-      if (
-        !lastResult.committed
-      ) {
-
-        await runTransaction(
-          countRef,
-          (value) =>
-            Math.max(
-              0,
-              Number(
-                value || 0
-              ) - 1
-            )
-        );
-
-
-        if (error) {
-
-          error.textContent =
-            "予約番号の取得に失敗しました。";
-        }
-
-        return;
-      }
-
-
-      const number =
-        lastResult.snapshot.val();
-
-
-      const reservation = {
-
-        number,
-
-        name,
-
-        slot:
-          slot.key,
-
-        start:
-          slot.start,
-
-        end:
-          slot.end,
-
-        size,
-
-        type:
-          "web",
-
-        createdAt:
-          Date.now()
-
-      };
-
-
-      /* -----------------------------
-         Firebase保存
-      ----------------------------- */
 
       try {
+
+        /* =========================
+           枠を確保
+           ========================= */
+
+        const countRef =
+          ref(
+            db,
+            `Queue/slots/${slot.key}/count`
+          );
+
+
+        const countResult =
+          await runTransaction(
+            countRef,
+            (value) => {
+
+              const count =
+                Number(value || 0);
+
+              const maxGroups =
+                Number(
+                  settings.maxGroups || 1
+                );
+
+              if (
+                count >= maxGroups
+              ) {
+
+                return undefined;
+              }
+
+              return count + 1;
+            }
+          );
+
+
+        if (
+          !countResult.committed
+        ) {
+
+          if (error) {
+
+            error.textContent =
+              "その時間帯は満員になりました。";
+
+          }
+
+          render();
+
+          return;
+        }
+
+
+        /* =========================
+           予約番号取得
+           ========================= */
+
+        const lastRef =
+          ref(
+            db,
+            "Queue/reservationLast"
+          );
+
+
+        const lastResult =
+          await runTransaction(
+            lastRef,
+            (value) =>
+              Number(value || 0) + 1
+          );
+
+
+        if (
+          !lastResult.committed
+        ) {
+
+          await runTransaction(
+            countRef,
+            (value) =>
+              Math.max(
+                0,
+                Number(value || 0) - 1
+              )
+          );
+
+
+          if (error) {
+
+            error.textContent =
+              "予約番号の取得に失敗しました。";
+
+          }
+
+          return;
+        }
+
+
+        const number =
+          lastResult.snapshot.val();
+
+
+        /* =========================
+           予約データ作成
+           ========================= */
+
+        const reservation = {
+
+          number,
+
+          name,
+
+          slot:
+            slot.key,
+
+          start:
+            slot.start,
+
+          end:
+            slot.end,
+
+          size,
+
+          type:
+            "web",
+
+          createdAt:
+            Date.now()
+        };
+
+
+        /* =========================
+           Firebaseへ保存
+           ========================= */
 
         await set(
           ref(
@@ -1328,23 +1107,47 @@ if ($("reserve")) {
         );
 
 
+        /* =========================
+           LocalStorage保存
+           ========================= */
+
         saveLocalReservation(
           reservation
         );
 
 
         /*
-          新しい予約なので、
-          前回のキャンセル番号を解除。
-        */
+         * 重要修正
+         *
+         * FirebaseのonValueが返ってくる前でも
+         * 今作った予約を画面側のreservationsへ
+         * 即座に入れる。
+         */
+
+        reservations[
+          String(number)
+        ] = reservation;
+
 
         cancellationMessageNumber =
           null;
 
 
-        $("name").value =
-          "";
+        /* =========================
+           入力欄をクリア
+           ========================= */
 
+        if ($("name")) {
+
+          $("name").value =
+            "";
+
+        }
+
+
+        /* =========================
+           搭乗券を即表示
+           ========================= */
 
         render();
 
@@ -1357,22 +1160,63 @@ if ($("reserve")) {
         );
 
 
-        await runTransaction(
-          countRef,
-          (value) =>
-            Math.max(
-              0,
-              Number(
-                value || 0
-              ) - 1
-            )
-        );
+        /*
+         * 予約保存に失敗した場合は
+         * 確保した枠を戻す
+         */
+
+        try {
+
+          await runTransaction(
+            ref(
+              db,
+              `Queue/slots/${slot.key}/count`
+            ),
+            (value) =>
+              Math.max(
+                0,
+                Number(value || 0) - 1
+              )
+          );
+
+        } catch (rollbackError) {
+
+          console.error(
+            "枠の戻し処理に失敗しました:",
+            rollbackError
+          );
+        }
 
 
         if (error) {
 
           error.textContent =
             "予約に失敗しました。もう一度お試しください。";
+
+        }
+
+        render();
+
+
+      } finally {
+
+        /*
+         * 予約成功時は搭乗券表示中なので
+         * ボタン自体は非表示。
+         *
+         * 失敗時だけ再び押せるようにする。
+         */
+
+        const currentReservation =
+          getLocalReservation();
+
+        if (
+          !currentReservation &&
+          reserveButton
+        ) {
+
+          reserveButton.disabled =
+            false;
         }
       }
     };
@@ -1381,21 +1225,16 @@ if ($("reserve")) {
 
 /* =========================================
    予約キャンセル
-========================================= */
+   ========================================= */
 
 async function cancelReservation(
   reservation
 ) {
 
   if (!reservation) {
-
     return;
   }
 
-
-  /* -----------------------------
-     確認
-  ----------------------------- */
 
   const ok =
     confirm(
@@ -1404,28 +1243,12 @@ async function cancelReservation(
 
 
   if (!ok) {
-
     return;
   }
 
 
-  /*
-    ★ここが重要
-
-    Firebaseの削除監視が
-    「スタッフによる削除」と
-    誤認しないようにする。
-  */
-
   selfCancelInProgress =
     true;
-
-
-  /*
-    今回の予約番号について
-    まだキャンセル完了メッセージを
-    出していない状態にする。
-  */
 
   cancellationMessageNumber =
     null;
@@ -1433,9 +1256,9 @@ async function cancelReservation(
 
   try {
 
-    /* -----------------------------
+    /* =========================
        Firebaseから予約削除
-    ----------------------------- */
+       ========================= */
 
     await remove(
       ref(
@@ -1445,9 +1268,9 @@ async function cancelReservation(
     );
 
 
-    /* -----------------------------
-       時間枠の人数を1減らす
-    ----------------------------- */
+    /* =========================
+       枠を1つ戻す
+       ========================= */
 
     await runTransaction(
       ref(
@@ -1457,49 +1280,44 @@ async function cancelReservation(
       (value) =>
         Math.max(
           0,
-          Number(
-            value || 0
-          ) - 1
+          Number(value || 0) - 1
         )
     );
 
 
-    /* -----------------------------
-       localStorage削除
-    ----------------------------- */
+    /* =========================
+       LocalStorage削除
+       ========================= */
 
     clearLocalReservation();
 
 
-    /* -----------------------------
-       画面を予約入力に戻す
-    ----------------------------- */
+    /*
+     * 自分の予約を削除した場合は
+     * FirebaseのonChildRemovedから
+     * メッセージを出さない。
+     *
+     * 予約者本人のキャンセル時は
+     * ここではメッセージを出さず、
+     * 画面だけ更新する。
+     */
 
-    if (
-      $("reservationArea")
-    ) {
+    if ($("reservationArea")) {
 
       $("reservationArea").hidden =
         true;
-
 
       $("reservationArea").innerHTML =
         "";
     }
 
 
-    if (
-      $("reserveArea")
-    ) {
+    if ($("reserveArea")) {
 
       $("reserveArea").hidden =
         settings.open === false;
     }
 
-
-    /* -----------------------------
-       時間帯更新
-    ----------------------------- */
 
     renderSlots();
 
@@ -1508,14 +1326,6 @@ async function cancelReservation(
     updateReserveButton();
 
 
-    /*
-      ★ここではalertを出さない。
-
-      onChildRemoved()だけが
-      キャンセル完了メッセージを
-      1回出す。
-    */
-
   } catch (error) {
 
     console.error(
@@ -1523,11 +1333,6 @@ async function cancelReservation(
       error
     );
 
-
-    /*
-      エラーの場合だけ
-      自分でキャンセル中の状態を解除。
-    */
 
     selfCancelInProgress =
       false;
@@ -1543,13 +1348,9 @@ async function cancelReservation(
 
 
   /*
-    onChildRemoved()が処理する時間を確保する。
-
-    すぐにfalseへ戻すと、
-    削除イベントのタイミングによっては
-    二重処理になる可能性があるため、
-    少し待つ。
-  */
+   * onChildRemovedの監視処理が
+   * 完全に終了してからフラグを解除する。
+   */
 
   setTimeout(
     () => {
@@ -1565,7 +1366,7 @@ async function cancelReservation(
 
 /* =========================================
    Firebase：設定監視
-========================================= */
+   ========================================= */
 
 onValue(
   ref(
@@ -1604,7 +1405,6 @@ onValue(
 
         open:
           data.open !== false
-
       };
     }
 
@@ -1615,8 +1415,8 @@ onValue(
 
 
 /* =========================================
-   Firebase：時間枠監視
-========================================= */
+   Firebase：枠監視
+   ========================================= */
 
 onValue(
   ref(
@@ -1628,7 +1428,6 @@ onValue(
     slots =
       snapshot.val() || {};
 
-
     render();
   }
 );
@@ -1636,7 +1435,7 @@ onValue(
 
 /* =========================================
    Firebase：予約監視
-========================================= */
+   ========================================= */
 
 onValue(
   ref(
@@ -1648,7 +1447,6 @@ onValue(
     reservations =
       snapshot.val() || {};
 
-
     render();
   }
 );
@@ -1656,7 +1454,7 @@ onValue(
 
 /* =========================================
    Firebase：予約削除監視
-========================================= */
+   ========================================= */
 
 onChildRemoved(
   ref(
@@ -1670,7 +1468,6 @@ onChildRemoved(
 
 
     if (!removedReservation) {
-
       return;
     }
 
@@ -1682,37 +1479,22 @@ onChildRemoved(
 
 
     /*
-      ★お客さん自身が
-      キャンセルボタンを押した場合。
-
-      cancelReservation()が
-      Firebaseから削除している途中なので、
-      ここではalertを出さない。
-
-      ただし localStorage の削除などは
-      cancelReservation()側ですでに行う。
-    */
+     * 自分自身がキャンセルした場合は
+     * ここでは何もしない。
+     */
 
     if (
       selfCancelInProgress
     ) {
-
       return;
     }
 
-
-    /*
-      現在この端末に
-      その予約が保存されていなければ、
-      この端末に関係する予約ではない。
-    */
 
     const localReservation =
       getLocalReservation();
 
 
     if (!localReservation) {
-
       return;
     }
 
@@ -1723,73 +1505,159 @@ onChildRemoved(
       );
 
 
+    /*
+     * 自分の予約がスタッフによって
+     * 削除された場合だけ処理する。
+     */
+
     if (
       localNumber !==
       removedNumber
     ) {
-
       return;
     }
 
 
-    /*
-      ローカル予約を削除
-    */
+    /* =========================
+       LocalStorage削除
+       ========================= */
 
     clearLocalReservation();
 
 
-    /*
-      予約表示を消す
-    */
+    /* =========================
+       画面を予約前に戻す
+       ========================= */
 
-    if (
-      $("reservationArea")
-    ) {
+    if ($("reservationArea")) {
 
       $("reservationArea").hidden =
         true;
-
 
       $("reservationArea").innerHTML =
         "";
     }
 
 
-    /*
-      予約画面を戻す
-    */
-
-    if (
-      $("reserveArea")
-    ) {
+    if ($("reserveArea")) {
 
       $("reserveArea").hidden =
         settings.open === false;
     }
 
 
-    /*
-      ★スタッフ削除の場合も
-      共通メッセージを1回だけ表示
-    */
+    /* =========================
+       キャンセルメッセージ
+       ========================= */
 
     showCancellationMessage(
       removedNumber
     );
+
+
+    renderSlots();
+
+    updateInfo();
+
+    updateReserveButton();
   }
 );
 
 
 /* =========================================
-   全体描画
-========================================= */
+   Firebase：全体リセット監視
+   ========================================= */
+
+onValue(
+  ref(
+    db,
+    "Queue/resetAt"
+  ),
+  (snapshot) => {
+
+    const resetAt =
+      Number(
+        snapshot.val() || 0
+      );
+
+
+    if (!resetAt) {
+      return;
+    }
+
+
+    /*
+     * 初回読み込み時は
+     * ただ値を記録するだけ。
+     *
+     * これにより、昔のresetAtを見て
+     * いきなり予約を消すことを防ぐ。
+     */
+
+    if (lastResetAt === 0) {
+
+      lastResetAt =
+        resetAt;
+
+      return;
+    }
+
+
+    /*
+     * 新しいリセットが発生した場合
+     */
+
+    if (
+      resetAt > lastResetAt
+    ) {
+
+      lastResetAt =
+        resetAt;
+
+
+      clearLocalReservation();
+
+
+      cancellationMessageNumber =
+        null;
+
+
+      if ($("reservationArea")) {
+
+        $("reservationArea").hidden =
+          true;
+
+        $("reservationArea").innerHTML =
+          "";
+      }
+
+
+      if ($("reserveArea")) {
+
+        $("reserveArea").hidden =
+          settings.open === false;
+      }
+
+
+      render();
+    }
+  }
+);
+
+
+/* =========================================
+   画面描画
+   ========================================= */
 
 function render() {
 
   const localReservation =
     getLocalReservation();
 
+
+  /*
+   * 予約がある場合
+   */
 
   if (localReservation) {
 
@@ -1803,38 +1671,34 @@ function render() {
       reservations[number];
 
 
-    if (
-      remoteReservation
-    ) {
+    /*
+     * Firebase上に予約が存在する
+     */
+
+    if (remoteReservation) {
 
       renderReservations();
 
-    } else {
-
-      /*
-        Firebaseから削除された場合は
-        onChildRemoved()が処理する。
-
-        ここではalertを出さない。
-      */
-
-      if (
-        $("reservationArea")
-      ) {
-
-        $("reservationArea").hidden =
-          true;
-      }
+      return;
     }
 
+
+    /*
+     * Firebaseの更新待ちの場合
+     *
+     * localStorageの予約を使って
+     * 搭乗券を表示する。
+     */
+
+    renderReservations();
 
     return;
   }
 
 
-  /* -----------------------------
-     予約がない場合
-  ----------------------------- */
+  /* =========================
+     予約前画面
+     ========================= */
 
   renderSlots();
 
@@ -1843,31 +1707,24 @@ function render() {
   updateReserveButton();
 
 
-  if (
-    $("closedArea")
-  ) {
+  if ($("closedArea")) {
 
     $("closedArea").hidden =
       settings.open !== false;
   }
 
 
-  if (
-    $("reserveArea")
-  ) {
+  if ($("reserveArea")) {
 
     $("reserveArea").hidden =
       settings.open === false;
   }
 
 
-  if (
-    $("reservationArea")
-  ) {
+  if ($("reservationArea")) {
 
     $("reservationArea").hidden =
       true;
-
 
     $("reservationArea").innerHTML =
       "";
@@ -1877,7 +1734,7 @@ function render() {
 
 /* =========================================
    時間帯変更
-========================================= */
+   ========================================= */
 
 if ($("slot")) {
 
@@ -1894,7 +1751,7 @@ if ($("slot")) {
 
 
 /* =========================================
-   初期表示
-========================================= */
+   初回描画
+   ========================================= */
 
 render();
