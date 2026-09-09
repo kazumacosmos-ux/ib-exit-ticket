@@ -1,1481 +1,921 @@
-// ==============================
-// お客さんページ
-// お客さん.js
-// ==============================
+/* =========================================
+   1-B出口 AIRLINES
+   PREMIUM BOARDING PASS
+   ========================================= */
 
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+* {
+  box-sizing: border-box;
+}
 
-import {
-  getDatabase,
-  ref,
-  onValue,
-  runTransaction,
-  set
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+html {
+  margin: 0;
+  padding: 0;
+  background: #06111f;
+}
 
-import {
-  firebaseConfig
-} from "./Firebase設定.js";
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 0;
 
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Helvetica Neue",
+    "Noto Sans JP",
+    sans-serif;
 
-// ==============================
-// Firebase 初期化
-// ==============================
+  color: #182334;
 
-const app = initializeApp(firebaseConfig);
-
-const db = getDatabase(app);
-
-
-// ==============================
-// HTML取得
-// ==============================
-
-const $ = id => document.getElementById(id);
-
-
-// ==============================
-// 固定設定
-// ==============================
-
-const FIXED_START = "09:00";
-const FIXED_END = "15:00";
-
-
-// ==============================
-// 初期設定
-// ==============================
-
-let settings = {
-  start: FIXED_START,
-  end: FIXED_END,
-  slotMinutes: 20,
-  maxGroups: 1,
-  open: true
-};
-
-
-// ==============================
-// Firebaseデータ
-// ==============================
-
-let slots = {};
-
-
-// ==============================
-// このスマホの予約一覧
-// ==============================
-
-let reservations = [];
-
-
-// ==============================
-// 分に変換
-// ==============================
-
-function toMin(time) {
-
-  if (!time) {
-    return 0;
-  }
-
-  const parts = time.split(":");
-
-  const hour = Number(parts[0]);
-  const minute = Number(parts[1]);
-
-  return hour * 60 + minute;
+  background:
+    radial-gradient(
+      circle at 50% -15%,
+      #41698f 0%,
+      #19334f 32%,
+      #0a1829 67%,
+      #050d17 100%
+    );
 }
 
 
-// ==============================
-// 分 → 時刻
-// ==============================
+/* =========================================
+   全体
+   ========================================= */
 
-function formatTime(minutes) {
+.container {
+  width: 100%;
+  max-width: 480px;
 
-  const hour = Math.floor(minutes / 60);
-  const minute = minutes % 60;
+  margin: 0 auto;
 
-  return (
-    String(hour).padStart(2, "0") +
-    ":" +
-    String(minute).padStart(2, "0")
-  );
+  padding:
+    32px
+    18px
+    60px;
 }
 
 
-// ==============================
-// 時間枠キー
-//
-// 09:00 → 09-00
-// 09:20 → 09-20
-// 09:40 → 09-40
-// ==============================
+/* =========================================
+   メインタイトル
+   ========================================= */
 
-function slotKey(minutes) {
+.container > h1 {
+  margin: 0 0 30px;
 
-  const hour = Math.floor(minutes / 60);
-  const minute = minutes % 60;
+  color: #ffffff;
 
-  return (
-    String(hour).padStart(2, "0") +
-    "-" +
-    String(minute).padStart(2, "0")
-  );
+  text-align: center;
+
+  font-size: 28px;
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+
+  text-shadow:
+    0 3px 15px rgba(0, 0, 0, 0.25);
+}
+
+.container > h1::before {
+  content: "✈";
+
+  display: block;
+
+  margin-bottom: 10px;
+
+  font-size: 30px;
+}
+
+.container > h1::after {
+  content: "1-B AIRLINES";
+
+  display: block;
+
+  margin-top: 10px;
+
+  color: #a9bfd7;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  letter-spacing: 0.35em;
 }
 
 
-// ==============================
-// 時間枠作成
-// ==============================
+/* =========================================
+   予約フォーム
+   ========================================= */
 
-function createSlots() {
+#reserveArea {
+  padding: 26px 22px 24px;
 
-  const result = {};
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.7);
 
-  const start = toMin(FIXED_START);
-  const end = toMin(FIXED_END);
+  border-radius: 26px;
 
-  const slotMinutes = Number(settings.slotMinutes);
+  background:
+    rgba(255, 255, 255, 0.97);
 
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.28);
 
-  // おかしな設定の場合
-  if (
-    !Number.isInteger(slotMinutes) ||
-    slotMinutes <= 0
-  ) {
-    return result;
-  }
-
-
-  // ==========================
-  // 20分ずつ増やす
-  // ==========================
-
-  for (
-    let minutes = start;
-    minutes < end;
-    minutes += slotMinutes
-  ) {
-
-    const slotEndMinutes =
-      minutes + slotMinutes;
-
-
-    // 最後が15:00を超える場合は作らない
-    if (slotEndMinutes > end) {
-      break;
-    }
-
-
-    const startTime =
-      formatTime(minutes);
-
-    const endTime =
-      formatTime(slotEndMinutes);
-
-    const id =
-      slotKey(minutes);
-
-
-    result[id] = {
-      key: id,
-      start: startTime,
-      end: endTime
-    };
-  }
-
-
-  return result;
+  backdrop-filter: blur(15px);
 }
 
 
-// ==============================
-// 搭乗時刻
-//
-// 予約枠終了の5分後
-// ==============================
+/* =========================================
+   フォーム見出し
+   ========================================= */
 
-function getBoardingTime(endTime) {
+#reserveArea h2 {
+  margin: 0 0 24px;
 
-  return formatTime(
-    toMin(endTime) + 5
-  );
+  color: #0d1d31;
+
+  font-size: 21px;
+  font-weight: 900;
+
+  letter-spacing: 0.03em;
+}
+
+#reserveArea h2::after {
+  content: "BOOK YOUR FLIGHT";
+
+  display: block;
+
+  margin-top: 5px;
+
+  color: #8493a5;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 0.22em;
 }
 
 
-// ==============================
-// 今日の日付
-// ==============================
+/* =========================================
+   ラベル
+   ========================================= */
 
-function getToday() {
+label {
+  display: block;
 
-  const now = new Date();
+  margin:
+    19px
+    0
+    8px;
 
-  const year =
-    now.getFullYear();
+  color: #667487;
 
-  const month =
-    String(now.getMonth() + 1)
-      .padStart(2, "0");
+  font-size: 11px;
+  font-weight: 800;
 
-  const day =
-    String(now.getDate())
-      .padStart(2, "0");
+  letter-spacing: 0.1em;
+}
 
-  return `${year}/${month}/${day}`;
+label:first-of-type {
+  margin-top: 0;
 }
 
 
-// ==============================
-// 便名
-// ==============================
+/* =========================================
+   入力・選択
+   ========================================= */
 
-function getFlightNumber(number) {
+input,
+select {
+  width: 100%;
+  height: 55px;
 
-  return (
-    "DREAM" +
-    String(number).padStart(3, "0")
-  );
+  padding:
+    0
+    16px;
+
+  border:
+    1px solid
+    #dbe2ea;
+
+  border-radius: 14px;
+
+  outline: none;
+
+  background: #f6f8fb;
+
+  color: #162337;
+
+  font-family: inherit;
+
+  font-size: 16px;
+  font-weight: 700;
+
+  transition:
+    0.2s ease;
+}
+
+input::placeholder {
+  color: #a0aab8;
+  font-weight: 500;
+}
+
+input:focus,
+select:focus {
+  border-color: #2d5d8d;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 0 0 4px
+    rgba(45, 93, 141, 0.11);
 }
 
 
-// ==============================
-// HTMLエスケープ
-// ==============================
+/* =========================================
+   時間選択
+   ========================================= */
 
-function escapeHtml(value) {
-
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+#slot {
+  font-size: 17px;
+  font-weight: 900;
 }
 
 
-// ==============================
-// 予約を端末に保存
-// ==============================
+/* =========================================
+   時間枠情報
+   ========================================= */
 
-function saveReservations() {
+.slot-info {
+  min-height: 20px;
 
-  localStorage.setItem(
-    "ib_reservations",
-    JSON.stringify(reservations)
-  );
+  margin:
+    9px
+    3px
+    0;
+
+  color: #68778a;
+
+  font-size: 12px;
+  font-weight: 700;
 }
 
 
-// ==============================
-// 端末から予約を削除
-// ==============================
+/* =========================================
+   予約ボタン
+   ========================================= */
 
-function removeLocalReservation(number) {
+#reserve {
+  width: 100%;
 
-  reservations =
-    reservations.filter(
-      reservation =>
-        Number(reservation.number) !==
-        Number(number)
+  min-height: 59px;
+
+  margin-top: 21px;
+
+  border: 0;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #0c2038 0%,
+      #245986 52%,
+      #3477aa 100%
     );
 
-  saveReservations();
+  color: #ffffff;
 
-  renderReservations();
+  font-family: inherit;
+
+  font-size: 16px;
+  font-weight: 900;
+
+  letter-spacing: 0.04em;
+
+  box-shadow:
+    0 12px 25px
+    rgba(20, 61, 96, 0.3);
+
+  cursor: pointer;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+}
+
+#reserve:active {
+  transform: translateY(2px);
+
+  box-shadow:
+    0 6px 13px
+    rgba(20, 61, 96, 0.25);
+}
+
+#reserve:disabled {
+  opacity: 0.5;
 }
 
 
-// ==============================
-// 時間枠表示
-// ==============================
+/* =========================================
+   エラー・完了メッセージ
+   ========================================= */
 
-function render() {
+.error {
+  margin:
+    13px
+    2px
+    0;
 
-  const slotElement = $("slot");
+  color: #b33a35;
 
-  if (!slotElement) {
-    return;
-  }
+  font-size: 12px;
+  font-weight: 700;
 
-
-  // ==========================
-  // 現在選択している値を保存
-  // ==========================
-
-  const oldValue =
-    slotElement.value;
-
-
-  // ==========================
-  // 時間枠を作成
-  // ==========================
-
-  const generated =
-    createSlots();
-
-
-  slotElement.innerHTML = "";
-
-
-  // ==========================
-  // 時間枠を表示
-  // ==========================
-
-  Object.values(generated)
-    .forEach(slot => {
-
-      const count =
-        Number(
-          slots[slot.key]?.count || 0
-        );
-
-
-      const max =
-        Number(settings.maxGroups);
-
-
-      const remaining =
-        Math.max(
-          0,
-          max - count
-        );
-
-
-      const option =
-        document.createElement("option");
-
-
-      option.value =
-        slot.key;
-
-
-      option.textContent =
-        `${slot.start}～${slot.end}` +
-        `（残り ${remaining}組）`;
-
-
-      // 満員なら選択不可
-      option.disabled =
-        count >= max;
-
-
-      slotElement.appendChild(option);
-    });
-
-
-  // ==========================
-  // 前に選択していた時間を復元
-  // ==========================
-
-  const oldOption =
-    [...slotElement.options]
-      .find(
-        option =>
-          option.value === oldValue &&
-          !option.disabled
-      );
-
-
-  if (oldOption) {
-
-    slotElement.value =
-      oldValue;
-
-  } else {
-
-    // 選択可能な最初の枠を選択
-    const firstAvailable =
-      [...slotElement.options]
-        .find(
-          option =>
-            !option.disabled
-        );
-
-
-    if (firstAvailable) {
-
-      slotElement.value =
-        firstAvailable.value;
-    }
-  }
-
-
-  updateInfo();
+  line-height: 1.6;
 }
 
 
-// ==============================
-// 選択中の時間枠情報
-// ==============================
+/* =========================================
+   予約済みエリア
+   ========================================= */
 
-function updateInfo() {
+#reservationArea {
+  margin-top: 26px;
 
-  const slotElement = $("slot");
-  const info = $("slotInfo");
+  padding: 0;
 
+  background: transparent;
 
-  if (!slotElement || !info) {
-    return;
-  }
+  box-shadow: none;
+}
 
+#reservationArea > h2 {
+  margin:
+    0
+    0
+    14px;
 
-  const generated =
-    createSlots();
+  color: #ffffff;
 
+  font-size: 17px;
+  font-weight: 800;
 
-  const selectedSlot =
-    generated[slotElement.value];
-
-
-  if (!selectedSlot) {
-
-    info.textContent = "";
-
-    return;
-  }
-
-
-  const count =
-    Number(
-      slots[selectedSlot.key]?.count || 0
-    );
-
-
-  const max =
-    Number(settings.maxGroups);
-
-
-  info.textContent =
-    `${selectedSlot.start}～${selectedSlot.end}` +
-    `：${count}/${max}組`;
+  letter-spacing: 0.05em;
 }
 
 
-// ==============================
-// 搭乗券一覧表示
-// ==============================
+/* =========================================
+   搭乗券
+   ========================================= */
 
-function renderReservations() {
+.boarding-pass {
+  position: relative;
 
-  const area =
-    $("reservationArea");
+  overflow: hidden;
 
+  margin-bottom: 22px;
 
-  if (!area) {
-    return;
-  }
+  border-radius: 25px;
 
+  background: #ffffff;
 
-  if (reservations.length === 0) {
-
-    area.hidden = true;
-
-    area.innerHTML = "";
-
-    return;
-  }
-
-
-  area.innerHTML = `
-    <h2>予約済みの搭乗券</h2>
-    <div id="boardingPassList"></div>
-  `;
-
-
-  const list =
-    $("boardingPassList");
-
-
-  if (!list) {
-    return;
-  }
-
-
-  reservations.forEach(
-    reservation => {
-
-      const card =
-        document.createElement("div");
-
-
-      card.className =
-        "boarding-pass";
-
-
-      const flight =
-        getFlightNumber(
-          reservation.number
-        );
-
-
-      const boardingTime =
-        getBoardingTime(
-          reservation.end
-        );
-
-
-      card.innerHTML = `
-
-        <div class="boarding-pass-header">
-
-          <div>
-
-            <h2>
-              1-B出口搭乗券
-            </h2>
-
-            <p>
-              出口ドリームスカイライン
-            </p>
-
-          </div>
-
-          <strong>
-            ${escapeHtml(flight)}
-          </strong>
-
-        </div>
-
-
-        <div class="boarding-pass-main">
-
-          <div class="boarding-arrival">
-
-            <span>
-              ご来場時間
-            </span>
-
-            <strong>
-              ${escapeHtml(
-                reservation.start
-              )}
-              ～
-              ${escapeHtml(
-                reservation.end
-              )}
-            </strong>
-
-          </div>
-
-
-          <div class="boarding-info-grid">
-
-            <div>
-
-              <span>
-                日付
-              </span>
-
-              <strong>
-                ${getToday()}
-              </strong>
-
-            </div>
-
-
-            <div>
-
-              <span>
-                ゲート
-              </span>
-
-              <strong>
-                1-B
-              </strong>
-
-            </div>
-
-
-            <div>
-
-              <span>
-                搭乗時刻
-              </span>
-
-              <strong>
-                ${escapeHtml(
-                  boardingTime
-                )}
-              </strong>
-
-            </div>
-
-
-            <div>
-
-              <span>
-                人数
-              </span>
-
-              <strong>
-                ${escapeHtml(
-                  reservation.size
-                )}名
-              </strong>
-
-            </div>
-
-          </div>
-
-
-          <div class="boarding-pass-passenger">
-
-            <span>
-              代表者
-            </span>
-
-            <strong>
-              ${escapeHtml(
-                reservation.name
-              )}
-            </strong>
-
-          </div>
-
-        </div>
-
-
-        <div class="boarding-pass-footer">
-
-          <p class="boarding-note">
-
-            ご来場時間になりましたら<br>
-            1-B出口へお越しください。
-
-          </p>
-
-
-          <button
-            type="button"
-            class="cancel-reservation"
-            data-number="${escapeHtml(
-              reservation.number
-            )}"
-          >
-            この予約をキャンセル
-          </button>
-
-        </div>
-
-      `;
-
-
-      list.appendChild(card);
-    }
-  );
-
-
-  // ==========================
-  // キャンセルボタン
-  // ==========================
-
-  document
-    .querySelectorAll(".cancel-reservation")
-    .forEach(button => {
-
-      button.onclick = () => {
-
-        const number =
-          Number(
-            button.dataset.number
-          );
-
-        cancelReservation(number);
-      };
-    });
-
-
-  area.hidden = false;
+  box-shadow:
+    0 25px 60px
+    rgba(0, 0, 0, 0.34);
 }
 
 
-// ==============================
-// 予約キャンセル
-// ==============================
+/* =========================================
+   搭乗券ヘッダー
+   ========================================= */
 
-async function cancelReservation(
-  reservationNumber
-) {
+.boarding-pass-header {
+  display: flex;
 
-  const reservation =
-    reservations.find(
-      item =>
-        Number(item.number) ===
-        Number(reservationNumber)
+  align-items: center;
+  justify-content: space-between;
+
+  min-height: 100px;
+
+  padding:
+    22px
+    22px
+    20px;
+
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #061426 0%,
+      #102d4b 48%,
+      #245c86 100%
     );
+}
+
+.boarding-pass-header h2 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+.boarding-pass-header p {
+  margin: 7px 0 0;
+
+  color: #9eb8d1;
+
+  font-size: 8px;
+  font-weight: 700;
+
+  letter-spacing: 0.16em;
+}
+
+.boarding-pass-header strong {
+  color: #ffffff;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+
+  font-size: 19px;
+  font-weight: 900;
+
+  letter-spacing: 0.04em;
+}
 
 
-  if (!reservation) {
-    return;
+/* =========================================
+   搭乗券メイン
+   ========================================= */
+
+.boarding-pass-main {
+  padding:
+    26px
+    22px
+    24px;
+}
+
+
+/* =========================================
+   ご来場時間
+   ========================================= */
+
+.boarding-arrival {
+  padding:
+    4px
+    0
+    23px;
+
+  border-bottom:
+    1px solid
+    #e8edf2;
+}
+
+.boarding-arrival span {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #8290a0;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: 0.18em;
+}
+
+.boarding-arrival strong {
+  display: block;
+
+  color: #0a1b2e;
+
+  font-size: 32px;
+  font-weight: 950;
+
+  letter-spacing: -0.04em;
+
+  line-height: 1.05;
+}
+
+
+/* =========================================
+   情報グリッド
+   ========================================= */
+
+.boarding-info-grid {
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    1fr;
+
+  gap:
+    20px
+    12px;
+
+  padding:
+    23px
+    0
+    21px;
+}
+
+.boarding-info-grid > div {
+  min-width: 0;
+}
+
+.boarding-info-grid span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #8995a4;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.15em;
+}
+
+.boarding-info-grid strong {
+  display: block;
+
+  overflow: hidden;
+
+  color: #17263a;
+
+  font-size: 16px;
+  font-weight: 900;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================
+   ゲートを目立たせる
+   ========================================= */
+
+.boarding-info-grid > div:nth-child(2) strong {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 62px;
+  min-height: 30px;
+
+  padding:
+    3px
+    11px;
+
+  border-radius: 8px;
+
+  color: #ffffff;
+
+  background: #102d49;
+
+  font-size: 15px;
+
+  letter-spacing: 0.04em;
+}
+
+
+/* =========================================
+   代表者
+   ========================================= */
+
+.boarding-pass-passenger {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  padding:
+    17px
+    16px;
+
+  border-radius: 13px;
+
+  background:
+    #f4f7fa;
+}
+
+.boarding-pass-passenger span {
+  color: #8995a4;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: 0.15em;
+
+  white-space: nowrap;
+}
+
+.boarding-pass-passenger strong {
+  overflow: hidden;
+
+  color: #16253a;
+
+  font-size: 15px;
+  font-weight: 900;
+
+  text-align: right;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================
+   ミシン目
+   ========================================= */
+
+.boarding-pass::after {
+  content: "";
+
+  display: block;
+
+  height: 2px;
+
+  margin:
+    0
+    20px;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #d5dce4 0,
+      #d5dce4 7px,
+      transparent 7px,
+      transparent 13px
+    );
+}
+
+
+/* =========================================
+   搭乗券フッター
+   ========================================= */
+
+.boarding-pass-footer {
+  padding:
+    20px
+    22px
+    22px;
+}
+
+.boarding-note {
+  margin:
+    0
+    0
+    17px;
+
+  color: #657386;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  line-height: 1.8;
+
+  text-align: center;
+}
+
+
+/* =========================================
+   バーコード風の装飾
+   ========================================= */
+
+.boarding-pass-footer::before {
+  content: "";
+
+  display: block;
+
+  width: 100%;
+  height: 38px;
+
+  margin:
+    0
+    0
+    17px;
+
+  opacity: 0.72;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+
+      #111c2b 0,
+      #111c2b 2px,
+
+      transparent 2px,
+      transparent 5px,
+
+      #111c2b 5px,
+      #111c2b 6px,
+
+      transparent 6px,
+      transparent 9px,
+
+      #111c2b 9px,
+      #111c2b 12px,
+
+      transparent 12px,
+      transparent 15px
+    );
+}
+
+
+/* =========================================
+   キャンセルボタン
+   ========================================= */
+
+.cancel-reservation {
+  width: 100%;
+
+  min-height: 47px;
+
+  border:
+    1px solid
+    #d9dfe7;
+
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  color: #697687;
+
+  font-family: inherit;
+
+  font-size: 12px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.cancel-reservation:active {
+  background: #f1f4f7;
+
+  border-color: #c8d0da;
+}
+
+
+/* =========================================
+   受付停止
+   ========================================= */
+
+#closedArea {
+  padding:
+    28px
+    22px;
+
+  border-radius: 24px;
+
+  background:
+    rgba(255, 255, 255, 0.97);
+
+  text-align: center;
+
+  box-shadow:
+    0 20px 50px
+    rgba(0, 0, 0, 0.28);
+}
+
+#closedArea h2 {
+  margin:
+    0
+    0
+    10px;
+
+  color: #17263a;
+
+  font-size: 19px;
+  font-weight: 900;
+}
+
+#closedArea p {
+  margin: 0;
+
+  color: #6d7989;
+
+  font-size: 13px;
+
+  line-height: 1.8;
+}
+
+
+/* =========================================
+   スマートフォン
+   ========================================= */
+
+@media (max-width: 420px) {
+
+  .container {
+    padding:
+      24px
+      14px
+      45px;
   }
 
+  .container > h1 {
+    margin-bottom: 24px;
 
-  const confirmed =
-    window.confirm(
-      "この予約をキャンセルしますか？\n\n" +
-      `${reservation.start}～${reservation.end}\n` +
-      `${reservation.name}さん・${reservation.size}名`
-    );
-
-
-  if (!confirmed) {
-    return;
+    font-size: 24px;
   }
 
+  #reserveArea {
+    padding:
+      23px
+      18px
+      21px;
 
-  try {
+    border-radius: 22px;
+  }
 
-    // ========================
-    // Firebaseから予約削除
-    // ========================
+  .boarding-pass {
+    border-radius: 22px;
+  }
 
-    const reservationRef =
-      ref(
-        db,
-        `Queue/reservations/${reservationNumber}`
-      );
+  .boarding-pass-header {
+    min-height: 92px;
 
+    padding:
+      20px
+      18px;
+  }
 
-    let existed = false;
+  .boarding-pass-header h2 {
+    font-size: 13px;
+  }
 
+  .boarding-pass-header strong {
+    font-size: 16px;
+  }
 
-    const result =
-      await runTransaction(
-        reservationRef,
-        current => {
+  .boarding-pass-main {
+    padding:
+      23px
+      18px
+      21px;
+  }
 
-          if (current === null) {
-            return;
-          }
+  .boarding-arrival strong {
+    font-size: 29px;
+  }
 
-          existed = true;
+  .boarding-info-grid {
+    gap:
+      18px
+      8px;
+  }
 
-          return null;
-        }
-      );
-
-
-    // ========================
-    // すでに削除されている
-    // ========================
-
-    if (
-      !result.committed ||
-      !existed
-    ) {
-
-      removeLocalReservation(
-        reservationNumber
-      );
-
-      alert(
-        "この予約はすでにキャンセルされています。"
-      );
-
-      return;
-    }
-
-
-    // ========================
-    // 枠を1つ戻す
-    // ========================
-
-    const countRef =
-      ref(
-        db,
-        `Queue/slots/${reservation.slot}/count`
-      );
-
-
-    await runTransaction(
-      countRef,
-      current => {
-
-        const count =
-          Number(current || 0);
-
-        return Math.max(
-          0,
-          count - 1
-        );
-      }
-    );
-
-
-    // ========================
-    // 端末から削除
-    // ========================
-
-    removeLocalReservation(
-      reservationNumber
-    );
-
-
-    alert(
-      "予約をキャンセルしました。"
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "予約キャンセルエラー:",
-      error
-    );
-
-
-    alert(
-      "予約のキャンセルに失敗しました。\n" +
-      "通信状態を確認して、もう一度お試しください。"
-    );
+  .boarding-pass-footer {
+    padding:
+      18px
+      18px
+      20px;
   }
 }
 
 
-// ==============================
-// Firebase
-// 設定監視
-// ==============================
-
-onValue(
-  ref(db, "Queue/settings"),
-  snapshot => {
-
-    const data =
-      snapshot.val();
-
-
-    if (data) {
-
-      settings = {
-
-        start:
-          FIXED_START,
-
-        end:
-          FIXED_END,
-
-        slotMinutes:
-          Number(data.slotMinutes) || 20,
-
-        maxGroups:
-          Number(data.maxGroups) || 1,
-
-        open:
-          data.open !== false
-      };
-    }
-
-
-    const reserveArea =
-      $("reserveArea");
-
-    const closedArea =
-      $("closedArea");
-
-
-    if (reserveArea) {
-
-      reserveArea.hidden =
-        !settings.open;
-    }
-
-
-    if (closedArea) {
-
-      closedArea.hidden =
-        settings.open;
-    }
-
-
-    render();
-  }
-);
-
-
-// ==============================
-// Firebase
-// 時間枠監視
-// ==============================
-
-onValue(
-  ref(db, "Queue/slots"),
-  snapshot => {
-
-    slots =
-      snapshot.val() || {};
-
-    render();
-  }
-);
-
-
-// ==============================
-// Firebase
-// 予約監視
-// ==============================
-
-onValue(
-  ref(db, "Queue/reservations"),
-  snapshot => {
-
-    const firebaseReservations =
-      snapshot.val() || {};
-
-
-    const existingNumbers =
-      new Set(
-        Object.keys(
-          firebaseReservations
-        ).map(Number)
-      );
-
-
-    const beforeCount =
-      reservations.length;
-
-
-    reservations =
-      reservations.filter(
-        reservation =>
-          existingNumbers.has(
-            Number(reservation.number)
-          )
-      );
-
-
-    if (
-      reservations.length !==
-      beforeCount
-    ) {
-
-      saveReservations();
-    }
-
-
-    renderReservations();
-  }
-);
-
-
-// ==============================
-// 時間枠変更
-// ==============================
-
-if ($("slot")) {
-
-  $("slot").onchange =
-    updateInfo;
-}
-
-
-// ==============================
-// 以前の予約を読み込む
-// ==============================
-
-function loadReservations() {
-
-  const newSaved =
-    localStorage.getItem(
-      "ib_reservations"
-    );
-
-
-  if (newSaved) {
-
-    try {
-
-      const data =
-        JSON.parse(newSaved);
-
-
-      if (Array.isArray(data)) {
-
-        reservations =
-          data.filter(
-            reservation =>
-              reservation &&
-              reservation.number
-          );
-
-      } else {
-
-        reservations = [];
-      }
-
-    } catch (error) {
-
-      console.error(
-        "予約読み込みエラー:",
-        error
-      );
-
-      reservations = [];
-    }
-
-  } else {
-
-    // ==========================
-    // 旧方式から移行
-    // ==========================
-
-    const oldSaved =
-      localStorage.getItem(
-        "ib_reservation"
-      );
-
-
-    if (oldSaved) {
-
-      try {
-
-        const oldReservation =
-          JSON.parse(oldSaved);
-
-
-        if (
-          oldReservation &&
-          oldReservation.number
-        ) {
-
-          reservations = [
-            oldReservation
-          ];
-
-          saveReservations();
-        }
-
-      } catch (error) {
-
-        console.error(
-          "旧予約読み込みエラー:",
-          error
-        );
-
-        reservations = [];
-      }
-    }
+/* =========================================
+   小さいスマホ
+   ========================================= */
+
+@media (max-width: 340px) {
+
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
-
-  renderReservations();
-}
-
-
-// ==============================
-// 予約一覧表示
-// ==============================
-
-function showReservation() {
-
-  renderReservations();
-}
-
-
-// ==============================
-// 最初に予約を読み込む
-// ==============================
-
-loadReservations();
-
-
-// ==============================
-// 予約ボタン
-// ==============================
-
-if ($("reserve")) {
-
-  $("reserve").onclick =
-    async () => {
-
-      const error =
-        $("error");
-
-
-      if (error) {
-
-        error.textContent = "";
-      }
-
-
-      // ========================
-      // 二重クリック防止
-      // ========================
-
-      $("reserve").disabled = true;
-
-
-      try {
-
-        // ========================
-        // 入力値
-        // ========================
-
-        const name =
-          $("name")
-            .value
-            .trim();
-
-
-        const size =
-          Number(
-            $("size").value
-          );
-
-
-        const selectedKey =
-          $("slot").value;
-
-
-        const slot =
-          createSlots()[
-            selectedKey
-          ];
-
-
-        // ========================
-        // 名前チェック
-        // ========================
-
-        if (!name) {
-
-          if (error) {
-
-            error.textContent =
-              "名前を入力してください。";
-          }
-
-          return;
-        }
-
-
-        // ========================
-        // 人数チェック
-        // ========================
-
-        if (
-          !Number.isInteger(size) ||
-          size < 1 ||
-          size > 4
-        ) {
-
-          if (error) {
-
-            error.textContent =
-              "人数は1〜4人にしてください。";
-          }
-
-          return;
-        }
-
-
-        // ========================
-        // 時間枠チェック
-        // ========================
-
-        if (!slot) {
-
-          if (error) {
-
-            error.textContent =
-              "時間枠を選択してください。";
-          }
-
-          return;
-        }
-
-
-        // ========================
-        // 受付状態チェック
-        // ========================
-
-        if (!settings.open) {
-
-          if (error) {
-
-            error.textContent =
-              "現在は受付停止中です。";
-          }
-
-          return;
-        }
-
-
-        // ========================
-        // 枠数を1増やす
-        // ========================
-
-        const countRef =
-          ref(
-            db,
-            `Queue/slots/${slot.key}/count`
-          );
-
-
-        const countResult =
-          await runTransaction(
-            countRef,
-            current => {
-
-              const count =
-                current === null
-                  ? 0
-                  : Number(current);
-
-
-              const max =
-                Number(
-                  settings.maxGroups
-                );
-
-
-              if (count >= max) {
-
-                return;
-              }
-
-
-              return count + 1;
-            }
-          );
-
-
-        // ========================
-        // 満員
-        // ========================
-
-        if (
-          !countResult.committed
-        ) {
-
-          if (error) {
-
-            error.textContent =
-              "その時間帯は満員です。";
-          }
-
-          return;
-        }
-
-
-        // ========================
-        // 予約番号発行
-        // ========================
-
-        const lastRef =
-          ref(
-            db,
-            "Queue/reservationLast"
-          );
-
-
-        let reservationNumber;
-
-
-        try {
-
-          const lastResult =
-            await runTransaction(
-              lastRef,
-              current =>
-                Number(current || 0) + 1
-            );
-
-
-          if (
-            !lastResult.committed
-          ) {
-
-            throw new Error(
-              "予約番号を取得できませんでした。"
-            );
-          }
-
-
-          reservationNumber =
-            Number(
-              lastResult.snapshot.val()
-            );
-
-        } catch (numberError) {
-
-          console.error(
-            "予約番号発行エラー:",
-            numberError
-          );
-
-
-          // 枠を戻す
-
-          await runTransaction(
-            countRef,
-            current =>
-              Math.max(
-                0,
-                Number(current || 0) - 1
-              )
-          );
-
-
-          if (error) {
-
-            error.textContent =
-              "予約番号の取得に失敗しました。";
-          }
-
-          return;
-        }
-
-
-        // ========================
-        // 予約データ
-        // ========================
-
-        const reservation = {
-
-          number:
-            reservationNumber,
-
-          name:
-            name,
-
-          slot:
-            slot.key,
-
-          start:
-            slot.start,
-
-          end:
-            slot.end,
-
-          size:
-            size,
-
-          type:
-            "web",
-
-          createdAt:
-            Date.now()
-        };
-
-
-        // ========================
-        // Firebase保存
-        // ========================
-
-        try {
-
-          await set(
-            ref(
-              db,
-              `Queue/reservations/${reservationNumber}`
-            ),
-            reservation
-          );
-
-        } catch (saveError) {
-
-          console.error(
-            "予約保存エラー:",
-            saveError
-          );
-
-
-          // 枠を戻す
-
-          await runTransaction(
-            countRef,
-            current =>
-              Math.max(
-                0,
-                Number(current || 0) - 1
-              )
-          );
-
-
-          if (error) {
-
-            error.textContent =
-              "予約の保存に失敗しました。";
-          }
-
-          return;
-        }
-
-
-        // ========================
-        // この端末の予約一覧に追加
-        // ========================
-
-        reservations.push(
-          reservation
-        );
-
-
-        // ========================
-        // 端末に保存
-        // ========================
-
-        saveReservations();
-
-
-        // ========================
-        // 搭乗券表示
-        // ========================
-
-        showReservation();
-
-
-        // ========================
-        // 入力欄リセット
-        // ========================
-
-        if ($("name")) {
-
-          $("name").value = "";
-        }
-
-
-        if ($("size")) {
-
-          $("size").value = "1";
-        }
-
-
-        // ========================
-        // 完了メッセージ
-        // ========================
-
-        if (error) {
-
-          error.textContent =
-            "予約しました。搭乗券を下に表示しています。";
-        }
-
-
-      } catch (reservationError) {
-
-        console.error(
-          "予約処理エラー:",
-          reservationError
-        );
-
-
-        if (error) {
-
-          error.textContent =
-            "予約に失敗しました。もう一度お試しください。";
-        }
-
-
-      } finally {
-
-        $("reserve").disabled = false;
-      }
-    };
+  .container > h1 {
+    font-size: 22px;
+  }
+
+  .boarding-pass-header strong {
+    font-size: 14px;
+  }
+
+  .boarding-arrival strong {
+    font-size: 25px;
+  }
+
+  .boarding-info-grid strong {
+    font-size: 14px;
+  }
 }
