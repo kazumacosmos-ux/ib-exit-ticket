@@ -1738,3 +1738,282 @@
 
           <label for="name">
             搭乗者代表名
+          </label>
+
+          <input
+            id="name"
+            type="text"
+            maxlength="30"
+            placeholder="代表者の名前を入力"
+          >
+
+        </div>
+
+
+        <div class="form-field">
+
+          <label for="size">
+            搭乗人数
+          </label>
+
+          <select id="size">
+
+            <option value="1">
+              1名
+            </option>
+
+            <option value="2">
+              2名
+            </option>
+
+            <option value="3">
+              3名
+            </option>
+
+            <option value="4">
+              4名
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div class="form-field">
+
+          <label for="slot">
+            搭乗時間
+          </label>
+
+
+          <select id="slot">
+
+            <option value="09-00">
+              09:00 ～ 10:00
+            </option>
+
+            <option value="10-00">
+              10:00 ～ 11:00
+            </option>
+
+            <option value="11-00">
+              11:00 ～ 12:00
+            </option>
+
+            <option value="12-00">
+              12:00 ～ 13:00
+            </option>
+
+            <option value="13-00">
+              13:00 ～ 14:00
+            </option>
+
+            <option value="14-00">
+              14:00 ～ 15:00
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <p
+          id="slotInfo"
+          class="slot-info"
+        ></p>
+
+
+        <button
+          id="reserve"
+          type="button"
+        >
+          搭乗券を予約する
+        </button>
+
+
+        <p
+          id="error"
+          class="error"
+        ></p>
+
+
+      </div>
+
+
+      <footer class="ticket-footer">
+
+        <div class="ticket-footer-text">
+
+          <strong>
+            DEGUCHI DREAM SKYLINE
+          </strong>
+
+          1-B GATE　｜　BOARDING PASS
+
+        </div>
+
+
+        <div
+          class="barcode"
+          aria-hidden="true"
+        >
+
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+
+        </div>
+
+      </footer>
+
+
+    </section>
+
+
+    <section
+      id="reservationArea"
+      hidden
+    ></section>
+
+
+    <section
+      id="closedArea"
+      hidden
+    >
+
+      <h2>
+        現在受付停止中です
+      </h2>
+
+      <p>
+        スタッフから案内があるまでお待ちください。
+      </p>
+
+    </section>
+
+
+  </main>
+
+
+  <script
+    type="module"
+    src="./お客さん.js?v=20260909-8"
+  ></script>
+
+
+  <!--
+    予約後にJavaScriptが作る搭乗券の
+    「TO」という表示を自動的に除去する。
+  -->
+
+  <script>
+
+    const removeBoardingPassTO = () => {
+
+      const area =
+        document.getElementById(
+          "reservationArea"
+        );
+
+      if (!area) {
+        return;
+      }
+
+
+      const walker =
+        document.createTreeWalker(
+          area,
+          NodeFilter.SHOW_TEXT
+        );
+
+
+      const nodes = [];
+
+      let node;
+
+      while (
+        node = walker.nextNode()
+      ) {
+
+        if (
+          node.textContent.trim() === "TO"
+        ) {
+
+          nodes.push(node);
+
+        }
+
+      }
+
+
+      nodes.forEach(
+        (textNode) => {
+
+          textNode.textContent = "";
+
+        }
+      );
+
+    };
+
+
+    const observer =
+      new MutationObserver(
+        () => {
+
+          removeBoardingPassTO();
+
+        }
+      );
+
+
+    const reservationArea =
+      document.getElementById(
+        "reservationArea"
+      );
+
+
+    if (reservationArea) {
+
+      observer.observe(
+        reservationArea,
+        {
+          childList: true,
+          subtree: true,
+          characterData: true
+        }
+      );
+
+    }
+
+
+    /*
+     * 初回確認
+     */
+
+    removeBoardingPassTO();
+
+  </script>
+
+
+</body>
+
+</html>
