@@ -3,10 +3,8 @@
 // スタッフ.js
 // ==============================
 
-
 import { initializeApp } from
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
 
 import {
   getDatabase,
@@ -19,7 +17,6 @@ import {
 } from
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -28,21 +25,18 @@ import {
 } from
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-
 import { firebaseConfig } from "./Firebase設定.js";
 
 
 // ==============================
-// Firebase 初期化
+// Firebase初期化
 // ==============================
 
 const app =
   initializeApp(firebaseConfig);
 
-
 const db =
   getDatabase(app);
-
 
 const auth =
   getAuth(app);
@@ -97,22 +91,17 @@ function $(id) {
 function toMinutes(time) {
 
   if (!time) {
-
     return 0;
   }
-
 
   const parts =
     time.split(":");
 
-
   const hour =
     Number(parts[0]);
 
-
   const minute =
     Number(parts[1]);
-
 
   return (
     hour * 60 +
@@ -132,10 +121,8 @@ function formatTime(minutes) {
       minutes / 60
     );
 
-
   const minute =
     minutes % 60;
-
 
   return (
     String(hour).padStart(
@@ -172,24 +159,20 @@ function createSlots() {
 
   const slots = [];
 
-
   const startMinutes =
     toMinutes(
       currentSettings.start
     );
-
 
   const endMinutes =
     toMinutes(
       currentSettings.end
     );
 
-
   const slotMinutes =
     Number(
       currentSettings.slotMinutes
     );
-
 
   if (
     !slotMinutes ||
@@ -198,7 +181,6 @@ function createSlots() {
 
     return slots;
   }
-
 
   for (
     let minutes =
@@ -217,13 +199,11 @@ function createSlots() {
         minutes
       );
 
-
     const end =
       formatTime(
         minutes +
         slotMinutes
       );
-
 
     slots.push({
 
@@ -237,7 +217,6 @@ function createSlots() {
         end
     });
   }
-
 
   return slots;
 }
@@ -256,7 +235,6 @@ function escapeHtml(value) {
 
     return "";
   }
-
 
   return String(value)
 
@@ -294,7 +272,6 @@ function escapeHtml(value) {
 const loginButton =
   $("login");
 
-
 if (loginButton) {
 
   loginButton.addEventListener(
@@ -307,19 +284,16 @@ if (loginButton) {
       const loginMessage =
         $("loginMessage");
 
-
       const password =
         passwordInput
           ? passwordInput.value.trim()
           : "";
-
 
       if (loginMessage) {
 
         loginMessage.textContent =
           "";
       }
-
 
       if (!password) {
 
@@ -332,14 +306,11 @@ if (loginButton) {
         return;
       }
 
-
       loginButton.disabled =
         true;
 
-
       loginButton.textContent =
         "ログイン中…";
-
 
       try {
 
@@ -356,14 +327,15 @@ if (loginButton) {
           error
         );
 
-
         if (loginMessage) {
 
           if (
             error.code ===
             "auth/invalid-credential" ||
+
             error.code ===
             "auth/wrong-password" ||
+
             error.code ===
             "auth/user-not-found"
           ) {
@@ -386,7 +358,6 @@ if (loginButton) {
         loginButton.textContent =
           "ログイン";
       }
-
     }
   );
 }
@@ -413,20 +384,16 @@ function renderPaperSlots() {
   const paperSlot =
     $("paperSlot");
 
-
   if (!paperSlot) {
 
     return;
   }
 
-
   const slots =
     createSlots();
 
-
   paperSlot.innerHTML =
     "";
-
 
   for (
     const slot of slots
@@ -437,20 +404,16 @@ function renderPaperSlots() {
         "option"
       );
 
-
     option.value =
       slot.key;
 
-
     option.textContent =
       `${slot.start}〜${slot.end}`;
-
 
     paperSlot.appendChild(
       option
     );
   }
-
 
   updatePaperSlotInfo();
 }
@@ -465,10 +428,8 @@ function updatePaperSlotInfo() {
   const paperSlot =
     $("paperSlot");
 
-
   const info =
     $("paperSlotInfo");
-
 
   if (
     !paperSlot ||
@@ -478,10 +439,8 @@ function updatePaperSlotInfo() {
     return;
   }
 
-
   const selectedSlot =
     paperSlot.value;
-
 
   if (!selectedSlot) {
 
@@ -491,14 +450,12 @@ function updatePaperSlotInfo() {
     return;
   }
 
-
   const slot =
     createSlots().find(
       item =>
         item.key ===
         selectedSlot
     );
-
 
   if (!slot) {
 
@@ -508,13 +465,11 @@ function updatePaperSlotInfo() {
     return;
   }
 
-
   const countRef =
     ref(
       db,
       `Queue/slots/${slot.key}/count`
     );
-
 
   onValue(
     countRef,
@@ -527,12 +482,10 @@ function updatePaperSlotInfo() {
             )
           : 0;
 
-
       const max =
         Number(
           currentSettings.maxGroups
         );
-
 
       info.textContent =
         `現在 ${count} / ${max} 組`;
@@ -550,19 +503,16 @@ function renderReservations() {
   const slotList =
     $("slotList");
 
-
   if (!slotList) {
 
     return;
   }
-
 
   const reservationsRef =
     ref(
       db,
       "Queue/reservations"
     );
-
 
   onValue(
     reservationsRef,
@@ -571,10 +521,8 @@ function renderReservations() {
       const data =
         snapshot.val();
 
-
       const reservations =
         [];
-
 
       if (data) {
 
@@ -586,12 +534,10 @@ function renderReservations() {
           const reservation =
             data[key];
 
-
           if (!reservation) {
 
             continue;
           }
-
 
           reservations.push(
             reservation
@@ -599,21 +545,17 @@ function renderReservations() {
         }
       }
 
-
       reservations.sort(
         (a, b) =>
           Number(a.number) -
           Number(b.number)
       );
 
-
       const slots =
         createSlots();
 
-
       slotList.innerHTML =
         "";
-
 
       for (
         const slot of slots
@@ -626,32 +568,26 @@ function renderReservations() {
               slot.key
           );
 
-
         const section =
           document.createElement(
             "section"
           );
 
-
         section.className =
           "slot-section";
-
 
         const title =
           document.createElement(
             "h3"
           );
 
-
         title.textContent =
           `${slot.start}〜${slot.end} ` +
           `（${slotReservations.length}/${currentSettings.maxGroups}組）`;
 
-
         section.appendChild(
           title
         );
-
 
         if (
           slotReservations.length === 0
@@ -662,10 +598,8 @@ function renderReservations() {
               "p"
             );
 
-
           empty.textContent =
             "予約はありません。";
-
 
           section.appendChild(
             empty
@@ -683,7 +617,6 @@ function renderReservations() {
                 "div"
               );
 
-
             item.className =
               "reservation-item";
 
@@ -699,12 +632,10 @@ function renderReservations() {
                   )
                 : "名前なし";
 
-
             const size =
               Number(
                 reservation.size
               );
-
 
             const type =
               reservation.type ===
@@ -712,23 +643,18 @@ function renderReservations() {
                 ? "紙予約"
                 : "Web予約";
 
-
-            const isCompleted =
-              reservation.status ===
-              "completed";
-
-
             item.innerHTML = `
               <strong>
                 ${name}
               </strong>
+
               <br>
+
               ${size}人
               ・
               ${type}
               ・
               予約番号 ${reservation.number}
-              <br>
             `;
 
 
@@ -736,26 +662,30 @@ function renderReservations() {
             // 搭乗状態
             // ========================
 
-            const statusText =
+            const isCompleted =
+              reservation.status ===
+              "completed";
+
+            const status =
               document.createElement(
-                "strong"
+                "span"
               );
 
+            status.className =
+              "reservation-status " +
+              (
+                isCompleted
+                  ? "completed"
+                  : "reserved"
+              );
 
-            if (isCompleted) {
-
-              statusText.textContent =
-                "🔵 搭乗済み";
-
-            } else {
-
-              statusText.textContent =
-                "🟢 予約済み";
-            }
-
+            status.textContent =
+              isCompleted
+                ? "🔵 搭乗済み"
+                : "🟢 予約済み";
 
             item.appendChild(
-              statusText
+              status
             );
 
 
@@ -765,27 +695,67 @@ function renderReservations() {
 
             if (!isCompleted) {
 
-              const completedButton =
+              const completeButton =
                 document.createElement(
                   "button"
                 );
 
+              completeButton.type =
+                "button";
 
-              completedButton.textContent =
+              completeButton.className =
+                "complete-reservation-button";
+
+              completeButton.textContent =
                 "搭乗済みにする";
 
 
-              completedButton.type =
-                "button";
-
-
-              completedButton.addEventListener(
+              completeButton.addEventListener(
                 "click",
                 async () => {
 
-                  await markReservationCompleted(
-                    reservation
-                  );
+                  // ----------------------
+                  // 確認
+                  // ----------------------
+
+                  const confirmed =
+                    confirm(
+                      `予約番号 ${reservation.number} を搭乗済みにしますか？`
+                    );
+
+
+                  // キャンセルされた場合
+                  if (!confirmed) {
+
+                    return;
+                  }
+
+
+                  // ----------------------
+                  // Firebase更新
+                  // ----------------------
+
+                  completeButton.disabled =
+                    true;
+
+                  completeButton.textContent =
+                    "変更中…";
+
+
+                  const success =
+                    await markReservationCompleted(
+                      reservation
+                    );
+
+
+                  if (!success) {
+
+                    completeButton.disabled =
+                      false;
+
+                    completeButton.textContent =
+                      "搭乗済みにする";
+                  }
                 }
               );
 
@@ -796,9 +766,8 @@ function renderReservations() {
                 )
               );
 
-
               item.appendChild(
-                completedButton
+                completeButton
               );
             }
 
@@ -812,25 +781,20 @@ function renderReservations() {
                 "select"
               );
 
-
             const defaultOption =
               document.createElement(
                 "option"
               );
 
-
             defaultOption.value =
               "";
-
 
             defaultOption.textContent =
               "時間枠を変更";
 
-
             moveSelect.appendChild(
               defaultOption
             );
-
 
             for (
               const targetSlot
@@ -845,26 +809,21 @@ function renderReservations() {
                 continue;
               }
 
-
               const option =
                 document.createElement(
                   "option"
                 );
 
-
               option.value =
                 targetSlot.key;
 
-
               option.textContent =
                 `${targetSlot.start}〜${targetSlot.end}`;
-
 
               moveSelect.appendChild(
                 option
               );
             }
-
 
             moveSelect.addEventListener(
               "change",
@@ -873,31 +832,26 @@ function renderReservations() {
                 const targetSlot =
                   moveSelect.value;
 
-
                 if (!targetSlot) {
 
                   return;
                 }
-
 
                 await moveReservation(
                   reservation,
                   targetSlot
                 );
 
-
                 moveSelect.value =
                   "";
               }
             );
-
 
             item.appendChild(
               document.createElement(
                 "br"
               )
             );
-
 
             item.appendChild(
               moveSelect
@@ -913,14 +867,11 @@ function renderReservations() {
                 "button"
               );
 
-
             deleteButton.textContent =
               "削除";
 
-
             deleteButton.type =
               "button";
-
 
             deleteButton.addEventListener(
               "click",
@@ -932,25 +883,21 @@ function renderReservations() {
               }
             );
 
-
             item.appendChild(
               document.createTextNode(
                 " "
               )
             );
 
-
             item.appendChild(
               deleteButton
             );
-
 
             section.appendChild(
               item
             );
           }
         }
-
 
         slotList.appendChild(
           section
@@ -972,21 +919,18 @@ async function markReservationCompleted(
   const number =
     reservation.number;
 
-
   if (
     number === undefined
   ) {
 
-    return;
+    return false;
   }
-
 
   const reservationRef =
     ref(
       db,
       `Queue/reservations/${number}`
     );
-
 
   try {
 
@@ -1002,6 +946,7 @@ async function markReservationCompleted(
       }
     );
 
+    return true;
 
   } catch (error) {
 
@@ -1010,10 +955,11 @@ async function markReservationCompleted(
       error
     );
 
-
     alert(
       "搭乗済みへの変更に失敗しました。"
     );
+
+    return false;
   }
 }
 
@@ -1030,7 +976,6 @@ async function moveReservation(
   const oldSlotKey =
     reservation.slot;
 
-
   if (
     !oldSlotKey ||
     !targetSlotKey ||
@@ -1040,14 +985,12 @@ async function moveReservation(
     return;
   }
 
-
   const targetSlot =
     createSlots().find(
       slot =>
         slot.key ===
         targetSlotKey
     );
-
 
   if (!targetSlot) {
 
@@ -1058,17 +1001,14 @@ async function moveReservation(
     return;
   }
 
-
   const targetCountRef =
     ref(
       db,
       `Queue/slots/${targetSlotKey}/count`
     );
 
-
   let targetIncremented =
     false;
-
 
   try {
 
@@ -1082,12 +1022,10 @@ async function moveReservation(
               ? 0
               : Number(current);
 
-
           const maxGroups =
             Number(
               currentSettings.maxGroups
             );
-
 
           if (
             count >= maxGroups
@@ -1096,11 +1034,9 @@ async function moveReservation(
             return;
           }
 
-
           return count + 1;
         }
       );
-
 
     if (
       !transactionResult.committed
@@ -1113,17 +1049,14 @@ async function moveReservation(
       return;
     }
 
-
     targetIncremented =
       true;
-
 
     const reservationRef =
       ref(
         db,
         `Queue/reservations/${reservation.number}`
       );
-
 
     await update(
       reservationRef,
@@ -1140,13 +1073,11 @@ async function moveReservation(
       }
     );
 
-
     const oldCountRef =
       ref(
         db,
         `Queue/slots/${oldSlotKey}/count`
       );
-
 
     await runTransaction(
       oldCountRef,
@@ -1157,14 +1088,12 @@ async function moveReservation(
             ? 0
             : Number(current);
 
-
         return Math.max(
           0,
           count - 1
         );
       }
     );
-
 
     alert(
       "時間枠を変更しました。"
@@ -1176,7 +1105,6 @@ async function moveReservation(
       "予約移動エラー:",
       error
     );
-
 
     if (
       targetIncremented
@@ -1192,7 +1120,6 @@ async function moveReservation(
               current === null
                 ? 0
                 : Number(current);
-
 
             return Math.max(
               0,
@@ -1212,7 +1139,6 @@ async function moveReservation(
       }
     }
 
-
     alert(
       "時間枠の変更に失敗しました。"
     );
@@ -1231,7 +1157,6 @@ async function deleteReservation(
   const number =
     reservation.number;
 
-
   if (
     number === undefined
   ) {
@@ -1239,18 +1164,15 @@ async function deleteReservation(
     return;
   }
 
-
   const confirmed =
     confirm(
       `予約番号 ${number} を削除しますか？`
     );
 
-
   if (!confirmed) {
 
     return;
   }
-
 
   const reservationRef =
     ref(
@@ -1258,13 +1180,11 @@ async function deleteReservation(
       `Queue/reservations/${number}`
     );
 
-
   try {
 
     await remove(
       reservationRef
     );
-
 
     if (
       reservation.slot
@@ -1276,7 +1196,6 @@ async function deleteReservation(
           `Queue/slots/${reservation.slot}/count`
         );
 
-
       await runTransaction(
         countRef,
         current => {
@@ -1286,7 +1205,6 @@ async function deleteReservation(
               ? 0
               : Number(current);
 
-
           return Math.max(
             0,
             count - 1
@@ -1294,7 +1212,6 @@ async function deleteReservation(
         }
       );
     }
-
 
     alert(
       "予約を削除しました。"
@@ -1306,7 +1223,6 @@ async function deleteReservation(
       "予約削除エラー:",
       error
     );
-
 
     alert(
       "予約の削除に失敗しました。"
@@ -1325,14 +1241,12 @@ const settingsRef =
     "Queue/settings"
   );
 
-
 onValue(
   settingsRef,
   snapshot => {
 
     const data =
       snapshot.val();
-
 
     if (data) {
 
@@ -1361,6 +1275,16 @@ onValue(
       };
     }
 
+    const receptionState =
+      $("receptionState");
+
+    if (receptionState) {
+
+      receptionState.textContent =
+        currentSettings.open
+          ? "🟢 受付中"
+          : "🔴 受付停止中";
+    }
 
     render();
   }
@@ -1376,7 +1300,6 @@ const slotsRef =
     db,
     "Queue/slots"
   );
-
 
 onValue(
   slotsRef,
@@ -1395,7 +1318,6 @@ onValue(
 
 const openAdminSettingsButton =
   $("openAdminSettings");
-
 
 if (openAdminSettingsButton) {
 
@@ -1417,7 +1339,6 @@ if (openAdminSettingsButton) {
 const paperSlotSelect =
   $("paperSlot");
 
-
 if (paperSlotSelect) {
 
   paperSlotSelect.addEventListener(
@@ -1437,7 +1358,6 @@ if (paperSlotSelect) {
 const addPaperButton =
   $("addPaper");
 
-
 if (addPaperButton) {
 
   addPaperButton.addEventListener(
@@ -1447,24 +1367,19 @@ if (addPaperButton) {
       const paperNameInput =
         $("paperName");
 
-
       const paperSizeInput =
         $("paperSize");
-
 
       const paperSlotInput =
         $("paperSlot");
 
-
       const paperMessage =
         $("paperMessage");
-
 
       const paperName =
         paperNameInput
           ? paperNameInput.value.trim()
           : "";
-
 
       const paperSize =
         paperSizeInput
@@ -1473,12 +1388,10 @@ if (addPaperButton) {
             )
           : 0;
 
-
       const paperSlot =
         paperSlotInput
           ? paperSlotInput.value
           : "";
-
 
       if (!paperName) {
 
@@ -1490,7 +1403,6 @@ if (addPaperButton) {
 
         return;
       }
-
 
       if (
         !Number.isInteger(
@@ -1509,7 +1421,6 @@ if (addPaperButton) {
         return;
       }
 
-
       if (!paperSlot) {
 
         if (paperMessage) {
@@ -1521,14 +1432,12 @@ if (addPaperButton) {
         return;
       }
 
-
       const slot =
         createSlots().find(
           item =>
             item.key ===
             paperSlot
         );
-
 
       if (!slot) {
 
@@ -1541,13 +1450,11 @@ if (addPaperButton) {
         return;
       }
 
-
       if (paperMessage) {
 
         paperMessage.textContent =
           "追加しています……";
       }
-
 
       const countRef =
         ref(
@@ -1555,9 +1462,7 @@ if (addPaperButton) {
           `Queue/slots/${slot.key}/count`
         );
 
-
       let countTransaction;
-
 
       try {
 
@@ -1571,12 +1476,10 @@ if (addPaperButton) {
                   ? 0
                   : Number(current);
 
-
               const maxGroups =
                 Number(
                   currentSettings.maxGroups
                 );
-
 
               if (
                 count >= maxGroups
@@ -1584,7 +1487,6 @@ if (addPaperButton) {
 
                 return;
               }
-
 
               return count + 1;
             }
@@ -1597,7 +1499,6 @@ if (addPaperButton) {
           error
         );
 
-
         if (paperMessage) {
 
           paperMessage.textContent =
@@ -1606,7 +1507,6 @@ if (addPaperButton) {
 
         return;
       }
-
 
       if (
         !countTransaction.committed
@@ -1621,16 +1521,13 @@ if (addPaperButton) {
         return;
       }
 
-
       const lastRef =
         ref(
           db,
           "Queue/reservationLast"
         );
 
-
       let reservationNumber;
-
 
       try {
 
@@ -1644,11 +1541,9 @@ if (addPaperButton) {
                   ? 0
                   : Number(current);
 
-
               return value + 1;
             }
           );
-
 
         if (
           !result.committed
@@ -1658,7 +1553,6 @@ if (addPaperButton) {
             "予約番号の発行に失敗しました。"
           );
         }
-
 
         reservationNumber =
           result.snapshot.val();
@@ -1670,7 +1564,6 @@ if (addPaperButton) {
           error
         );
 
-
         try {
 
           await runTransaction(
@@ -1681,7 +1574,6 @@ if (addPaperButton) {
                 current === null
                   ? 0
                   : Number(current);
-
 
               return Math.max(
                 0,
@@ -1700,7 +1592,6 @@ if (addPaperButton) {
           );
         }
 
-
         if (paperMessage) {
 
           paperMessage.textContent =
@@ -1709,7 +1600,6 @@ if (addPaperButton) {
 
         return;
       }
-
 
       const reservationData = {
 
@@ -1743,13 +1633,11 @@ if (addPaperButton) {
           Date.now()
       };
 
-
       const reservationRef =
         ref(
           db,
           `Queue/reservations/${reservationNumber}`
         );
-
 
       try {
 
@@ -1758,20 +1646,17 @@ if (addPaperButton) {
           reservationData
         );
 
-
         if (paperMessage) {
 
           paperMessage.textContent =
             `予約を追加しました。予約番号：${reservationNumber}`;
         }
 
-
         if (paperNameInput) {
 
           paperNameInput.value =
             "";
         }
-
 
         updatePaperSlotInfo();
 
@@ -1781,7 +1666,6 @@ if (addPaperButton) {
           "紙予約保存エラー:",
           error
         );
-
 
         try {
 
@@ -1793,7 +1677,6 @@ if (addPaperButton) {
                 current === null
                   ? 0
                   : Number(current);
-
 
               return Math.max(
                 0,
@@ -1811,7 +1694,6 @@ if (addPaperButton) {
             rollbackError
           );
         }
-
 
         if (paperMessage) {
 
@@ -1831,7 +1713,6 @@ if (addPaperButton) {
 const logoutButton =
   $("logout");
 
-
 if (logoutButton) {
 
   logoutButton.addEventListener(
@@ -1850,7 +1731,6 @@ if (logoutButton) {
           "ログアウトエラー:",
           error
         );
-
 
         alert(
           "ログアウトに失敗しました。"
@@ -1872,20 +1752,16 @@ onAuthStateChanged(
     const loginArea =
       $("loginArea");
 
-
     const adminArea =
       $("adminArea");
-
 
     if (user) {
 
       loginArea.style.display =
         "none";
 
-
       adminArea.style.display =
         "block";
-
 
       render();
 
@@ -1893,7 +1769,6 @@ onAuthStateChanged(
 
       loginArea.style.display =
         "block";
-
 
       adminArea.style.display =
         "none";
