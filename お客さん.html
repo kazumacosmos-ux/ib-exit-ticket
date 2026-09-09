@@ -650,6 +650,130 @@
 
 
     /*
+     * 注意事項
+     */
+
+    .notice-box {
+
+      margin:
+        8px 25px 24px;
+
+      padding:
+        20px 20px 18px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #f0faff,
+          #e8f7ff
+        );
+
+      border:
+        2px solid #b7e3fb;
+
+      border-radius:
+        18px;
+
+      box-shadow:
+        0 5px 16px
+        rgba(
+          20,
+          120,
+          180,
+          0.08
+        );
+    }
+
+
+    .notice-title {
+
+      display: flex;
+
+      align-items:
+        center;
+
+      gap: 10px;
+
+      margin-bottom:
+        13px;
+
+      color: #07568c;
+
+      font-size: 16px;
+
+      font-weight: 800;
+    }
+
+
+    .notice-icon {
+
+      display: flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      width: 30px;
+      height: 30px;
+
+      flex-shrink: 0;
+
+      border-radius: 50%;
+
+      background:
+        #168dcc;
+
+      color:
+        #ffffff;
+
+      font-size: 18px;
+
+      font-weight: 900;
+    }
+
+
+    .notice-list {
+
+      margin: 0;
+
+      padding-left:
+        21px;
+
+      color: #124f78;
+
+      font-size: 12px;
+
+      line-height: 1.75;
+    }
+
+
+    .notice-list li {
+
+      padding-left:
+        2px;
+
+      margin-bottom:
+        6px;
+    }
+
+
+    .notice-list li:last-child {
+
+      margin-bottom:
+        0;
+    }
+
+
+    .notice-list li::marker {
+
+      color:
+        #159bd8;
+    }
+
+
+    /*
      * 入力フォーム
      */
 
@@ -1518,6 +1642,42 @@
       }
 
 
+      .notice-box {
+
+        margin:
+          6px 18px 22px;
+
+        padding:
+          17px 16px 15px;
+
+        border-radius:
+          16px;
+      }
+
+
+      .notice-title {
+
+        font-size: 15px;
+      }
+
+
+      .notice-icon {
+
+        width: 28px;
+        height: 28px;
+
+        font-size: 17px;
+      }
+
+
+      .notice-list {
+
+        font-size: 11px;
+
+        line-height: 1.7;
+      }
+
+
       .booking-section {
 
         padding:
@@ -1614,23 +1774,13 @@
     <header class="airline-header">
 
       <div class="airport-sign">
-        DEGUCHI DREAM SKYLINE AIRPORT
+        Deguchi Dream Skyline
       </div>
-
-
-      <p class="airline-small">
-        DEGUCHI Dream
-      </p>
 
 
       <h1>
         1-B出口 搭乗券予約
       </h1>
-
-
-      <p class="airline-name">
-        出口DreamSkyline
-      </p>
 
 
       <p class="airline-slogan">
@@ -1643,9 +1793,9 @@
     <!-- 予約チケット -->
 
     <section
-  id="bookingArea"
-  class="reservation-ticket"
->
+      id="bookingArea"
+      class="reservation-ticket"
+    >
 
 
       <div class="ticket-top">
@@ -1709,6 +1859,50 @@
           </span>
 
         </div>
+
+      </div>
+
+
+      <!-- ご予約前の注意事項 -->
+
+      <div class="notice-box">
+
+        <div class="notice-title">
+
+          <span class="notice-icon">
+            !
+          </span>
+
+          <span>
+            ご予約前にご確認ください
+          </span>
+
+        </div>
+
+
+        <ul class="notice-list">
+
+          <li>
+            1回のご予約につき、1〜4名様までご予約いただけます。
+          </li>
+
+          <li>
+            搭乗時間前にお越しください。
+          </li>
+
+          <li>
+            予約後に時間を変更する場合は、一度キャンセルして取り直していただくか、直接受付スタッフまでお申し出ください。
+          </li>
+
+          <li>
+            搭乗券は代表者の方のスマートフォンでご提示ください。万が一に備えて、スクリーンショットを撮っておくことをおすすめします。
+          </li>
+
+          <li>
+            混雑状況により、多少お待ちいただく場合があります。
+          </li>
+
+        </ul>
 
       </div>
 
