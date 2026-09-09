@@ -33,6 +33,20 @@ let reservationsLoaded = false;
 let cancellationMessageShown = false;
 
 
+/*
+  お客さん自身がキャンセルした予約番号を記録する。
+
+  Firebaseから削除されると
+  onChildRemovedも発生するため、
+
+  ・お客さん自身のキャンセル
+  ・スタッフによるキャンセル
+
+  を区別するために使用する。
+*/
+const selfCancelledNumbers = new Set();
+
+
 /* =========================
    時間関係
 ========================= */
@@ -464,7 +478,7 @@ function showReserveArea() {
 
 
 /* =========================
-   スタッフによる削除
+   Firebaseから予約が削除された時
 ========================= */
 
 function handleRemoteReservationRemoved(
@@ -488,8 +502,27 @@ function handleRemoteReservationRemoved(
   }
 
 
-  /* Firebaseから削除されたので
-     端末の予約も削除 */
+  /*
+    お客さん自身がキャンセルした場合
+  */
+
+  if (
+    selfCancelledNumbers.has(
+      targetNumber
+    )
+  ) {
+
+    selfCancelledNumbers.delete(
+      targetNumber
+    );
+
+    return;
+  }
+
+
+  /*
+    スタッフによって削除された場合
+  */
 
   localStorage.removeItem(
     "ib_reservation"
@@ -560,6 +593,19 @@ function syncLocalReservation() {
   /* Firebaseに存在しない */
 
   if (!remote) {
+
+    /*
+      自分でキャンセルした直後なら
+      スタッフによるキャンセル表示をしない
+    */
+
+    if (
+      selfCancelledNumbers.has(
+        number
+      )
+    ) {
+      return;
+    }
 
     handleRemoteReservationRemoved(
       number
@@ -779,6 +825,30 @@ onChildRemoved(
     const removedNumber =
       snapshot.key;
 
+    /*
+      自分でキャンセルした場合は
+      「スタッフによってキャンセル」
+      を表示しない
+    */
+
+    if (
+      selfCancelledNumbers.has(
+        String(removedNumber)
+      )
+    ) {
+
+      selfCancelledNumbers.delete(
+        String(removedNumber)
+      );
+
+      delete reservations[
+        removedNumber
+      ];
+
+      return;
+    }
+
+
     handleRemoteReservationRemoved(
       removedNumber
     );
@@ -986,10 +1056,17 @@ if ($("reserve")) {
 
 
       /* =========================
-         画面表示
+         キャンセル関連をリセット
       ========================= */
 
       cancellationMessageShown = false;
+
+      selfCancelledNumbers.clear();
+
+
+      /* =========================
+         画面表示
+      ========================= */
 
       const reserveArea =
         $("reserveArea");
@@ -1021,6 +1098,22 @@ async function cancelReservation(
   if (!ok) {
     return;
   }
+
+
+  const reservationNumber =
+    String(reservation.number);
+
+
+  /*
+    Firebaseから削除された時に
+    「スタッフによってキャンセル」
+    と誤表示されないよう、
+    自分でキャンセルした番号を先に記録する。
+  */
+
+  selfCancelledNumbers.add(
+    reservationNumber
+  );
 
 
   try {
@@ -1095,7 +1188,41 @@ async function cancelReservation(
     }
 
 
+    /*
+      お客さん自身がキャンセルしたことを表示
+    */
+
+    alert(
+      "予約がキャンセルされました。"
+    );
+
+
+    /*
+      Firebaseの削除イベントが
+      すでに処理されている可能性があるので、
+      念のため少し後に記録を削除する。
+
+      まだ残っている場合だけ削除する。
+    */
+
+    setTimeout(() => {
+      selfCancelledNumbers.delete(
+        reservationNumber
+      );
+    }, 1000);
+
+
   } catch (error) {
+
+    /*
+      キャンセル処理に失敗した場合は
+      自分でキャンセルした記録を取り消す。
+    */
+
+    selfCancelledNumbers.delete(
+      reservationNumber
+    );
+
 
     console.error(
       "予約キャンセルエラー:",
@@ -1113,4 +1240,4 @@ async function cancelReservation(
    初期表示
 ========================= */
 
-renderSavedReservation();
+render();
