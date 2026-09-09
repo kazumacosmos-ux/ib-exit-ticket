@@ -27,12 +27,14 @@ import {
 ========================= */
 
 const app = initializeApp(firebaseConfig);
+
 const db = getDatabase(app);
+
 const auth = getAuth(app);
 
 
 /* =========================
-   設定
+   初期設定
 ========================= */
 
 let settings = {
@@ -44,13 +46,18 @@ let settings = {
 };
 
 let slots = {};
+
 let reservations = {};
 
 let selfCancelInProgress = false;
+
 let lastResetAt = 0;
 
-const RESERVATION_KEY = "ib_reservation";
-const RESET_KEY = "ib_resetAt";
+const RESERVATION_KEY =
+  "ib_reservation";
+
+const RESET_KEY =
+  "ib_resetAt";
 
 
 /* =========================
@@ -58,163 +65,293 @@ const RESET_KEY = "ib_resetAt";
 ========================= */
 
 function getLocalReservation() {
+
   try {
-    return JSON.parse(localStorage.getItem(RESERVATION_KEY));
+
+    return JSON.parse(
+      localStorage.getItem(
+        RESERVATION_KEY
+      )
+    );
+
   } catch {
+
     return null;
+
   }
+
 }
 
+
 function saveLocalReservation(data) {
+
   localStorage.setItem(
     RESERVATION_KEY,
     JSON.stringify(data)
   );
+
 }
+
 
 function clearLocalReservation() {
-  localStorage.removeItem(RESERVATION_KEY);
+
+  localStorage.removeItem(
+    RESERVATION_KEY
+  );
+
 }
+
 
 function getLocalResetAt() {
+
   return Number(
-    localStorage.getItem(RESET_KEY) || 0
+    localStorage.getItem(
+      RESET_KEY
+    ) || 0
   );
+
 }
 
+
 function saveLocalResetAt(value) {
+
   localStorage.setItem(
     RESET_KEY,
     String(value)
   );
+
 }
 
 
 /* =========================
-   共通
+   共通関数
 ========================= */
 
 function escapeHtml(value) {
+
   return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+
 }
+
 
 function timeToMinutes(time) {
-  const [h, m] = time.split(":").map(Number);
+
+  const [h, m] =
+    time.split(":").map(Number);
+
   return h * 60 + m;
+
 }
 
+
 function minutesToTime(minutes) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
+
+  const h =
+    Math.floor(minutes / 60);
+
+  const m =
+    minutes % 60;
 
   return (
     String(h).padStart(2, "0") +
     ":" +
     String(m).padStart(2, "0")
   );
+
 }
 
+
 function generateSlots() {
+
   const result = [];
 
-  const start = timeToMinutes(settings.start);
-  const end = timeToMinutes(settings.end);
-  const step = Number(settings.slotMinutes);
+  const start =
+    timeToMinutes(settings.start);
+
+  const end =
+    timeToMinutes(settings.end);
+
+  const step =
+    Number(settings.slotMinutes);
 
   if (!step || step <= 0) {
+
     return result;
+
   }
+
 
   for (
     let current = start;
     current + step <= end;
     current += step
   ) {
-    const startTime = minutesToTime(current);
-    const endTime = minutesToTime(current + step);
+
+    const startTime =
+      minutesToTime(current);
+
+    const endTime =
+      minutesToTime(
+        current + step
+      );
+
+    const key =
+      startTime.replace(":", "");
 
     result.push({
-      key: startTime.replace(":", ""),
+
+      key: key,
+
       start: startTime,
+
       end: endTime,
+
       count: Number(
-        slots[startTime.replace(":", "")]?.count || 0
+        slots[key]?.count || 0
       )
+
     });
+
   }
 
+
   return result;
+
 }
+
 
 function getToday() {
+
   const now = new Date();
 
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
+  const y =
+    now.getFullYear();
+
+  const m =
+    String(
+      now.getMonth() + 1
+    ).padStart(2, "0");
+
+  const d =
+    String(
+      now.getDate()
+    ).padStart(2, "0");
 
   return `${y}/${m}/${d}`;
+
 }
+
 
 function getBoardingTime(endTime) {
-  const minutes = timeToMinutes(endTime) + 5;
+
+  const minutes =
+    timeToMinutes(endTime) + 5;
+
   return minutesToTime(minutes);
+
 }
 
+
 function getFlightNumber(number) {
-  const numeric = Number(
-    String(number).replace(/\D/g, "")
+
+  const numeric =
+    Number(
+      String(number)
+        .replace(/\D/g, "")
+    );
+
+  return (
+    "DREAM" +
+    String(numeric).padStart(3, "0")
   );
 
-  return `DREAM${String(numeric).padStart(3, "0")}`;
 }
 
 
 /* =========================
-   予約エリア表示
+   予約フォーム表示
 ========================= */
 
 function showBookingArea() {
-  const area = document.getElementById("bookingArea");
+
+  const area =
+    document.getElementById(
+      "bookingArea"
+    );
 
   if (!area) return;
 
   area.hidden = false;
+
   area.style.display = "";
 
-  const button = document.getElementById("reserveButton");
+
+  const button =
+    document.getElementById(
+      "reserve"
+    );
 
   if (button) {
+
     button.disabled = false;
-    button.textContent = "搭乗券を予約する";
+
+    button.textContent =
+      "搭乗券を予約する";
+
   }
 
+
   renderSlots();
+
   updateInfo();
+
 }
+
+
+/* =========================
+   予約フォーム非表示
+========================= */
 
 function hideBookingArea() {
-  const area = document.getElementById("bookingArea");
+
+  const area =
+    document.getElementById(
+      "bookingArea"
+    );
 
   if (!area) return;
 
   area.hidden = true;
+
   area.style.display = "none";
+
 }
 
+
+/* =========================
+   搭乗券エリア非表示
+========================= */
+
 function hideReservationArea() {
-  const area = document.getElementById("reservationArea");
+
+  const area =
+    document.getElementById(
+      "reservationArea"
+    );
 
   if (!area) return;
 
   area.hidden = true;
+
   area.style.display = "none";
+
   area.innerHTML = "";
+
 }
 
 
@@ -227,128 +364,234 @@ function showReservationComplete(
   start,
   end
 ) {
+
   const area =
-    document.getElementById("reservationArea");
+    document.getElementById(
+      "reservationArea"
+    );
 
   if (!area) return;
 
+
   area.hidden = false;
+
   area.style.display = "";
 
+
   area.innerHTML = `
+
     <div class="reservation-complete">
-      <div class="complete-icon">✓</div>
+
+      <div class="complete-icon">
+        ✓
+      </div>
+
       <div class="complete-title">
         予約完了！
       </div>
+
       <div class="complete-number">
-        ${escapeHtml(getFlightNumber(number))}
+        ${escapeHtml(
+          getFlightNumber(number)
+        )}
       </div>
+
       <div class="complete-time">
-        ${escapeHtml(start)} ～ ${escapeHtml(end)}
+        ${escapeHtml(start)}
+        ～
+        ${escapeHtml(end)}
       </div>
+
     </div>
+
   `;
 
+
   setTimeout(() => {
+
     renderReservations();
+
   }, 1200);
+
 }
 
 
 /* =========================
-   時間枠
+   時間枠表示
 ========================= */
 
 function renderSlots() {
+
   const select =
-    document.getElementById("slotSelect");
+    document.getElementById(
+      "slot"
+    );
 
   if (!select) return;
 
-  const currentValue = select.value;
+
+  const currentValue =
+    select.value;
+
 
   select.innerHTML = `
+
     <option value="">
       ご来場時間を選択してください
     </option>
+
   `;
 
-  const generatedSlots = generateSlots();
 
-  generatedSlots.forEach(slot => {
-    const count = Number(slot.count || 0);
-    const max = Number(settings.maxGroups || 0);
-    const full = count >= max;
+  const generatedSlots =
+    generateSlots();
 
-    const option =
-      document.createElement("option");
 
-    option.value = slot.key;
-    option.textContent =
-      `${slot.start} ～ ${slot.end}` +
-      (full
-        ? "（満員）"
-        : `（残り${max - count}枠）`);
+  generatedSlots.forEach(
+    slot => {
 
-    option.disabled = full;
+      const count =
+        Number(slot.count || 0);
 
-    select.appendChild(option);
-  });
+      const max =
+        Number(
+          settings.maxGroups || 0
+        );
+
+      const full =
+        count >= max;
+
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        slot.key;
+
+
+      option.textContent =
+        `${slot.start} ～ ${slot.end}` +
+        (
+          full
+            ? "（満員）"
+            : `（残り${max - count}枠）`
+        );
+
+
+      option.disabled =
+        full;
+
+
+      select.appendChild(
+        option
+      );
+
+    }
+  );
+
 
   if (
     currentValue &&
     [...select.options].some(
       option =>
-        option.value === currentValue &&
+        option.value ===
+          currentValue &&
         !option.disabled
     )
   ) {
-    select.value = currentValue;
+
+    select.value =
+      currentValue;
+
   }
+
 }
 
+
+/* =========================
+   枠情報
+========================= */
+
 function updateInfo() {
+
   const info =
-    document.getElementById("slotInfo");
+    document.getElementById(
+      "slotInfo"
+    );
 
   if (!info) return;
 
-  const generatedSlots = generateSlots();
 
-  const total = generatedSlots.reduce(
-    (sum, slot) =>
-      sum + Number(slot.count || 0),
-    0
-  );
+  const generatedSlots =
+    generateSlots();
 
-  const max = generatedSlots.reduce(
-    (sum, slot) =>
-      sum + Number(settings.maxGroups || 0),
-    0
-  );
+
+  const total =
+    generatedSlots.reduce(
+      (sum, slot) =>
+        sum +
+        Number(
+          slot.count || 0
+        ),
+      0
+    );
+
+
+  const max =
+    generatedSlots.reduce(
+      (sum, slot) =>
+        sum +
+        Number(
+          settings.maxGroups || 0
+        ),
+      0
+    );
+
 
   info.textContent =
     `現在 ${total}組 / 最大 ${max}組`;
+
 }
 
+
+/* =========================
+   予約ボタン状態
+========================= */
+
 function updateReserveButton() {
+
   const button =
-    document.getElementById("reserveButton");
+    document.getElementById(
+      "reserve"
+    );
 
   if (!button) return;
+
 
   const localReservation =
     getLocalReservation();
 
+
   if (localReservation) {
+
     button.disabled = true;
-    button.textContent = "予約済み";
+
+    button.textContent =
+      "予約済み";
+
     return;
+
   }
 
+
   button.disabled = false;
-  button.textContent = "搭乗券を予約する";
+
+  button.textContent =
+    "搭乗券を予約する";
+
 }
 
 
@@ -357,429 +600,601 @@ function updateReserveButton() {
 ========================= */
 
 function renderReservations() {
+
   const area =
-    document.getElementById("reservationArea");
+    document.getElementById(
+      "reservationArea"
+    );
 
   if (!area) return;
+
 
   const localReservation =
     getLocalReservation();
 
+
   /*
    * 自分の予約がない
    */
+
   if (!localReservation) {
+
     hideReservationArea();
 
+
     if (settings.open) {
+
       showBookingArea();
+
     } else {
+
       hideBookingArea();
+
     }
 
+
     return;
+
   }
 
-  /*
-   * Firebase上の予約を取得
-   */
-  const remoteReservation =
-    reservations[localReservation.number];
 
   /*
-   * 搭乗済みになった場合
-   *
-   * Firebase上の予約は残す。
-   * お客さん側の表示だけリセットする。
+   * Firebase上の予約
    */
+
+  const remoteReservation =
+    reservations[
+      localReservation.number
+    ];
+
+
+  /*
+   * 搭乗済み
+   */
+
   if (
     remoteReservation &&
-    remoteReservation.status === "completed"
+    remoteReservation.status ===
+      "completed"
   ) {
+
     clearLocalReservation();
 
     hideReservationArea();
+
     showBookingArea();
 
     return;
+
   }
 
+
   /*
-   * 予約がFirebaseから削除された場合
+   * Firebaseにまだ存在しない場合
+   *
+   * 予約直後の同期待ち
    */
+
   if (!remoteReservation) {
-    /*
-     * 予約直後など、一時的に同期が
-     * 間に合っていない可能性があるため、
-     * 少し待ってから判断する。
-     */
+
     return;
+
   }
+
+
+  /*
+   * 予約フォームを消す
+   */
 
   hideBookingArea();
 
+
   area.hidden = false;
+
   area.style.display = "";
+
 
   const number =
     remoteReservation.number ||
     localReservation.number;
+
 
   const name =
     remoteReservation.name ||
     localReservation.name ||
     "";
 
+
   const start =
     remoteReservation.start ||
     localReservation.start;
 
+
   const end =
     remoteReservation.end ||
     localReservation.end;
+
 
   const size =
     remoteReservation.size ||
     localReservation.size ||
     1;
 
+
   const flight =
     getFlightNumber(number);
+
 
   const boardingTime =
     getBoardingTime(end);
 
+
   area.innerHTML = `
+
     <div class="boarding-pass">
 
-      <div class="boarding-pass-top">
-        <div class="boarding-title">
-          1-B出口 搭乗券
-        </div>
 
-        <div class="boarding-airline">
-          出口ドリームスカイライン
-        </div>
-      </div>
+      <div class="boarding-pass-header">
 
+        <div>
 
-      <div class="boarding-flight">
+          <h2>
+            1-B出口 搭乗券
+          </h2>
 
-        <div class="flight-block">
-          <div class="flight-label">
-            FLIGHT
-          </div>
-
-          <div class="flight-value">
-            ${escapeHtml(flight)}
-          </div>
-        </div>
-
-        <div class="flight-block">
-          <div class="flight-label">
-            GATE
-          </div>
-
-          <div class="flight-value">
-            1-B
-          </div>
-        </div>
-
-      </div>
-
-
-      <div class="boarding-main">
-
-        <div class="boarding-row">
-          <div>
-            <div class="boarding-label">
-              ご来場時間
-            </div>
-
-            <div class="boarding-value">
-              ${escapeHtml(start)}
-              ～
-              ${escapeHtml(end)}
-            </div>
-          </div>
-
-          <div>
-            <div class="boarding-label">
-              日付
-            </div>
-
-            <div class="boarding-value">
-              ${escapeHtml(getToday())}
-            </div>
-          </div>
-        </div>
-
-
-        <div class="boarding-row">
-
-          <div>
-            <div class="boarding-label">
-              FROM
-            </div>
-
-            <div class="boarding-value">
-              1-B
-            </div>
-          </div>
-
-          <div>
-            <div class="boarding-label">
-              搭乗時刻
-            </div>
-
-            <div class="boarding-value">
-              ${escapeHtml(boardingTime)}
-            </div>
-          </div>
+          <p>
+            出口ドリームスカイライン
+          </p>
 
         </div>
 
 
-        <div class="boarding-row">
-
-          <div>
-            <div class="boarding-label">
-              人数
-            </div>
-
-            <div class="boarding-value">
-              ${escapeHtml(size)}名
-            </div>
-          </div>
-
-          <div>
-            <div class="boarding-label">
-              代表者
-            </div>
-
-            <div class="boarding-value">
-              ${escapeHtml(name)}
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-
-      <div class="boarding-barcode">
-        <div class="barcode-lines">
-          || ||| | |||| || | ||| |||| |
-        </div>
-
-        <div class="barcode-number">
+        <strong>
           ${escapeHtml(flight)}
-        </div>
+        </strong>
+
       </div>
 
 
-      <div
-        class="boarding-note"
-        style="
-          color: #315d78;
-          margin-top: 18px;
-          font-size: 13px;
-          line-height: 1.8;
-          text-align: left;
-        "
-      >
+      <div class="boarding-pass-main">
+
+
+        <div class="boarding-arrival">
+
+          <span>
+            ご来場時間
+          </span>
+
+          <strong>
+            ${escapeHtml(start)}
+            ～
+            ${escapeHtml(end)}
+          </strong>
+
+        </div>
+
+
+        <div class="boarding-info-grid">
+
+
+          <div>
+
+            <span>
+              DATE
+            </span>
+
+            <strong>
+              ${escapeHtml(
+                getToday()
+              )}
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <span>
+              GATE
+            </span>
+
+            <strong>
+              1-B
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <span>
+              搭乗時刻
+            </span>
+
+            <strong>
+              ${escapeHtml(
+                boardingTime
+              )}
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <span>
+              人数
+            </span>
+
+            <strong>
+              ${escapeHtml(size)}名
+            </strong>
+
+          </div>
+
+
+        </div>
+
+
+        <div class="boarding-pass-passenger">
+
+          <span>
+            代表者
+          </span>
+
+          <strong>
+            ${escapeHtml(name)}
+          </strong>
+
+        </div>
+
+
+      </div>
+
+
+      <div class="boarding-pass-footer">
+
+
         <div
+          class="boarding-note"
           style="
-            font-weight: bold;
-            margin-bottom: 5px;
+            color: #315d78;
           "
         >
-          【ご予約にあたっての注意】
+
+          <div>
+            【ご予約にあたっての注意】
+          </div>
+
+          <div>
+            ・搭乗時刻前になりましたら、受付までお越しください。
+          </div>
+
+          <div>
+            ・予約後に時間を変更する場合は、一度キャンセルしてから再度ご予約いただくか、受付スタッフまでお申し出ください。
+          </div>
+
+          <div>
+            ・搭乗券は代表者のスマートフォンでご提示ください。万が一に備え、スクリーンショットを保存しておくことをおすすめします。
+          </div>
+
+          <div>
+            ・混雑状況により、お待ちいただく場合がございます。
+          </div>
+
         </div>
 
-        <div>
-          ・搭乗時刻前になりましたら、受付までお越しください。
-        </div>
 
-        <div>
-          ・予約後に時間を変更する場合は、一度キャンセルしてから再度ご予約いただくか、受付スタッフまでお申し出ください。
-        </div>
+        <button
+          id="cancel-reservation"
+          class="cancel-reservation"
+          type="button"
+        >
+          予約をキャンセルする
+        </button>
 
-        <div>
-          ・搭乗券は代表者のスマートフォンでご提示ください。万が一に備え、スクリーンショットを保存しておくことをおすすめします。
-        </div>
 
-        <div>
-          ・混雑状況により、お待ちいただく場合がございます。
-        </div>
       </div>
 
 
-      <button
-        id="cancelReservationButton"
-        class="cancel-button"
-      >
-        予約をキャンセルする
-      </button>
-
     </div>
+
   `;
 
 
   const cancelButton =
     document.getElementById(
-      "cancelReservationButton"
+      "cancel-reservation"
     );
 
+
   if (cancelButton) {
+
     cancelButton.addEventListener(
       "click",
       cancelReservation
     );
+
   }
+
 }
 
 
 /* =========================
-   予約
+   予約処理
 ========================= */
 
 async function reserve() {
+
   const error =
-    document.getElementById("reserveError");
+    document.getElementById(
+      "error"
+    );
+
 
   if (error) {
+
     error.textContent = "";
+
   }
 
+
+  /*
+   * Firebase匿名ログイン
+   */
+
   if (!auth.currentUser) {
+
     try {
+
       await signInAnonymously(auth);
+
     } catch (e) {
+
       if (error) {
+
         error.textContent =
           "接続できませんでした。もう一度お試しください。";
+
       }
+
       return;
+
     }
+
   }
+
+
+  /*
+   * すでに予約済み
+   */
 
   const existing =
     getLocalReservation();
 
+
   if (existing) {
+
     renderReservations();
+
     return;
+
   }
+
+
+  /*
+   * 受付停止
+   */
 
   if (!settings.open) {
+
     if (error) {
+
       error.textContent =
         "現在、予約受付を停止しています。";
+
     }
+
     return;
+
   }
 
+
+  /*
+   * 入力取得
+   */
+
   const nameInput =
-    document.getElementById("name");
+    document.getElementById(
+      "name"
+    );
+
 
   const sizeInput =
-    document.getElementById("size");
+    document.getElementById(
+      "size"
+    );
+
 
   const slotSelect =
-    document.getElementById("slotSelect");
+    document.getElementById(
+      "slot"
+    );
+
 
   const name =
     nameInput?.value.trim() || "";
 
+
   const size =
-    Number(sizeInput?.value || 0);
+    Number(
+      sizeInput?.value || 0
+    );
+
 
   const slotKey =
     slotSelect?.value || "";
 
+
+  /*
+   * 名前チェック
+   */
+
   if (!name) {
+
     if (error) {
+
       error.textContent =
         "代表者名を入力してください。";
+
     }
+
     return;
+
   }
 
-  if (size < 1 || size > 4) {
+
+  /*
+   * 人数チェック
+   */
+
+  if (
+    size < 1 ||
+    size > 4
+  ) {
+
     if (error) {
+
       error.textContent =
         "人数は1〜4名で入力してください。";
+
     }
+
     return;
+
   }
 
+
+  /*
+   * 時間チェック
+   */
+
   if (!slotKey) {
+
     if (error) {
+
       error.textContent =
         "搭乗時間を選択してください。";
+
     }
+
     return;
+
   }
+
 
   const generatedSlots =
     generateSlots();
 
+
   const selectedSlot =
     generatedSlots.find(
-      slot => slot.key === slotKey
+      slot =>
+        slot.key === slotKey
     );
 
+
   if (!selectedSlot) {
+
     if (error) {
+
       error.textContent =
         "選択した時間枠が見つかりません。";
+
     }
+
     return;
+
   }
+
 
   const slotRef =
-    ref(db, `Queue/slots/${slotKey}/count`);
+    ref(
+      db,
+      `Queue/slots/${slotKey}/count`
+    );
+
 
   const maxGroups =
-    Number(settings.maxGroups || 0);
+    Number(
+      settings.maxGroups || 0
+    );
+
+
+  /*
+   * ボタンを処理中にする
+   */
 
   const button =
-    document.getElementById("reserveButton");
+    document.getElementById(
+      "reserve"
+    );
+
 
   if (button) {
+
     button.disabled = true;
-    button.textContent = "予約処理中…";
+
+    button.textContent =
+      "予約処理中…";
+
   }
 
-  let slotIncremented = false;
-  let reservationNumber = null;
+
+  let slotIncremented =
+    false;
+
 
   try {
 
     /*
-     * 枠数を確保
+     * 枠を確保
      */
+
     const slotResult =
       await runTransaction(
         slotRef,
         current => {
+
           const count =
             Number(current || 0);
 
-          if (count >= maxGroups) {
+
+          if (
+            count >= maxGroups
+          ) {
+
             return;
+
           }
 
+
           return count + 1;
+
         }
       );
 
-    if (!slotResult.committed) {
+
+    if (
+      !slotResult.committed
+    ) {
+
       throw new Error(
         "この時間枠は満員です。"
       );
+
     }
+
 
     slotIncremented = true;
 
@@ -787,38 +1202,68 @@ async function reserve() {
     /*
      * 予約番号
      */
+
     const lastRef =
-      ref(db, "Queue/reservationLast");
+      ref(
+        db,
+        "Queue/reservationLast"
+      );
+
 
     const numberResult =
       await runTransaction(
         lastRef,
-        current => Number(current || 0) + 1
+        current =>
+          Number(current || 0) + 1
       );
 
-    reservationNumber =
-      Number(numberResult.snapshot.val());
+
+    const reservationNumber =
+      Number(
+        numberResult.snapshot.val()
+      );
 
 
     /*
      * 予約データ
      */
+
     const reservation = {
-      number: reservationNumber,
-      name: name,
-      slot: slotKey,
-      start: selectedSlot.start,
-      end: selectedSlot.end,
-      size: size,
-      type: "web",
-      status: "reserved",
-      createdAt: Date.now()
+
+      number:
+        reservationNumber,
+
+      name:
+        name,
+
+      slot:
+        slotKey,
+
+      start:
+        selectedSlot.start,
+
+      end:
+        selectedSlot.end,
+
+      size:
+        size,
+
+      type:
+        "web",
+
+      status:
+        "reserved",
+
+      createdAt:
+        Date.now()
+
     };
 
 
     /*
-     * Firebaseに保存
+     * Firebaseへ保存
      */
+
     await set(
       ref(
         db,
@@ -829,76 +1274,109 @@ async function reserve() {
 
 
     /*
-     * 自分の予約として保存
+     * 自分の予約を保存
      */
+
     saveLocalReservation(
       reservation
     );
 
-    reservations[reservationNumber] =
-      reservation;
+
+    reservations[
+      reservationNumber
+    ] = reservation;
 
 
     /*
-     * 入力欄をクリア
+     * 名前入力をクリア
      */
+
     if (nameInput) {
+
       nameInput.value = "";
+
     }
+
 
     /*
      * 予約フォームを消す
      */
+
     hideBookingArea();
 
+
     /*
-     * 搭乗券を表示
+     * 搭乗券表示
      */
+
     renderReservations();
+
 
   } catch (e) {
 
     /*
-     * 予約失敗時は確保した枠を戻す
+     * 失敗した場合は枠を戻す
      */
+
     if (
       slotIncremented &&
       slotKey
     ) {
+
       try {
+
         await runTransaction(
           slotRef,
           current => {
+
             const count =
-              Number(current || 0);
+              Number(
+                current || 0
+              );
 
             return Math.max(
               0,
               count - 1
             );
+
           }
         );
+
       } catch {
-        // ここでは何もしない
+
+        // 何もしない
+
       }
+
     }
 
+
     if (error) {
+
       error.textContent =
         e?.message ||
         "予約できませんでした。もう一度お試しください。";
+
     }
+
 
   } finally {
 
     /*
-     * 予約が残っていなければ
+     * 予約が残っていない場合だけ
      * ボタンを元に戻す
      */
-    if (!getLocalReservation()) {
+
+    if (
+      !getLocalReservation()
+    ) {
+
       updateReserveButton();
+
     }
+
   }
+
 }
 
 
@@ -907,29 +1385,41 @@ async function reserve() {
 ========================= */
 
 async function cancelReservation() {
+
   const localReservation =
     getLocalReservation();
 
+
   if (!localReservation) {
+
     return;
+
   }
+
 
   const confirmed =
     confirm(
       "この予約をキャンセルしますか？"
     );
 
+
   if (!confirmed) {
+
     return;
+
   }
 
-  selfCancelInProgress = true;
+
+  selfCancelInProgress =
+    true;
+
 
   try {
 
     /*
      * Firebaseから予約削除
      */
+
     await remove(
       ref(
         db,
@@ -939,32 +1429,40 @@ async function cancelReservation() {
 
 
     /*
-     * 時間枠を1つ戻す
+     * 枠を1つ戻す
      */
+
     const slotRef =
       ref(
         db,
         `Queue/slots/${localReservation.slot}/count`
       );
 
+
     await runTransaction(
       slotRef,
       current => {
+
         const count =
-          Number(current || 0);
+          Number(
+            current || 0
+          );
 
         return Math.max(
           0,
           count - 1
         );
+
       }
     );
 
 
     /*
-     * 自分の予約情報を削除
+     * 自分の予約を削除
      */
+
     clearLocalReservation();
+
 
     delete reservations[
       localReservation.number
@@ -974,13 +1472,16 @@ async function cancelReservation() {
     /*
      * 搭乗券を消す
      */
+
     hideReservationArea();
 
 
     /*
      * 予約フォームを戻す
      */
+
     showBookingArea();
+
 
   } catch (e) {
 
@@ -991,9 +1492,14 @@ async function cancelReservation() {
   } finally {
 
     setTimeout(() => {
-      selfCancelInProgress = false;
+
+      selfCancelInProgress =
+        false;
+
     }, 500);
+
   }
+
 }
 
 
@@ -1002,39 +1508,55 @@ async function cancelReservation() {
 ========================= */
 
 onValue(
-  ref(db, "Queue/settings"),
+  ref(
+    db,
+    "Queue/settings"
+  ),
   snapshot => {
 
     const data =
       snapshot.val();
 
+
     if (data) {
+
       settings = {
         ...settings,
         ...data
       };
+
     }
 
+
     renderSlots();
+
     updateInfo();
+
     renderReservations();
+
   }
 );
 
 
 /* =========================
-   Firebase：枠
+   Firebase：時間枠
 ========================= */
 
 onValue(
-  ref(db, "Queue/slots"),
+  ref(
+    db,
+    "Queue/slots"
+  ),
   snapshot => {
 
     slots =
       snapshot.val() || {};
 
+
     renderSlots();
+
     updateInfo();
+
   }
 );
 
@@ -1044,37 +1566,53 @@ onValue(
 ========================= */
 
 onValue(
-  ref(db, "Queue/reservations"),
+  ref(
+    db,
+    "Queue/reservations"
+  ),
   snapshot => {
 
     reservations =
       snapshot.val() || {};
 
+
     const localReservation =
       getLocalReservation();
 
+
     /*
-     * 搭乗済みになった場合も
-     * ここで検知する
+     * 搭乗済みになった場合
      */
+
     if (localReservation) {
+
       const remote =
         reservations[
           localReservation.number
         ];
 
+
       if (
         remote &&
-        remote.status === "completed"
+        remote.status ===
+          "completed"
       ) {
+
         clearLocalReservation();
+
         hideReservationArea();
+
         showBookingArea();
+
         return;
+
       }
+
     }
 
+
     renderReservations();
+
   }
 );
 
@@ -1084,34 +1622,53 @@ onValue(
 ========================= */
 
 onChildRemoved(
-  ref(db, "Queue/reservations"),
+  ref(
+    db,
+    "Queue/reservations"
+  ),
   snapshot => {
 
     const removedNumber =
       snapshot.key;
 
+
     const localReservation =
       getLocalReservation();
 
+
     if (
       localReservation &&
-      String(localReservation.number) ===
-        String(removedNumber)
+      String(
+        localReservation.number
+      ) ===
+        String(
+          removedNumber
+        )
     ) {
 
-      if (selfCancelInProgress) {
+      if (
+        selfCancelInProgress
+      ) {
+
         return;
+
       }
+
 
       clearLocalReservation();
 
+
       hideReservationArea();
+
       showBookingArea();
+
 
       alert(
         "予約がキャンセルされました。"
       );
+
     }
+
   }
 );
 
@@ -1121,45 +1678,66 @@ onChildRemoved(
 ========================= */
 
 onValue(
-  ref(db, "Queue/resetAt"),
+  ref(
+    db,
+    "Queue/resetAt"
+  ),
   snapshot => {
 
     const value =
-      Number(snapshot.val() || 0);
+      Number(
+        snapshot.val() || 0
+      );
+
 
     const localValue =
       getLocalResetAt();
+
 
     if (
       value > 0 &&
       value > localValue
     ) {
-      lastResetAt = value;
 
-      saveLocalResetAt(value);
+      lastResetAt =
+        value;
+
+
+      saveLocalResetAt(
+        value
+      );
+
+
       clearLocalReservation();
 
+
       hideReservationArea();
+
       showBookingArea();
+
     }
+
   }
 );
 
 
 /* =========================
-   ボタン
+   予約ボタン
 ========================= */
 
 const reserveButton =
   document.getElementById(
-    "reserveButton"
+    "reserve"
   );
 
+
 if (reserveButton) {
+
   reserveButton.addEventListener(
     "click",
     reserve
   );
+
 }
 
 
@@ -1170,10 +1748,17 @@ if (reserveButton) {
 const localReservation =
   getLocalReservation();
 
+
 if (localReservation) {
+
   hideBookingArea();
+
   renderReservations();
+
 } else {
+
   hideReservationArea();
+
   showBookingArea();
+
 }
