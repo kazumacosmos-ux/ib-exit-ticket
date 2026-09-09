@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>管理者設定</title>
+
+  <link
+    rel="stylesheet"
+    href="./デザイン.css"
+  >
+</head>
+
+<body>
+
+  <main class="container">
+
+    <h1>🔐 管理者設定</h1>
+
+
+    <!-- =========================
+         管理者ログイン
+    ========================== -->
+
+    <section id="loginArea">
+
+      <h2>管理者ログイン</h2>
+
+      <p>
+        このページは管理者専用です。
+      </p>
+
+      <label for="password">
+        管理者パスワード
+      </label>
+
+      <input
+        id="password"
+        type="password"
+        autocomplete="current-password"
+        placeholder="管理者パスワードを入力"
+      >
+
+      <button
+        id="login"
+        type="button"
+      >
+        管理者としてログイン
+      </button>
+
+      <p
+        id="loginMessage"
+        class="error"
+      ></p>
+
+    </section>
+
+
+    <!-- =========================
+         管理者設定
+    ========================== -->
+
+    <section
+      id="settingsArea"
+      style="display:none;"
+    >
+
+      <h2>受付設定</h2>
+
+
+      <p>
+        現在の受付状態：
+        <strong id="receptionState">
+          読み込み中……
+        </strong>
+      </p>
+
+
+      <button
+        id="toggleOpen"
+        type="button"
+      >
+        読み込み中……
+      </button>
+
+
+      <hr>
+
+
+      <h2>時間設定</h2>
+
+
+      <p>
+        開始時刻：
+        <strong>09:00</strong>
+      </p>
+
+
+      <p>
+        終了時刻：
+        <strong>15:00</strong>
+      </p>
+
+
+      <label>
+        1枠の時間
+
+        <input
+          id="slotMinutes"
+          type="number"
+          min="1"
+          step="1"
+          inputmode="numeric"
+          placeholder="例：30"
+        >
+
+        分
+      </label>
+
+
+      <label>
+        1枠あたりの最大組数
+
+        <select id="maxGroups">
+
+          <option value="1">
+            1組
+          </option>
+
+          <option value="2">
+            2組
+          </option>
+
+          <option value="3">
+            3組
+          </option>
+
+          <option value="4">
+            4組
+          </option>
+
+          <option value="5">
+            5組
+          </option>
+
+          <option value="6">
+            6組
+          </option>
+
+          <option value="7">
+            7組
+          </option>
+
+          <option value="8">
+            8組
+          </option>
+
+          <option value="9">
+            9組
+          </option>
+
+          <option value="10">
+            10組
+          </option>
+
+        </select>
+
+      </label>
+
+
+      <button
+        id="saveSettings"
+        type="button"
+      >
+        設定を保存
+      </button>
+
+
+      <p id="settingsMessage"></p>
+
+
+      <hr>
+
+
+      <!-- =======================
+           全体リセット
+      ======================== -->
+
+      <h2>⚠️ データ管理</h2>
+
+
+      <p>
+        文化祭開始前などに、
+        予約データをすべてリセットできます。
+      </p>
+
+
+      <p>
+        <strong>
+          Web予約・紙予約・予約番号・時間枠の予約数が
+          すべて消えます。
+        </strong>
+      </p>
+
+
+      <button
+        id="resetAll"
+        type="button"
+      >
+        全体リセット
+      </button>
+
+
+      <p id="resetMessage"></p>
+
+
+      <hr>
+
+
+      <button
+        id="backToStaff"
+        type="button"
+      >
+        スタッフ画面に戻る
+      </button>
+
+
+      <br><br>
+
+
+      <button
+        id="logout"
+        type="button"
+      >
+        管理者ログアウト
+      </button>
+
+    </section>
+
+  </main>
+
+
+  <script
+    type="module"
+    src="./管理者設定.js?v=20260909-admin1"
+  ></script>
+
+</body>
+</html>
