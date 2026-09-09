@@ -288,6 +288,111 @@ function escapeHtml(value) {
 
 
 // ==============================
+// ログイン
+// ==============================
+
+const loginButton =
+  $("login");
+
+
+if (loginButton) {
+
+  loginButton.addEventListener(
+    "click",
+    async () => {
+
+      const passwordInput =
+        $("password");
+
+      const loginMessage =
+        $("loginMessage");
+
+
+      const password =
+        passwordInput
+          ? passwordInput.value.trim()
+          : "";
+
+
+      if (loginMessage) {
+
+        loginMessage.textContent =
+          "";
+      }
+
+
+      if (!password) {
+
+        if (loginMessage) {
+
+          loginMessage.textContent =
+            "パスワードを入力してください。";
+        }
+
+        return;
+      }
+
+
+      loginButton.disabled =
+        true;
+
+
+      loginButton.textContent =
+        "ログイン中…";
+
+
+      try {
+
+        await signInWithEmailAndPassword(
+          auth,
+          STAFF_EMAIL,
+          password
+        );
+
+      } catch (error) {
+
+        console.error(
+          "スタッフログインエラー:",
+          error
+        );
+
+
+        if (loginMessage) {
+
+          if (
+            error.code ===
+            "auth/invalid-credential" ||
+            error.code ===
+            "auth/wrong-password" ||
+            error.code ===
+            "auth/user-not-found"
+          ) {
+
+            loginMessage.textContent =
+              "パスワードが違います。";
+
+          } else {
+
+            loginMessage.textContent =
+              "ログインに失敗しました。";
+          }
+        }
+
+      } finally {
+
+        loginButton.disabled =
+          false;
+
+        loginButton.textContent =
+          "ログイン";
+      }
+
+    }
+  );
+}
+
+
+// ==============================
 // ページ更新
 // ==============================
 
@@ -1150,392 +1255,469 @@ onValue(
 // 管理者設定ページを開く
 // ==============================
 
-$("openAdminSettings").addEventListener(
-  "click",
-  () => {
+const openAdminSettingsButton =
+  $("openAdminSettings");
 
-    window.location.href =
-      "./管理者設定.html";
-  }
-);
+
+if (openAdminSettingsButton) {
+
+  openAdminSettingsButton.addEventListener(
+    "click",
+    () => {
+
+      window.location.href =
+        "./管理者設定.html";
+    }
+  );
+}
 
 
 // ==============================
 // 紙予約の時間枠変更
 // ==============================
 
-$("paperSlot").addEventListener(
-  "change",
-  () => {
+const paperSlotSelect =
+  $("paperSlot");
 
-    updatePaperSlotInfo();
-  }
-);
+
+if (paperSlotSelect) {
+
+  paperSlotSelect.addEventListener(
+    "change",
+    () => {
+
+      updatePaperSlotInfo();
+    }
+  );
+}
 
 
 // ==============================
 // 紙予約追加
 // ==============================
 
-$("addPaper").addEventListener(
-  "click",
-  async () => {
-
-    const paperName =
-      $("paperName")
-        .value
-        .trim();
+const addPaperButton =
+  $("addPaper");
 
 
-    const paperSize =
-      Number(
-        $("paperSize").value
-      );
+if (addPaperButton) {
+
+  addPaperButton.addEventListener(
+    "click",
+    async () => {
+
+      const paperNameInput =
+        $("paperName");
 
 
-    const paperSlot =
-      $("paperSlot").value;
+      const paperSizeInput =
+        $("paperSize");
 
 
-    const paperMessage =
-      $("paperMessage");
+      const paperSlotInput =
+        $("paperSlot");
 
 
-    if (!paperName) {
-
-      paperMessage.textContent =
-        "名前を入力してください。";
-
-      return;
-    }
+      const paperMessage =
+        $("paperMessage");
 
 
-    if (
-      !Number.isInteger(
-        paperSize
-      ) ||
-      paperSize < 1 ||
-      paperSize > 4
-    ) {
-
-      paperMessage.textContent =
-        "人数は1〜4人にしてください。";
-
-      return;
-    }
+      const paperName =
+        paperNameInput
+          ? paperNameInput.value.trim()
+          : "";
 
 
-    if (!paperSlot) {
-
-      paperMessage.textContent =
-        "時間枠を選択してください。";
-
-      return;
-    }
-
-
-    const slot =
-      createSlots().find(
-        item =>
-          item.key ===
-          paperSlot
-      );
+      const paperSize =
+        paperSizeInput
+          ? Number(
+              paperSizeInput.value
+            )
+          : 0;
 
 
-    if (!slot) {
-
-      paperMessage.textContent =
-        "時間枠が見つかりません。";
-
-      return;
-    }
+      const paperSlot =
+        paperSlotInput
+          ? paperSlotInput.value
+          : "";
 
 
-    paperMessage.textContent =
-      "追加しています……";
+      if (!paperName) {
 
+        if (paperMessage) {
 
-    const countRef =
-      ref(
-        db,
-        `Queue/slots/${slot.key}/count`
-      );
+          paperMessage.textContent =
+            "名前を入力してください。";
+        }
 
-
-    let countTransaction;
-
-
-    try {
-
-      countTransaction =
-        await runTransaction(
-          countRef,
-          current => {
-
-            const count =
-              current === null
-                ? 0
-                : Number(current);
-
-
-            const maxGroups =
-              Number(
-                currentSettings.maxGroups
-              );
-
-
-            if (
-              count >= maxGroups
-            ) {
-
-              return;
-            }
-
-
-            return count + 1;
-          }
-        );
-
-    } catch (error) {
-
-      console.error(
-        "枠数更新エラー:",
-        error
-      );
-
-
-      paperMessage.textContent =
-        "時間枠の更新に失敗しました。";
-
-      return;
-    }
-
-
-    if (
-      !countTransaction.committed
-    ) {
-
-      paperMessage.textContent =
-        "その時間枠は満員です。";
-
-      return;
-    }
-
-
-    const lastRef =
-      ref(
-        db,
-        "Queue/reservationLast"
-      );
-
-
-    let reservationNumber;
-
-
-    try {
-
-      const result =
-        await runTransaction(
-          lastRef,
-          current => {
-
-            const value =
-              current === null
-                ? 0
-                : Number(current);
-
-
-            return value + 1;
-          }
-        );
+        return;
+      }
 
 
       if (
-        !result.committed
+        !Number.isInteger(
+          paperSize
+        ) ||
+        paperSize < 1 ||
+        paperSize > 4
       ) {
 
-        throw new Error(
-          "予約番号の発行に失敗しました。"
-        );
+        if (paperMessage) {
+
+          paperMessage.textContent =
+            "人数は1〜4人にしてください。";
+        }
+
+        return;
       }
 
 
-      reservationNumber =
-        result.snapshot.val();
+      if (!paperSlot) {
 
-    } catch (error) {
+        if (paperMessage) {
 
-      console.error(
-        "予約番号発行エラー:",
-        error
-      );
+          paperMessage.textContent =
+            "時間枠を選択してください。";
+        }
+
+        return;
+      }
+
+
+      const slot =
+        createSlots().find(
+          item =>
+            item.key ===
+            paperSlot
+        );
+
+
+      if (!slot) {
+
+        if (paperMessage) {
+
+          paperMessage.textContent =
+            "時間枠が見つかりません。";
+        }
+
+        return;
+      }
+
+
+      if (paperMessage) {
+
+        paperMessage.textContent =
+          "追加しています……";
+      }
+
+
+      const countRef =
+        ref(
+          db,
+          `Queue/slots/${slot.key}/count`
+        );
+
+
+      let countTransaction;
 
 
       try {
 
-        await runTransaction(
-          countRef,
-          current => {
+        countTransaction =
+          await runTransaction(
+            countRef,
+            current => {
 
-            const count =
-              current === null
-                ? 0
-                : Number(current);
+              const count =
+                current === null
+                  ? 0
+                  : Number(current);
 
 
-            return Math.max(
-              0,
-              count - 1
-            );
-          }
-        );
+              const maxGroups =
+                Number(
+                  currentSettings.maxGroups
+                );
 
-      } catch (
-        rollbackError
-      ) {
+
+              if (
+                count >= maxGroups
+              ) {
+
+                return;
+              }
+
+
+              return count + 1;
+            }
+          );
+
+      } catch (error) {
 
         console.error(
-          "枠数ロールバックエラー:",
-          rollbackError
+          "枠数更新エラー:",
+          error
         );
+
+
+        if (paperMessage) {
+
+          paperMessage.textContent =
+            "時間枠の更新に失敗しました。";
+        }
+
+        return;
       }
 
 
-      paperMessage.textContent =
-        "予約番号の発行に失敗しました。";
+      if (
+        !countTransaction.committed
+      ) {
 
-      return;
-    }
+        if (paperMessage) {
 
+          paperMessage.textContent =
+            "その時間枠は満員です。";
+        }
 
-    const reservationData = {
-
-      number:
-        Number(
-          reservationNumber
-        ),
-
-      name:
-        paperName,
-
-      slot:
-        slot.key,
-
-      start:
-        slot.start,
-
-      end:
-        slot.end,
-
-      size:
-        paperSize,
-
-      type:
-        "paper",
-
-      createdAt:
-        Date.now()
-    };
+        return;
+      }
 
 
-    const reservationRef =
-      ref(
-        db,
-        `Queue/reservations/${reservationNumber}`
-      );
+      const lastRef =
+        ref(
+          db,
+          "Queue/reservationLast"
+        );
 
 
-    try {
-
-      await set(
-        reservationRef,
-        reservationData
-      );
-
-
-      paperMessage.textContent =
-        `予約を追加しました。予約番号：${reservationNumber}`;
-
-
-      $("paperName").value =
-        "";
-
-
-      updatePaperSlotInfo();
-
-    } catch (error) {
-
-      console.error(
-        "紙予約保存エラー:",
-        error
-      );
+      let reservationNumber;
 
 
       try {
 
-        await runTransaction(
-          countRef,
-          current => {
+        const result =
+          await runTransaction(
+            lastRef,
+            current => {
 
-            const count =
-              current === null
-                ? 0
-                : Number(current);
+              const value =
+                current === null
+                  ? 0
+                  : Number(current);
 
 
-            return Math.max(
-              0,
-              count - 1
-            );
-          }
-        );
+              return value + 1;
+            }
+          );
 
-      } catch (
-        rollbackError
-      ) {
+
+        if (
+          !result.committed
+        ) {
+
+          throw new Error(
+            "予約番号の発行に失敗しました。"
+          );
+        }
+
+
+        reservationNumber =
+          result.snapshot.val();
+
+      } catch (error) {
 
         console.error(
-          "ロールバックエラー:",
-          rollbackError
+          "予約番号発行エラー:",
+          error
         );
+
+
+        try {
+
+          await runTransaction(
+            countRef,
+            current => {
+
+              const count =
+                current === null
+                  ? 0
+                  : Number(current);
+
+
+              return Math.max(
+                0,
+                count - 1
+              );
+            }
+          );
+
+        } catch (
+          rollbackError
+        ) {
+
+          console.error(
+            "枠数ロールバックエラー:",
+            rollbackError
+          );
+        }
+
+
+        if (paperMessage) {
+
+          paperMessage.textContent =
+            "予約番号の発行に失敗しました。";
+        }
+
+        return;
       }
 
 
-      paperMessage.textContent =
-        "紙予約の保存に失敗しました。";
+      const reservationData = {
+
+        number:
+          Number(
+            reservationNumber
+          ),
+
+        name:
+          paperName,
+
+        slot:
+          slot.key,
+
+        start:
+          slot.start,
+
+        end:
+          slot.end,
+
+        size:
+          paperSize,
+
+        type:
+          "paper",
+
+        createdAt:
+          Date.now()
+      };
+
+
+      const reservationRef =
+        ref(
+          db,
+          `Queue/reservations/${reservationNumber}`
+        );
+
+
+      try {
+
+        await set(
+          reservationRef,
+          reservationData
+        );
+
+
+        if (paperMessage) {
+
+          paperMessage.textContent =
+            `予約を追加しました。予約番号：${reservationNumber}`;
+        }
+
+
+        if (paperNameInput) {
+
+          paperNameInput.value =
+            "";
+        }
+
+
+        updatePaperSlotInfo();
+
+      } catch (error) {
+
+        console.error(
+          "紙予約保存エラー:",
+          error
+        );
+
+
+        try {
+
+          await runTransaction(
+            countRef,
+            current => {
+
+              const count =
+                current === null
+                  ? 0
+                  : Number(current);
+
+
+              return Math.max(
+                0,
+                count - 1
+              );
+            }
+          );
+
+        } catch (
+          rollbackError
+        ) {
+
+          console.error(
+            "枠数ロールバックエラー:",
+            rollbackError
+          );
+        }
+
+
+        if (paperMessage) {
+
+          paperMessage.textContent =
+            "紙予約の保存に失敗しました。";
+        }
+      }
     }
-  }
-);
+  );
+}
 
 
 // ==============================
 // ログアウト
 // ==============================
 
-$("logout").addEventListener(
-  "click",
-  async () => {
-
-    try {
-
-      await signOut(
-        auth
-      );
-
-    } catch (error) {
-
-      console.error(
-        "ログアウトエラー:",
-        error
-      );
+const logoutButton =
+  $("logout");
 
 
-      alert(
-        "ログアウトに失敗しました。"
-      );
+if (logoutButton) {
+
+  logoutButton.addEventListener(
+    "click",
+    async () => {
+
+      try {
+
+        await signOut(
+          auth
+        );
+
+      } catch (error) {
+
+        console.error(
+          "ログアウトエラー:",
+          error
+        );
+
+
+        alert(
+          "ログアウトに失敗しました。"
+        );
+      }
     }
-  }
-);
+  );
+}
 
 
 // ==============================
