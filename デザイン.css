@@ -1,36 +1,40 @@
 /* =========================================
    1-B出口 AIRLINES
-   Mobile Boarding Pass Design
+   PREMIUM BOARDING PASS
    ========================================= */
 
 * {
   box-sizing: border-box;
 }
 
-html {
-  margin: 0;
-  padding: 0;
-  background: #07111f;
-}
-
+html,
 body {
   margin: 0;
   padding: 0;
-  min-height: 100vh;
+  min-height: 100%;
+}
+
+body {
   font-family:
     -apple-system,
     BlinkMacSystemFont,
     "Helvetica Neue",
-    "Noto Sans JP",
+    "Hiragino Kaku Gothic ProN",
+    "Yu Gothic",
+    YuGothic,
     sans-serif;
+
   background:
     radial-gradient(
-      circle at 50% -10%,
-      #29476b 0%,
-      #102238 38%,
-      #07111f 75%
+      circle at 50% 0%,
+      #243a63 0%,
+      #101a31 42%,
+      #070d1b 100%
     );
-  color: #172033;
+
+  color: #ffffff;
+  min-height: 100vh;
+  padding: 40px 16px 70px;
 }
 
 /* =========================================
@@ -38,62 +42,48 @@ body {
    ========================================= */
 
 .container {
-  width: min(100%, 520px);
+  width: min(100%, 480px);
   margin: 0 auto;
-  padding: 28px 18px 50px;
 }
 
 /* =========================================
-   ヘッダー
+   予約エリア
    ========================================= */
 
-.container > h1 {
-  margin: 0 0 28px;
-  color: #ffffff;
-  text-align: center;
-  font-size: 27px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
+#reserveArea {
+  background: rgba(255, 255, 255, 0.98);
+  color: #111827;
 
-.container > h1::before {
-  content: "✈";
-  display: block;
-  margin-bottom: 8px;
-  font-size: 30px;
-}
+  border-radius: 28px;
 
-.container > h1::after {
-  content: "1-B AIRLINES";
-  display: block;
-  margin-top: 8px;
-  color: #91a8c5;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.28em;
-}
+  padding: 30px 24px 26px;
 
-/* =========================================
-   セクション
-   ========================================= */
-
-section {
-  background: rgba(255, 255, 255, 0.97);
-  border-radius: 24px;
-  padding: 24px 20px;
   box-shadow:
-    0 18px 45px rgba(0, 0, 0, 0.28),
-    0 2px 8px rgba(0, 0, 0, 0.12);
+    0 25px 60px rgba(0, 0, 0, 0.35),
+    0 5px 20px rgba(0, 0, 0, 0.15);
+
+  margin-bottom: 35px;
 }
 
-/* =========================================
-   見出し
-   ========================================= */
+#reserveArea::before {
+  content: "✈  1-B AIRLINES";
+  display: block;
 
-section h2 {
-  margin: 0 0 22px;
-  color: #101b2c;
-  font-size: 21px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+
+  color: #52627d;
+
+  margin-bottom: 8px;
+}
+
+#reserveArea h2 {
+  margin: 0 0 25px;
+
+  font-size: 28px;
+  line-height: 1.2;
+
   font-weight: 800;
   letter-spacing: 0.03em;
 }
@@ -102,68 +92,99 @@ section h2 {
    ラベル
    ========================================= */
 
-label {
+#reserveArea label {
   display: block;
-  margin: 18px 0 8px;
-  color: #657084;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
 
-label:first-of-type {
-  margin-top: 0;
+  font-size: 13px;
+  font-weight: 700;
+
+  color: #596579;
+
+  margin: 16px 0 7px;
 }
 
 /* =========================================
    入力欄
    ========================================= */
 
-input,
-select {
+#reserveArea input,
+#reserveArea select {
   width: 100%;
-  height: 54px;
-  padding: 0 16px;
-  border: 1px solid #dce2ea;
-  border-radius: 14px;
-  outline: none;
+
+  min-height: 48px;
+
+  border: 1px solid #d8dee8;
+  border-radius: 13px;
+
   background: #f7f9fc;
-  color: #172033;
-  font-family: inherit;
+
+  color: #111827;
+
   font-size: 16px;
-  font-weight: 600;
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+
+  padding: 0 14px;
+
+  outline: none;
+
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-input:focus,
-select:focus {
-  border-color: #315f91;
+#reserveArea input::placeholder {
+  color: #9aa4b2;
+}
+
+#reserveArea input:focus,
+#reserveArea select:focus {
+  border-color: #667da8;
+
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(49, 95, 145, 0.12);
+
+  box-shadow:
+    0 0 0 3px rgba(102, 125, 168, 0.14);
 }
 
 /* =========================================
-   時間選択
+   セレクトボックス
    ========================================= */
 
-#slot {
-  font-size: 17px;
-  font-weight: 800;
+#reserveArea select {
+  cursor: pointer;
+
+  background-image:
+    linear-gradient(45deg, transparent 50%, #5d6b82 50%),
+    linear-gradient(135deg, #5d6b82 50%, transparent 50%);
+
+  background-position:
+    calc(100% - 18px) 21px,
+    calc(100% - 12px) 21px;
+
+  background-size:
+    6px 6px,
+    6px 6px;
+
+  background-repeat: no-repeat;
+
+  padding-right: 38px;
 }
 
 /* =========================================
-   残り枠表示
+   時間帯情報
    ========================================= */
 
 .slot-info {
-  min-height: 20px;
-  margin: 10px 3px 0;
-  color: #607087;
-  font-size: 13px;
-  font-weight: 600;
+  margin: 12px 0 0;
+
+  padding: 12px 14px;
+
+  border-radius: 12px;
+
+  background: #f0f3f8;
+
+  color: #536075;
+
+  font-size: 14px;
+  font-weight: 700;
 }
 
 /* =========================================
@@ -172,24 +193,33 @@ select:focus {
 
 #reserve {
   width: 100%;
-  min-height: 58px;
+
+  min-height: 54px;
+
   margin-top: 22px;
-  border: 0;
-  border-radius: 16px;
+
+  border: none;
+  border-radius: 15px;
+
   background:
     linear-gradient(
       135deg,
-      #193b62 0%,
-      #275d91 100%
+      #263b63,
+      #111d36
     );
+
   color: #ffffff;
-  font-family: inherit;
+
   font-size: 16px;
   font-weight: 800;
+
   letter-spacing: 0.04em;
+
   cursor: pointer;
+
   box-shadow:
-    0 10px 22px rgba(25, 59, 98, 0.28);
+    0 8px 18px rgba(20, 35, 65, 0.25);
+
   transition:
     transform 0.15s ease,
     box-shadow 0.15s ease,
@@ -197,13 +227,14 @@ select:focus {
 }
 
 #reserve:active {
-  transform: translateY(2px);
+  transform: translateY(1px);
+
   box-shadow:
-    0 5px 12px rgba(25, 59, 98, 0.22);
+    0 4px 10px rgba(20, 35, 65, 0.2);
 }
 
 #reserve:disabled {
-  opacity: 0.45;
+  opacity: 0.5;
   cursor: default;
 }
 
@@ -211,23 +242,35 @@ select:focus {
    エラー
    ========================================= */
 
-.error {
-  margin: 14px 2px 0;
-  color: #c0392b;
-  font-size: 13px;
+#error {
+  margin: 12px 0 0;
+
+  min-height: 20px;
+
+  color: #c23b3b;
+
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.6;
+
+  text-align: center;
 }
 
 /* =========================================
-   予約完了エリア
+   予約済みエリア
    ========================================= */
 
 #reservationArea {
-  padding: 0;
-  overflow: hidden;
-  background: transparent;
-  box-shadow: none;
+  margin-top: 25px;
+}
+
+#reservationArea > h2 {
+  color: #ffffff;
+
+  font-size: 25px;
+
+  margin: 0 0 18px;
+
+  letter-spacing: 0.03em;
 }
 
 /* =========================================
@@ -236,213 +279,339 @@ select:focus {
 
 .boarding-pass {
   position: relative;
+
   overflow: hidden;
-  padding: 0;
+
+  width: 100%;
+
   border-radius: 24px;
+
   background: #ffffff;
+
+  color: #111827;
+
   box-shadow:
-    0 20px 50px rgba(0, 0, 0, 0.32);
+    0 25px 55px rgba(0, 0, 0, 0.38),
+    0 8px 20px rgba(0, 0, 0, 0.18);
+
+  margin-bottom: 25px;
 }
 
-/* 上部 */
+/* =========================================
+   搭乗券 ヘッダー
+   ========================================= */
 
 .boarding-pass-header {
+  position: relative;
+
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 15px;
+
   padding: 22px 22px 20px;
+
   background:
     linear-gradient(
       135deg,
-      #0b1b30 0%,
-      #193d62 100%
+      #16284b,
+      #0b1429
     );
+
   color: #ffffff;
+}
+
+.boarding-pass-header::after {
+  content: "";
+
+  position: absolute;
+
+  left: 22px;
+  right: 22px;
+  bottom: 0;
+
+  height: 1px;
+
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .boarding-pass-header h2 {
   margin: 0;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
+
+  font-size: 21px;
+
+  font-weight: 800;
+
+  letter-spacing: 0.04em;
 }
 
 .boarding-pass-header p {
-  margin: 7px 0 0;
-  color: #9db2ca;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.25em;
+  margin: 5px 0 0;
+
+  font-size: 11px;
+
+  color: rgba(255, 255, 255, 0.68);
+
+  letter-spacing: 0.1em;
+}
+
+.boarding-pass-header strong {
+  flex-shrink: 0;
+
+  font-size: 17px;
+
+  letter-spacing: 0.08em;
+
+  color: #ffffff;
 }
 
 /* =========================================
-   搭乗券中央
+   搭乗券 メイン
    ========================================= */
 
-.boarding-pass-body {
-  padding: 25px 22px;
-}
+.boarding-pass-main {
+  padding: 24px 22px 22px;
 
-.boarding-pass-route {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 12px;
-}
-
-.boarding-pass-time {
-  color: #0c1a2c;
-  font-size: 42px;
-  font-weight: 900;
-  line-height: 1;
-  letter-spacing: -0.05em;
-}
-
-.boarding-pass-time:last-child {
-  text-align: right;
-}
-
-.boarding-pass-arrow {
-  color: #8b98aa;
-  font-size: 20px;
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #f7f9fc 100%
+    );
 }
 
 /* =========================================
-   ゲート
+   来場時間
    ========================================= */
 
-.boarding-pass-gate {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 23px;
-  padding-top: 18px;
-  border-top: 1px solid #e8ecf1;
+.boarding-arrival {
+  padding-bottom: 21px;
+
+  border-bottom: 1px solid #e4e8ef;
 }
 
-.boarding-pass-gate-label {
-  color: #7b8797;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.18em;
-}
-
-.boarding-pass-gate-value {
-  color: #10253f;
-  font-size: 25px;
-  font-weight: 900;
-}
-
-/* =========================================
-   詳細情報
-   ========================================= */
-
-.boarding-pass-info {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px 12px;
-  margin-top: 22px;
-}
-
-.boarding-pass-info-item span {
+.boarding-arrival span {
   display: block;
-  margin-bottom: 5px;
-  color: #8a95a4;
-  font-size: 9px;
+
+  margin-bottom: 7px;
+
+  color: #6b778b;
+
+  font-size: 11px;
   font-weight: 800;
+
+  letter-spacing: 0.12em;
+
+  text-transform: uppercase;
+}
+
+.boarding-arrival strong {
+  display: block;
+
+  color: #111d36;
+
+  font-size: 29px;
+
+  line-height: 1.15;
+
+  font-weight: 900;
+
+  letter-spacing: 0.01em;
+}
+
+/* =========================================
+   情報グリッド
+   ========================================= */
+
+.boarding-info-grid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 0;
+
+  margin-top: 3px;
+}
+
+.boarding-info-grid > div {
+  padding: 17px 0 15px;
+
+  border-bottom: 1px solid #e4e8ef;
+}
+
+.boarding-info-grid > div:nth-child(odd) {
+  padding-right: 14px;
+
+  border-right: 1px solid #e4e8ef;
+}
+
+.boarding-info-grid > div:nth-child(even) {
+  padding-left: 14px;
+}
+
+.boarding-info-grid span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #7a8596;
+
+  font-size: 10px;
+  font-weight: 800;
+
   letter-spacing: 0.12em;
 }
 
-.boarding-pass-info-item strong {
+.boarding-info-grid strong {
   display: block;
-  overflow: hidden;
-  color: #182438;
-  font-size: 15px;
+
+  color: #18243c;
+
+  font-size: 16px;
+
   font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* =========================================
-   ミシン目
+   代表者
    ========================================= */
 
-.boarding-pass-divider {
+.boarding-pass-passenger {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 12px;
+
+  padding-top: 18px;
+}
+
+.boarding-pass-passenger span {
+  color: #7a8596;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+}
+
+.boarding-pass-passenger strong {
+  color: #18243c;
+
+  font-size: 17px;
+  font-weight: 800;
+
+  word-break: break-all;
+
+  text-align: right;
+}
+
+/* =========================================
+   搭乗券 フッター
+   ========================================= */
+
+.boarding-pass-footer {
   position: relative;
-  height: 1px;
-  margin: 0 20px;
-  border-top: 2px dashed #dce1e8;
+
+  padding: 20px 22px 22px;
+
+  background: #f1f4f8;
+
+  border-top: 1px dashed #c5ccd7;
 }
 
-.boarding-pass-divider::before,
-.boarding-pass-divider::after {
+.boarding-pass-footer::before,
+.boarding-pass-footer::after {
   content: "";
+
   position: absolute;
-  top: 50%;
-  width: 22px;
-  height: 22px;
+
+  top: -10px;
+
+  width: 20px;
+  height: 20px;
+
   border-radius: 50%;
-  background: #0d1c2e;
-  transform: translateY(-50%);
+
+  background: #111b31;
 }
 
-.boarding-pass-divider::before {
-  left: -32px;
+.boarding-pass-footer::before {
+  left: -10px;
 }
 
-.boarding-pass-divider::after {
-  right: -32px;
+.boarding-pass-footer::after {
+  right: -10px;
+}
+
+/* =========================================
+   案内文
+   ========================================= */
+
+.boarding-note {
+  margin: 0 0 17px;
+
+  color: #4e5b70;
+
+  font-size: 13px;
+
+  line-height: 1.7;
+
+  text-align: center;
 }
 
 /* =========================================
    バーコード風デザイン
    ========================================= */
 
-.boarding-pass-barcode {
-  height: 46px;
-  margin: 22px 0 8px;
-  opacity: 0.8;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      #111827 0,
-      #111827 2px,
-      transparent 2px,
-      transparent 5px,
-      #111827 5px,
-      #111827 6px,
-      transparent 6px,
-      transparent 9px
-    );
-}
-
-.boarding-pass-code {
-  margin: 0;
-  color: #8994a3;
-  text-align: center;
-  font-family: monospace;
-  font-size: 9px;
-  letter-spacing: 0.3em;
+.boarding-pass-footer::after {
+  box-shadow:
+    -210px 35px 0 -8px #111b31,
+    -190px 35px 0 -8px #111b31,
+    -170px 35px 0 -8px #111b31,
+    -150px 35px 0 -8px #111b31,
+    -130px 35px 0 -8px #111b31,
+    -110px 35px 0 -8px #111b31,
+    -90px 35px 0 -8px #111b31,
+    -70px 35px 0 -8px #111b31,
+    -50px 35px 0 -8px #111b31,
+    -30px 35px 0 -8px #111b31;
 }
 
 /* =========================================
    キャンセルボタン
    ========================================= */
 
-.cancel-button {
+.cancel-reservation {
+  display: block;
+
   width: 100%;
-  min-height: 48px;
-  margin-top: 22px;
-  border: 1px solid #d9dee6;
-  border-radius: 13px;
+
+  min-height: 43px;
+
+  border: 1px solid #d7dce4;
+
+  border-radius: 12px;
+
   background: #ffffff;
-  color: #697586;
-  font-family: inherit;
+
+  color: #667085;
+
   font-size: 13px;
   font-weight: 700;
+
   cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
-.cancel-button:active {
-  background: #f2f4f7;
+.cancel-reservation:active {
+  background: #eef1f5;
 }
 
 /* =========================================
@@ -450,73 +619,122 @@ select:focus {
    ========================================= */
 
 #closedArea {
+  background: rgba(255, 255, 255, 0.97);
+
+  color: #111827;
+
+  border-radius: 25px;
+
+  padding: 30px 24px;
+
   text-align: center;
+
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.3);
 }
 
 #closedArea h2 {
-  margin-bottom: 10px;
+  margin: 0 0 12px;
+
+  font-size: 23px;
 }
 
 #closedArea p {
   margin: 0;
-  color: #6f7b8c;
+
+  color: #657083;
+
   font-size: 14px;
+
   line-height: 1.7;
 }
 
 /* =========================================
-   スマホ
+   スマートフォン
    ========================================= */
 
-@media (max-width: 420px) {
+@media (max-width: 520px) {
 
-  .container {
-    padding: 22px 14px 40px;
+  body {
+    padding: 20px 12px 50px;
   }
 
-  .container > h1 {
-    margin-bottom: 22px;
-    font-size: 24px;
+  #reserveArea {
+    padding: 25px 18px 22px;
+
+    border-radius: 22px;
   }
 
-  section {
-    padding: 21px 17px;
-    border-radius: 21px;
+  #reserveArea h2 {
+    font-size: 25px;
   }
 
-  .boarding-pass-body {
-    padding: 22px 18px;
+  .boarding-pass {
+    border-radius: 20px;
   }
 
-  .boarding-pass-time {
-    font-size: 36px;
+  .boarding-pass-header {
+    padding: 19px 18px 18px;
   }
 
-  .boarding-pass-route {
-    gap: 8px;
+  .boarding-pass-header h2 {
+    font-size: 18px;
   }
 
-  .boarding-pass-arrow {
-    font-size: 16px;
+  .boarding-pass-header strong {
+    font-size: 14px;
+  }
+
+  .boarding-pass-main {
+    padding: 21px 18px;
+  }
+
+  .boarding-arrival strong {
+    font-size: 25px;
+  }
+
+  .boarding-pass-footer {
+    padding: 18px;
   }
 }
 
 /* =========================================
-   小さい画面
+   小さいスマートフォン
    ========================================= */
 
-@media (max-width: 340px) {
+@media (max-width: 380px) {
 
-  .container {
-    padding-left: 10px;
-    padding-right: 10px;
+  body {
+    padding-left: 9px;
+    padding-right: 9px;
   }
 
-  .boarding-pass-time {
-    font-size: 31px;
+  #reserveArea {
+    padding-left: 15px;
+    padding-right: 15px;
   }
 
-  .boarding-pass-info {
-    gap: 15px 8px;
+  .boarding-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .boarding-info-grid > div:nth-child(odd) {
+    padding-right: 0;
+
+    border-right: none;
+  }
+
+  .boarding-info-grid > div:nth-child(even) {
+    padding-left: 0;
+  }
+
+  .boarding-pass-passenger {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .boarding-pass-passenger strong {
+    text-align: left;
   }
 }
