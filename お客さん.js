@@ -197,11 +197,6 @@ function showReservationComplete(
 
   if (!reservationArea) {
 
-    /*
-     * reservationAreaが見つからない場合だけ
-     * 最終手段としてalertを使用する。
-     */
-
     alert(
       "🎫 予約が完了しました！\n\n" +
       `予約番号：No.${number}\n` +
@@ -319,7 +314,7 @@ function showReservationComplete(
           "
         >
           ${escapeHtml(start)}
-          ～ 
+          ～
           ${escapeHtml(end)}
         </span>
       </div>
@@ -339,11 +334,6 @@ function showReservationComplete(
 
   `;
 
-
-  /*
-   * 少し待ってから搭乗券を表示。
-   * 予約完了通知を一瞬でも確実に見せる。
-   */
 
   setTimeout(
     () => {
@@ -1216,6 +1206,100 @@ function renderReservations() {
 
       <div class="boarding-pass-main">
 
+        <!-- 発着地 -->
+
+        <div
+          class="boarding-route"
+          style="
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:16px;
+            margin:0 0 24px;
+            padding:18px 14px;
+            border-radius:14px;
+            background:rgba(255,255,255,0.72);
+            border:1px solid rgba(14,116,144,0.15);
+          "
+        >
+
+          <div
+            style="
+              flex:1;
+              text-align:left;
+            "
+          >
+
+            <span
+              style="
+                display:block;
+                font-size:11px;
+                color:#64748b;
+                letter-spacing:1px;
+                margin-bottom:4px;
+              "
+            >
+              FROM
+            </span>
+
+            <strong
+              style="
+                display:block;
+                font-size:24px;
+                color:#075985;
+              "
+            >
+              1-B
+            </strong>
+
+          </div>
+
+
+          <div
+            style="
+              font-size:24px;
+              color:#38bdf8;
+              flex-shrink:0;
+            "
+          >
+            ✈
+          </div>
+
+
+          <div
+            style="
+              flex:1;
+              text-align:right;
+            "
+          >
+
+            <span
+              style="
+                display:block;
+                font-size:11px;
+                color:#64748b;
+                letter-spacing:1px;
+                margin-bottom:4px;
+              "
+            >
+              TO
+            </span>
+
+            <strong
+              style="
+                display:block;
+                font-size:24px;
+                color:#075985;
+              "
+            >
+              ？？？
+            </strong>
+
+          </div>
+
+        </div>
+
+
         <div class="boarding-arrival">
 
           <span>
@@ -1708,9 +1792,6 @@ if (reserveButton) {
 
         /*
          * 予約完了通知
-         *
-         * alert()ではなく、
-         * 画面内に通知を表示する。
          */
 
         showReservationComplete(
