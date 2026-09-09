@@ -17,15 +17,19 @@ import { firebaseConfig } from "./Firebase設定.js";
    Firebase
 ========================================= */
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const app =
+  initializeApp(firebaseConfig);
+
+const db =
+  getDatabase(app);
 
 
 /* =========================================
    DOM
 ========================================= */
 
-const $ = (id) => document.getElementById(id);
+const $ =
+  (id) => document.getElementById(id);
 
 
 /* =========================================
@@ -33,46 +37,52 @@ const $ = (id) => document.getElementById(id);
 ========================================= */
 
 let settings = {
+
   start: "09:00",
+
   end: "15:00",
+
   slotMinutes: 60,
+
   maxGroups: 1,
+
   open: true
+
 };
 
+
 let slots = {};
+
 let reservations = {};
 
 
 /* =========================================
-   キャンセル処理状態
+   キャンセル状態
 ========================================= */
 
 /*
-  お客さん自身がキャンセルボタンを押した場合、
+  お客さん自身がキャンセルしている途中かどうか。
 
-  remove()
-      ↓
-  Firebaseの削除通知
-      ↓
-  onChildRemoved()
+  true の間は onChildRemoved() では
+  メッセージを表示しません。
 
-  という流れになります。
+  キャンセル処理が終わったあと、
+  cancelReservation() 側では
+  メッセージを表示しません。
 
-  そのため、キャンセル処理中だけ
-  onChildRemoved()側のメッセージを
-  出さないようにします。
+  → Firebase削除監視だけが
+    メッセージを表示します。
 */
 
 let selfCancelInProgress = false;
 
 
 /*
-  同じキャンセルについて
-  完了メッセージを2回出さないためのフラグ
+  同じ削除について
+  メッセージを複数回出さないための番号。
 */
 
-let cancellationMessageShown = false;
+let cancellationMessageNumber = null;
 
 
 /* =========================================
@@ -93,6 +103,7 @@ function getLocalReservation() {
       );
 
     if (!value) {
+
       return null;
     }
 
@@ -118,7 +129,9 @@ function saveLocalReservation(
 
     localStorage.setItem(
       RESERVATION_KEY,
-      JSON.stringify(reservation)
+      JSON.stringify(
+        reservation
+      )
     );
 
   } catch (error) {
@@ -153,15 +166,33 @@ function clearLocalReservation() {
    キャンセル完了メッセージ
 ========================================= */
 
-function showCancellationMessage() {
+function showCancellationMessage(
+  number
+) {
+
+  const currentNumber =
+    String(number);
+
+
+  /*
+    同じ予約番号について
+    すでに表示していたら何もしない。
+  */
 
   if (
-    cancellationMessageShown
+    cancellationMessageNumber !== null &&
+    String(
+      cancellationMessageNumber
+    ) === currentNumber
   ) {
+
     return;
   }
 
-  cancellationMessageShown = true;
+
+  cancellationMessageNumber =
+    currentNumber;
+
 
   alert(
     "予約がキャンセルされました。"
@@ -173,30 +204,39 @@ function showCancellationMessage() {
    時間計算
 ========================================= */
 
-function toMinutes(time) {
+function toMinutes(
+  time
+) {
 
   if (
     !time ||
     typeof time !== "string"
   ) {
+
     return 0;
   }
+
 
   const parts =
     time.split(":");
 
+
   const hour =
     Number(parts[0]);
 
+
   const minute =
     Number(parts[1]);
+
 
   if (
     Number.isNaN(hour) ||
     Number.isNaN(minute)
   ) {
+
     return 0;
   }
+
 
   return (
     hour * 60 +
@@ -214,27 +254,45 @@ function formatTime(
       totalMinutes / 60
     );
 
+
   const minute =
     totalMinutes % 60;
 
+
   return (
-    String(hour).padStart(2, "0") +
+    String(hour).padStart(
+      2,
+      "0"
+    ) +
     ":" +
-    String(minute).padStart(2, "0")
+    String(minute).padStart(
+      2,
+      "0"
+    )
   );
 }
 
 
-function slotKey(minutes) {
+function slotKey(
+  minutes
+) {
 
   return (
     String(
-      Math.floor(minutes / 60)
-    ).padStart(2, "0") +
+      Math.floor(
+        minutes / 60
+      )
+    ).padStart(
+      2,
+      "0"
+    ) +
     "-" +
     String(
       minutes % 60
-    ).padStart(2, "0")
+    ).padStart(
+      2,
+      "0"
+    )
   );
 }
 
@@ -247,11 +305,13 @@ function createSlots() {
 
   const result = {};
 
+
   const start =
     toMinutes(
       settings.start ||
       "09:00"
     );
+
 
   const end =
     toMinutes(
@@ -259,18 +319,22 @@ function createSlots() {
       "15:00"
     );
 
+
   const slotMinutes =
     Number(
       settings.slotMinutes ||
       60
     );
 
+
   if (
     slotMinutes <= 0 ||
     end <= start
   ) {
+
     return result;
   }
+
 
   for (
     let minutes = start;
@@ -282,14 +346,20 @@ function createSlots() {
       minutes +
       slotMinutes;
 
+
     if (
       slotEnd > end
     ) {
+
       break;
     }
 
+
     const key =
-      slotKey(minutes);
+      slotKey(
+        minutes
+      );
+
 
     result[key] = {
 
@@ -308,6 +378,7 @@ function createSlots() {
     };
   }
 
+
   return result;
 }
 
@@ -321,18 +392,28 @@ function getToday() {
   const now =
     new Date();
 
+
   const year =
     now.getFullYear();
+
 
   const month =
     String(
       now.getMonth() + 1
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
+
 
   const day =
     String(
       now.getDate()
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
+
 
   return (
     `${year}/${month}/${day}`
@@ -349,7 +430,10 @@ function getBoardingTime(
 ) {
 
   const minutes =
-    toMinutes(endTime);
+    toMinutes(
+      endTime
+    );
+
 
   return formatTime(
     minutes + 5
@@ -367,7 +451,9 @@ function getFlightNumber(
 
   return (
     "DREAM" +
-    String(number).padStart(
+    String(
+      number
+    ).padStart(
       3,
       "0"
     )
@@ -383,14 +469,20 @@ function escapeHtml(
   value
 ) {
 
-  return String(value).replace(
+  return String(
+    value
+  ).replace(
     /[&<>"']/g,
     (character) => ({
 
       "&": "&amp;",
+
       "<": "&lt;",
+
       ">": "&gt;",
+
       '"': "&quot;",
+
       "'": "&#039;"
 
     }[character])
@@ -407,19 +499,26 @@ function renderSlots() {
   const select =
     $("slot");
 
+
   if (!select) {
+
     return;
   }
 
-  select.innerHTML = "";
+
+  select.innerHTML =
+    "";
+
 
   const generatedSlots =
     createSlots();
+
 
   const slotList =
     Object.values(
       generatedSlots
     );
+
 
   if (
     slotList.length === 0
@@ -430,23 +529,35 @@ function renderSlots() {
         "option"
       );
 
-    option.value = "";
+
+    option.value =
+      "";
+
 
     option.textContent =
       "時間帯を設定できません";
 
-    option.disabled = true;
 
-    option.selected = true;
+    option.disabled =
+      true;
+
+
+    option.selected =
+      true;
+
 
     select.appendChild(
       option
     );
 
+
     return;
   }
 
-  let firstAvailable = null;
+
+  let firstAvailable =
+    null;
+
 
   slotList.forEach(
     (slot) => {
@@ -458,28 +569,35 @@ function renderSlots() {
           ]?.count || 0
         );
 
+
       const maxGroups =
         Number(
           settings.maxGroups ||
           1
         );
 
+
       const isFull =
         count >= maxGroups;
+
 
       const option =
         document.createElement(
           "option"
         );
 
+
       option.value =
         slot.key;
+
 
       option.textContent =
         `${slot.start}～${slot.end}`;
 
+
       option.disabled =
         isFull;
+
 
       if (
         !isFull &&
@@ -490,11 +608,13 @@ function renderSlots() {
           slot.key;
       }
 
+
       select.appendChild(
         option
       );
     }
   );
+
 
   if (
     firstAvailable !== null
@@ -520,30 +640,38 @@ function updateInfo() {
   const select =
     $("slot");
 
+
   const info =
     $("slotInfo");
+
 
   if (
     !select ||
     !info
   ) {
+
     return;
   }
 
+
   const generatedSlots =
     createSlots();
+
 
   const slot =
     generatedSlots[
       select.value
     ];
 
+
   if (!slot) {
 
-    info.textContent = "";
+    info.textContent =
+      "";
 
     return;
   }
+
 
   const count =
     Number(
@@ -552,11 +680,13 @@ function updateInfo() {
       ]?.count || 0
     );
 
+
   const maxGroups =
     Number(
       settings.maxGroups ||
       1
     );
+
 
   if (
     count >= maxGroups
@@ -568,7 +698,9 @@ function updateInfo() {
   } else {
 
     const remaining =
-      maxGroups - count;
+      maxGroups -
+      count;
+
 
     info.textContent =
       `残り ${remaining} 組`;
@@ -577,7 +709,7 @@ function updateInfo() {
 
 
 /* =========================================
-   予約ボタンの状態
+   予約ボタン状態
 ========================================= */
 
 function updateReserveButton() {
@@ -585,31 +717,41 @@ function updateReserveButton() {
   const button =
     $("reserve");
 
+
   if (!button) {
+
     return;
   }
+
 
   const select =
     $("slot");
 
+
   if (!select) {
+
     return;
   }
 
+
   const generatedSlots =
     createSlots();
+
 
   const slot =
     generatedSlots[
       select.value
     ];
 
+
   if (!slot) {
 
-    button.disabled = true;
+    button.disabled =
+      true;
 
     return;
   }
+
 
   const count =
     Number(
@@ -618,22 +760,26 @@ function updateReserveButton() {
       ]?.count || 0
     );
 
+
   const maxGroups =
     Number(
       settings.maxGroups ||
       1
     );
 
+
   if (
     settings.open === false ||
     count >= maxGroups
   ) {
 
-    button.disabled = true;
+    button.disabled =
+      true;
 
   } else {
 
-    button.disabled = false;
+    button.disabled =
+      false;
   }
 }
 
@@ -647,45 +793,57 @@ function renderReservations() {
   const reservationArea =
     $("reservationArea");
 
+
   const reserveArea =
     $("reserveArea");
+
 
   if (
     !reservationArea ||
     !reserveArea
   ) {
+
     return;
   }
 
+
   const localReservation =
     getLocalReservation();
+
 
   if (!localReservation) {
 
     reservationArea.hidden =
       true;
 
+
     reservationArea.innerHTML =
       "";
+
 
     reserveArea.hidden =
       settings.open === false;
 
+
     return;
   }
+
 
   const number =
     String(
       localReservation.number
     );
 
+
   const remoteReservation =
     reservations[number];
 
+
   /*
-    Firebaseから予約が消えた直後は
-    onChildRemoved()が処理するので、
-    ここではメッセージを出さない。
+    Firebaseから消えた直後は
+    onChildRemoved()が処理する。
+
+    ここではalertを出さない。
   */
 
   if (!remoteReservation) {
@@ -696,24 +854,30 @@ function renderReservations() {
     return;
   }
 
+
   const reservation =
     remoteReservation;
+
 
   reservationArea.hidden =
     false;
 
+
   reserveArea.hidden =
     true;
+
 
   const boardingTime =
     getBoardingTime(
       reservation.end
     );
 
+
   const flightNumber =
     getFlightNumber(
       reservation.number
     );
+
 
   reservationArea.innerHTML = `
 
@@ -733,6 +897,7 @@ function renderReservations() {
 
         </div>
 
+
         <strong>
           ${escapeHtml(
             flightNumber
@@ -750,14 +915,19 @@ function renderReservations() {
             ご来場時間
           </span>
 
+
           <strong>
+
             ${escapeHtml(
               reservation.start
             )}
+
             ～
+
             ${escapeHtml(
               reservation.end
             )}
+
           </strong>
 
         </div>
@@ -765,11 +935,13 @@ function renderReservations() {
 
         <div class="boarding-info-grid">
 
+
           <div>
 
             <span>
               日付
             </span>
+
 
             <strong>
               ${getToday()}
@@ -784,6 +956,7 @@ function renderReservations() {
               ゲート
             </span>
 
+
             <strong>
               1-B
             </strong>
@@ -796,6 +969,7 @@ function renderReservations() {
             <span>
               搭乗時刻
             </span>
+
 
             <strong>
               ${escapeHtml(
@@ -812,6 +986,7 @@ function renderReservations() {
               人数
             </span>
 
+
             <strong>
               ${escapeHtml(
                 reservation.size
@@ -819,6 +994,7 @@ function renderReservations() {
             </strong>
 
           </div>
+
 
         </div>
 
@@ -829,6 +1005,7 @@ function renderReservations() {
             代表者
           </span>
 
+
           <strong>
             ${escapeHtml(
               reservation.name ||
@@ -838,10 +1015,12 @@ function renderReservations() {
 
         </div>
 
+
       </div>
 
 
       <div class="boarding-pass-footer">
+
 
         <p class="boarding-note">
 
@@ -859,7 +1038,9 @@ function renderReservations() {
           この予約をキャンセル
         </button>
 
+
       </div>
+
 
     </div>
 
@@ -868,6 +1049,7 @@ function renderReservations() {
 
   const cancelButton =
     $("cancelReservation");
+
 
   if (cancelButton) {
 
@@ -881,7 +1063,7 @@ function renderReservations() {
 
 
 /* =========================================
-   予約する
+   予約
 ========================================= */
 
 if ($("reserve")) {
@@ -892,6 +1074,7 @@ if ($("reserve")) {
       const error =
         $("error");
 
+
       if (error) {
 
         error.textContent =
@@ -901,6 +1084,7 @@ if ($("reserve")) {
 
       const existing =
         getLocalReservation();
+
 
       if (existing) {
 
@@ -933,16 +1117,20 @@ if ($("reserve")) {
           .value
           .trim();
 
+
       const size =
         Number(
           $("size").value
         );
 
+
       const selectedSlotKey =
         $("slot").value;
 
+
       const generatedSlots =
         createSlots();
+
 
       const slot =
         generatedSlots[
@@ -990,7 +1178,7 @@ if ($("reserve")) {
 
 
       /* -----------------------------
-         時間枠の人数を確保
+         時間枠を確保
       ----------------------------- */
 
       const countRef =
@@ -1010,11 +1198,13 @@ if ($("reserve")) {
                 value || 0
               );
 
+
             const maxGroups =
               Number(
                 settings.maxGroups ||
                 1
               );
+
 
             if (
               count >= maxGroups
@@ -1022,6 +1212,7 @@ if ($("reserve")) {
 
               return undefined;
             }
+
 
             return count + 1;
           }
@@ -1038,6 +1229,7 @@ if ($("reserve")) {
             "その時間帯は満員になりました。";
         }
 
+
         render();
 
         return;
@@ -1045,7 +1237,7 @@ if ($("reserve")) {
 
 
       /* -----------------------------
-         予約番号を取得
+         予約番号取得
       ----------------------------- */
 
       const lastRef =
@@ -1122,7 +1314,7 @@ if ($("reserve")) {
 
 
       /* -----------------------------
-         Firebaseに予約保存
+         Firebase保存
       ----------------------------- */
 
       try {
@@ -1139,6 +1331,15 @@ if ($("reserve")) {
         saveLocalReservation(
           reservation
         );
+
+
+        /*
+          新しい予約なので、
+          前回のキャンセル番号を解除。
+        */
+
+        cancellationMessageNumber =
+          null;
 
 
         $("name").value =
@@ -1187,12 +1388,13 @@ async function cancelReservation(
 ) {
 
   if (!reservation) {
+
     return;
   }
 
 
   /* -----------------------------
-     キャンセル確認
+     確認
   ----------------------------- */
 
   const ok =
@@ -1202,15 +1404,17 @@ async function cancelReservation(
 
 
   if (!ok) {
+
     return;
   }
 
 
   /*
-    ★重要
+    ★ここが重要
 
-    Firebaseの削除通知が先に
-    メッセージを出さないようにする。
+    Firebaseの削除監視が
+    「スタッフによる削除」と
+    誤認しないようにする。
   */
 
   selfCancelInProgress =
@@ -1218,18 +1422,19 @@ async function cancelReservation(
 
 
   /*
-    次のキャンセル完了メッセージを
-    1回だけ許可する。
+    今回の予約番号について
+    まだキャンセル完了メッセージを
+    出していない状態にする。
   */
 
-  cancellationMessageShown =
-    false;
+  cancellationMessageNumber =
+    null;
 
 
   try {
 
     /* -----------------------------
-       Firebaseから予約を削除
+       Firebaseから予約削除
     ----------------------------- */
 
     await remove(
@@ -1260,14 +1465,14 @@ async function cancelReservation(
 
 
     /* -----------------------------
-       localStorageの予約を削除
+       localStorage削除
     ----------------------------- */
 
     clearLocalReservation();
 
 
     /* -----------------------------
-       予約画面を消す
+       画面を予約入力に戻す
     ----------------------------- */
 
     if (
@@ -1277,14 +1482,11 @@ async function cancelReservation(
       $("reservationArea").hidden =
         true;
 
+
       $("reservationArea").innerHTML =
         "";
     }
 
-
-    /* -----------------------------
-       予約画面を戻す
-    ----------------------------- */
 
     if (
       $("reserveArea")
@@ -1296,7 +1498,7 @@ async function cancelReservation(
 
 
     /* -----------------------------
-       時間帯を更新
+       時間帯更新
     ----------------------------- */
 
     renderSlots();
@@ -1307,11 +1509,12 @@ async function cancelReservation(
 
 
     /*
-      ★ここで1回だけ表示
+      ★ここではalertを出さない。
+
+      onChildRemoved()だけが
+      キャンセル完了メッセージを
+      1回出す。
     */
-
-    showCancellationMessage();
-
 
   } catch (error) {
 
@@ -1322,8 +1525,8 @@ async function cancelReservation(
 
 
     /*
-      エラーの場合は
-      キャンセル処理中フラグを解除
+      エラーの場合だけ
+      自分でキャンセル中の状態を解除。
     */
 
     selfCancelInProgress =
@@ -1336,19 +1539,16 @@ async function cancelReservation(
 
 
     render();
-
-    return;
   }
 
 
   /*
-    Firebaseの削除イベントが
-    すでに発生している可能性があるため、
-    少しだけ待ってから解除する。
+    onChildRemoved()が処理する時間を確保する。
 
-    これにより、
-    onChildRemoved()が
-    もう一度メッセージを出すことを防ぐ。
+    すぐにfalseへ戻すと、
+    削除イベントのタイミングによっては
+    二重処理になる可能性があるため、
+    少し待つ。
   */
 
   setTimeout(
@@ -1357,11 +1557,8 @@ async function cancelReservation(
       selfCancelInProgress =
         false;
 
-      cancellationMessageShown =
-        false;
-
     },
-    1000
+    1500
   );
 }
 
@@ -1379,6 +1576,7 @@ onValue(
 
     const data =
       snapshot.val();
+
 
     if (data) {
 
@@ -1410,6 +1608,7 @@ onValue(
       };
     }
 
+
     render();
   }
 );
@@ -1428,6 +1627,7 @@ onValue(
 
     slots =
       snapshot.val() || {};
+
 
     render();
   }
@@ -1448,6 +1648,7 @@ onValue(
     reservations =
       snapshot.val() || {};
 
+
     render();
   }
 );
@@ -1464,12 +1665,32 @@ onChildRemoved(
   ),
   (snapshot) => {
 
-    /*
-      ★お客さん自身がキャンセル中なら
-      ここでは何もしない。
+    const removedReservation =
+      snapshot.val();
 
-      cancelReservation()側で
-      1回だけメッセージを出す。
+
+    if (!removedReservation) {
+
+      return;
+    }
+
+
+    const removedNumber =
+      String(
+        removedReservation.number
+      );
+
+
+    /*
+      ★お客さん自身が
+      キャンセルボタンを押した場合。
+
+      cancelReservation()が
+      Firebaseから削除している途中なので、
+      ここではalertを出さない。
+
+      ただし localStorage の削除などは
+      cancelReservation()側ですでに行う。
     */
 
     if (
@@ -1480,50 +1701,47 @@ onChildRemoved(
     }
 
 
-    const removedReservation =
-      snapshot.val();
-
-    if (!removedReservation) {
-      return;
-    }
-
+    /*
+      現在この端末に
+      その予約が保存されていなければ、
+      この端末に関係する予約ではない。
+    */
 
     const localReservation =
       getLocalReservation();
 
+
     if (!localReservation) {
+
       return;
     }
 
 
-    /*
-      自分の予約番号と違う削除なら
-      何もしない。
-    */
-
-    if (
+    const localNumber =
       String(
         localReservation.number
-      ) !==
-      String(
-        removedReservation.number
-      )
+      );
+
+
+    if (
+      localNumber !==
+      removedNumber
     ) {
 
       return;
     }
 
 
-    /* -----------------------------
-       ローカルの予約を削除
-    ----------------------------- */
+    /*
+      ローカル予約を削除
+    */
 
     clearLocalReservation();
 
 
-    /* -----------------------------
-       予約画面を消す
-    ----------------------------- */
+    /*
+      予約表示を消す
+    */
 
     if (
       $("reservationArea")
@@ -1532,14 +1750,15 @@ onChildRemoved(
       $("reservationArea").hidden =
         true;
 
+
       $("reservationArea").innerHTML =
         "";
     }
 
 
-    /* -----------------------------
-       予約画面を戻す
-    ----------------------------- */
+    /*
+      予約画面を戻す
+    */
 
     if (
       $("reserveArea")
@@ -1552,10 +1771,12 @@ onChildRemoved(
 
     /*
       ★スタッフ削除の場合も
-      同じメッセージを1回だけ表示
+      共通メッセージを1回だけ表示
     */
 
-    showCancellationMessage();
+    showCancellationMessage(
+      removedNumber
+    );
   }
 );
 
@@ -1577,6 +1798,7 @@ function render() {
         localReservation.number
       );
 
+
     const remoteReservation =
       reservations[number];
 
@@ -1590,9 +1812,10 @@ function render() {
     } else {
 
       /*
-        Firebaseから削除された直後は
-        onChildRemoved()が処理するため、
-        ここではメッセージを出さない。
+        Firebaseから削除された場合は
+        onChildRemoved()が処理する。
+
+        ここではalertを出さない。
       */
 
       if (
@@ -1604,9 +1827,14 @@ function render() {
       }
     }
 
+
     return;
   }
 
+
+  /* -----------------------------
+     予約がない場合
+  ----------------------------- */
 
   renderSlots();
 
@@ -1639,6 +1867,7 @@ function render() {
 
     $("reservationArea").hidden =
       true;
+
 
     $("reservationArea").innerHTML =
       "";
