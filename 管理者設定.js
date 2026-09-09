@@ -12,9 +12,9 @@ import {
 
 import {
   getAuth,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut
+  signInAnonymously,
+  signOut,
+  onAuthStateChanged
 } from
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -32,11 +32,8 @@ const auth = getAuth(app);
 
 
 // =========================
-// 設定
+// 管理者パスワード
 // =========================
-
-const STAFF_EMAIL =
-  "kazuma.cosmos@gmail.com";
 
 const ADMIN_PASSWORD =
   "kazuma";
@@ -106,18 +103,24 @@ let currentSettings = {
 
 
 // =========================
-// 管理者認証状態
+// 管理者ログイン状態
 // =========================
 
-// 管理者パスワード確認中かどうか
-let checkingAdminPassword = false;
-
-// 管理者認証が完了しているか
 let adminAuthenticated = false;
 
+let firebaseSigningIn = false;
+
 
 // =========================
-// ログイン
+// 初期状態
+// =========================
+
+loginArea.style.display = "block";
+settingsArea.style.display = "none";
+
+
+// =========================
+// 管理者ログイン
 // =========================
 
 loginButton.addEventListener(
@@ -138,24 +141,69 @@ loginButton.addEventListener(
 
     }
 
+
+    // パスワードが違う
+    if (password !== ADMIN_PASSWORD) {
+
+      loginMessage.textContent =
+        "ログインに失敗しました。";
+
+      passwordInput.value = "";
+
+      passwordInput.focus();
+
+      return;
+
+    }
+
+
+    // 二重ログイン防止
+    if (firebaseSigningIn) {
+
+      return;
+
+    }
+
+
+    firebaseSigningIn = true;
+
+    loginButton.disabled = true;
+
+
     try {
 
-      await signInWithEmailAndPassword(
-        auth,
-        STAFF_EMAIL,
-        password
-      );
+      // Firebase匿名ログイン
+      await signInAnonymously(auth);
+
+      adminAuthenticated = true;
+
+      loginArea.style.display = "none";
+
+      settingsArea.style.display = "block";
+
+      loginMessage.textContent = "";
 
       passwordInput.value = "";
 
     } catch (error) {
 
+      console.error(error);
+
+      adminAuthenticated = false;
+
+      settingsArea.style.display = "none";
+
+      loginArea.style.display = "block";
+
       loginMessage.textContent =
         "ログインに失敗しました。";
 
-      console.error(error);
-
     }
+
+
+    firebaseSigningIn = false;
+
+    loginButton.disabled = false;
 
   }
 );
@@ -167,35 +215,10 @@ loginButton.addEventListener(
 
 onAuthStateChanged(
   auth,
-  async (user) => {
+  (user) => {
 
-    // ログインしていない
-    if (!user) {
-
-      loginArea.style.display = "block";
-
-      settingsArea.style.display = "none";
-
-      checkingAdminPassword = false;
-      adminAuthenticated = false;
-
-      return;
-
-    }
-
-
-    // スタッフメールアドレス以外
-    if (user.email !== STAFF_EMAIL) {
-
-      await signOut(auth);
-
-      return;
-
-    }
-
-
-    // すでに管理者認証済みなら何もしない
-    if (adminAuthenticated) {
+    // 管理者ログイン済み
+    if (user && adminAuthenticated) {
 
       loginArea.style.display = "none";
 
@@ -206,88 +229,19 @@ onAuthStateChanged(
     }
 
 
-    // すでに確認中なら何もしない
-    if (checkingAdminPassword) {
+    // 未ログイン
+    if (!user) {
 
-      return;
+      adminAuthenticated = false;
+
+      loginArea.style.display = "block";
+
+      settingsArea.style.display = "none";
 
     }
 
-
-    // 管理者パスワード確認
-    await showAdminPassword();
-
   }
 );
-
-
-// =========================
-// 管理者パスワード
-// =========================
-
-async function showAdminPassword() {
-
-  checkingAdminPassword = true;
-
-  const entered =
-    window.prompt(
-      "管理者用パスワードを入力してください。"
-    );
-
-
-  // 正解
-  if (entered === ADMIN_PASSWORD) {
-
-    adminAuthenticated = true;
-
-    checkingAdminPassword = false;
-
-    loginArea.style.display = "none";
-
-    settingsArea.style.display = "block";
-
-    loginMessage.textContent = "";
-
-    return;
-
-  }
-
-
-  // 間違い・キャンセル
-  alert(
-    "管理者用パスワードが違います。"
-  );
-
-
-  // 管理者画面を表示しない
-  adminAuthenticated = false;
-
-  settingsArea.style.display = "none";
-
-
-  // Firebaseから確実にログアウト
-  try {
-
-    await signOut(auth);
-
-  } catch (error) {
-
-    console.error(error);
-
-  }
-
-
-  // ログイン画面を表示
-  loginArea.style.display = "block";
-
-  passwordInput.value = "";
-
-  loginMessage.textContent =
-    "もう一度ログインしてください。";
-
-  checkingAdminPassword = false;
-
-}
 
 
 // =========================
@@ -313,6 +267,11 @@ onValue(
     };
 
     updateSettingsScreen();
+
+  },
+  (error) => {
+
+    console.error(error);
 
   }
 );
@@ -360,6 +319,12 @@ toggleOpen.addEventListener(
   "click",
   async () => {
 
+    if (!adminAuthenticated) {
+
+      return;
+
+    }
+
     const nextOpen =
       !currentSettings.open;
 
@@ -371,6 +336,11 @@ toggleOpen.addEventListener(
           open: nextOpen
         }
       );
+
+      currentSettings.open =
+        nextOpen;
+
+      updateSettingsScreen();
 
       settingsMessage.textContent =
         nextOpen
@@ -397,6 +367,13 @@ toggleOpen.addEventListener(
 saveSettingsButton.addEventListener(
   "click",
   async () => {
+
+    if (!adminAuthenticated) {
+
+      return;
+
+    }
+
 
     const slotMinutes =
       Number(slotMinutesInput.value);
@@ -465,6 +442,13 @@ saveSettingsButton.addEventListener(
 resetAllButton.addEventListener(
   "click",
   async () => {
+
+    if (!adminAuthenticated) {
+
+      return;
+
+    }
+
 
     const first =
       confirm(
@@ -540,7 +524,6 @@ backToStaffButton.addEventListener(
       "./スタッフ.html";
 
   }
-
 );
 
 
@@ -552,10 +535,17 @@ logoutButton.addEventListener(
   "click",
   async () => {
 
-    await signOut(auth);
+    try {
+
+      await signOut(auth);
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
 
     adminAuthenticated = false;
-    checkingAdminPassword = false;
 
     settingsArea.style.display =
       "none";
