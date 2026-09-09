@@ -605,10 +605,6 @@ function renderReservations() {
         );
 
 
-        // ==========================
-        // 予約なし
-        // ==========================
-
         if (
           slotReservations.length === 0
         ) {
@@ -627,14 +623,7 @@ function renderReservations() {
             empty
           );
 
-        }
-
-
-        // ==========================
-        // 予約あり
-        // ==========================
-
-        else {
+        } else {
 
           for (
             const reservation
@@ -897,10 +886,6 @@ async function moveReservation(
 
   try {
 
-    // ==========================
-    // 移動先を1組増やす
-    // ==========================
-
     const transactionResult =
       await runTransaction(
         targetCountRef,
@@ -947,10 +932,6 @@ async function moveReservation(
       true;
 
 
-    // ==========================
-    // 予約情報を変更
-    // ==========================
-
     const reservationRef =
       ref(
         db,
@@ -973,10 +954,6 @@ async function moveReservation(
       }
     );
 
-
-    // ==========================
-    // 元の枠を1組減らす
-    // ==========================
 
     const oldCountRef =
       ref(
@@ -1014,10 +991,6 @@ async function moveReservation(
       error
     );
 
-
-    // ==========================
-    // ロールバック
-    // ==========================
 
     if (
       targetIncremented
@@ -1102,18 +1075,10 @@ async function deleteReservation(
 
   try {
 
-    // ==========================
-    // 予約を削除
-    // ==========================
-
     await remove(
       reservationRef
     );
 
-
-    // ==========================
-    // 枠数を1減らす
-    // ==========================
 
     if (
       reservation.slot
@@ -1173,6 +1138,7 @@ async function deleteReservation(
 // ・Queue/reservations
 // ・Queue/slots
 // ・Queue/reservationLast
+// ・Queue/resetAt
 //
 // 設定は残す
 //
@@ -1251,58 +1217,66 @@ async function resetAllData() {
   try {
 
     // ==========================
-    // まとめてリセット
+    // 現在ログインしているか確認
     // ==========================
 
-    await update(
+    if (!auth.currentUser) {
+
+      throw new Error(
+        "スタッフがログインしていません。"
+      );
+    }
+
+
+    // ==========================
+    // ① 予約データを削除
+    // ==========================
+
+    await set(
       ref(
         db,
-        "Queue"
+        "Queue/reservations"
       ),
-      {
-
-        /*
-          予約をすべて削除
-        */
-
-        reservations:
-          null,
+      null
+    );
 
 
-        /*
-          時間枠の人数をすべて削除
+    // ==========================
+    // ② 時間枠データを削除
+    // ==========================
 
-          → 存在しない枠は
-            お客さん側・スタッフ側で
-            0組として扱われます。
-        */
-
-        slots:
-          null,
-
-
-        /*
-          予約番号を0へ戻す
-
-          次の予約
-          → DREAM001
-        */
-
-        reservationLast:
-          0,
+    await set(
+      ref(
+        db,
+        "Queue/slots"
+      ),
+      null
+    );
 
 
-        /*
-          リセットした時刻を保存。
+    // ==========================
+    // ③ 予約番号を0へ戻す
+    // ==========================
 
-          お客さん側が古いlocalStorageを
-          持っている場合に、
-          後で自動的に判定できるようにする。
-        */
+    await set(
+      ref(
+        db,
+        "Queue/reservationLast"
+      ),
+      0
+    );
 
-        resetAt:
-          Date.now()
-      }
+
+    // ==========================
+    // ④ リセット時刻を保存
+    // ==========================
+
+    await set(
+      ref(
+        db,
+        "Queue/resetAt"
+      ),
+      Date.now()
     );
 
 
@@ -1334,6 +1308,18 @@ async function resetAllData() {
     );
 
 
+    console.error(
+      "エラーコード:",
+      error?.code
+    );
+
+
+    console.error(
+      "エラーメッセージ:",
+      error?.message
+    );
+
+
     if (resetMessage) {
 
       resetMessage.textContent =
@@ -1341,9 +1327,27 @@ async function resetAllData() {
     }
 
 
+    // ==========================
+    // エラー内容を確認できるようにする
+    // ==========================
+
+    let detail =
+      error?.message ||
+      "原因不明のエラー";
+
+
+    if (
+      error?.code
+    ) {
+
+      detail =
+        `${error.code}\n${detail}`;
+    }
+
+
     alert(
-      "リセットに失敗しました。\n" +
-      "もう一度お試しください。"
+      "リセットに失敗しました。\n\n" +
+      detail
     );
 
   } finally {
@@ -1698,10 +1702,6 @@ $("saveSettings").addEventListener(
       );
 
 
-    // ==========================
-    // 1枠の時間チェック
-    // ==========================
-
     if (
       !Number.isInteger(
         slotMinutes
@@ -1715,10 +1715,6 @@ $("saveSettings").addEventListener(
       return;
     }
 
-
-    // ==========================
-    // 最大組数チェック
-    // ==========================
 
     if (
       !Number.isInteger(
@@ -1735,18 +1731,10 @@ $("saveSettings").addEventListener(
     }
 
 
-    // ==========================
-    // 09:00〜15:00
-    // ==========================
-
     const totalMinutes =
       toMinutes(FIXED_END) -
       toMinutes(FIXED_START);
 
-
-    // ==========================
-    // 長すぎる場合
-    // ==========================
 
     if (
       slotMinutes >
@@ -1759,10 +1747,6 @@ $("saveSettings").addEventListener(
       return;
     }
 
-
-    // ==========================
-    // 6時間に割り切れるか
-    // ==========================
 
     if (
       totalMinutes %
@@ -1889,10 +1873,6 @@ $("addPaper").addEventListener(
       $("paperMessage");
 
 
-    // ==========================
-    // 名前チェック
-    // ==========================
-
     if (!paperName) {
 
       paperMessage.textContent =
@@ -1901,10 +1881,6 @@ $("addPaper").addEventListener(
       return;
     }
 
-
-    // ==========================
-    // 人数チェック
-    // ==========================
 
     if (
       !Number.isInteger(
@@ -1920,10 +1896,6 @@ $("addPaper").addEventListener(
       return;
     }
 
-
-    // ==========================
-    // 時間枠チェック
-    // ==========================
 
     if (!paperSlot) {
 
@@ -1954,10 +1926,6 @@ $("addPaper").addEventListener(
     paperMessage.textContent =
       "追加しています……";
 
-
-    // ==========================
-    // 枠数
-    // ==========================
 
     const countRef =
       ref(
@@ -2015,10 +1983,6 @@ $("addPaper").addEventListener(
     }
 
 
-    // ==========================
-    // 満員
-    // ==========================
-
     if (
       !countTransaction.committed
     ) {
@@ -2029,10 +1993,6 @@ $("addPaper").addEventListener(
       return;
     }
 
-
-    // ==========================
-    // 予約番号
-    // ==========================
 
     const lastRef =
       ref(
@@ -2084,10 +2044,6 @@ $("addPaper").addEventListener(
       );
 
 
-      // ========================
-      // 枠数を戻す
-      // ========================
-
       try {
 
         await runTransaction(
@@ -2125,10 +2081,6 @@ $("addPaper").addEventListener(
     }
 
 
-    // ==========================
-    // 予約データ
-    // ==========================
-
     const reservationData = {
 
       number:
@@ -2158,10 +2110,6 @@ $("addPaper").addEventListener(
         Date.now()
     };
 
-
-    // ==========================
-    // 予約保存
-    // ==========================
 
     const reservationRef =
       ref(
@@ -2196,10 +2144,6 @@ $("addPaper").addEventListener(
         error
       );
 
-
-      // ========================
-      // 枠数ロールバック
-      // ========================
 
       try {
 
