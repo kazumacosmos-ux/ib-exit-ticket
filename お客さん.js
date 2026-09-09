@@ -554,7 +554,7 @@ function getFlightNumber(
 
 
 /* =========================================
-   画面内通知
+   予約完了表示
 ========================================= */
 
 function showReservationComplete(
@@ -810,9 +810,7 @@ function renderSlots() {
         count >= maxGroups;
 
       const option =
-        document.createElement(
-          "option"
-        );
+        document.createElement("option");
 
       option.value =
         slot.key;
@@ -1006,6 +1004,10 @@ function renderReservations() {
   const localReservation =
     getLocalReservation();
 
+  /* =====================================
+     予約がない場合
+  ===================================== */
+
   if (!localReservation) {
 
     reservationArea.hidden =
@@ -1014,8 +1016,62 @@ function renderReservations() {
     reservationArea.innerHTML =
       "";
 
+    const bookingArea =
+      $("bookingArea");
+
+    if (bookingArea) {
+
+      bookingArea.hidden =
+        settings.open === false;
+    }
+
+    const button =
+      $("reserve");
+
+    if (button) {
+
+      button.disabled =
+        false;
+
+      button.textContent =
+        "予約する";
+    }
+
     return;
   }
+
+
+  /* =====================================
+     予約がある場合
+  ===================================== */
+
+  const bookingArea =
+    $("bookingArea");
+
+  if (bookingArea) {
+
+    bookingArea.hidden =
+      true;
+  }
+
+
+  /*
+   * ここが今回の重要部分。
+   * 「予約処理中…」を確実に終了させる。
+   */
+
+  const reserveButton =
+    $("reserve");
+
+  if (reserveButton) {
+
+    reserveButton.disabled =
+      true;
+
+    reserveButton.textContent =
+      "予約済み";
+  }
+
 
   const number =
     String(
@@ -1604,9 +1660,42 @@ async function reserve() {
     );
 
 
-    /* ===============================
-       予約完了表示
-    =============================== */
+    /* =================================
+       予約成功直後に画面を切り替える
+    ================================= */
+
+    const bookingArea =
+      $("bookingArea");
+
+    if (bookingArea) {
+
+      bookingArea.hidden =
+        true;
+    }
+
+
+    if (button) {
+
+      button.disabled =
+        true;
+
+      button.textContent =
+        "予約済み";
+    }
+
+
+    /*
+     * FirebaseのonValueを待たず、
+     * この場で搭乗券を表示する。
+     */
+
+    renderReservations();
+
+
+    /*
+     * 予約完了表示を少しだけ見せる。
+     * その後、搭乗券に切り替える。
+     */
 
     showReservationComplete(
       number,
@@ -1674,6 +1763,12 @@ async function reserve() {
 
 
   } finally {
+
+    /*
+     * 予約成功時は
+     * renderReservations() が「予約済み」にするので
+     * ここでは「予約処理中…」に戻さない。
+     */
 
     if (
       button &&
@@ -2126,9 +2221,20 @@ function render() {
     getLocalReservation();
 
 
-  /* 予約済み */
+  /* =====================================
+     予約済み
+  ===================================== */
 
   if (localReservation) {
+
+    const bookingArea =
+      $("bookingArea");
+
+    if (bookingArea) {
+
+      bookingArea.hidden =
+        true;
+    }
 
     renderReservations();
 
@@ -2136,7 +2242,19 @@ function render() {
   }
 
 
-  /* 予約前 */
+  /* =====================================
+     予約前
+  ===================================== */
+
+  const bookingArea =
+    $("bookingArea");
+
+  if (bookingArea) {
+
+    bookingArea.hidden =
+      settings.open === false;
+  }
+
 
   renderSlots();
 
