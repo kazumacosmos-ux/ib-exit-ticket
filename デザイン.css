@@ -1,12 +1,7 @@
-/* ==============================
-   1-B出口
-   デザイン.css
-   ============================== */
-
-
-/* ==============================
-   全体
-   ============================== */
+/* =========================================
+   1-B出口 AIRLINES
+   Mobile Boarding Pass Design
+   ========================================= */
 
 * {
   box-sizing: border-box;
@@ -15,825 +10,513 @@
 html {
   margin: 0;
   padding: 0;
+  background: #07111f;
 }
 
 body {
   margin: 0;
   padding: 0;
-
   min-height: 100vh;
-
   font-family:
     -apple-system,
     BlinkMacSystemFont,
     "Helvetica Neue",
-    "Hiragino Kaku Gothic ProN",
-    "Yu Gothic",
-    YuGothic,
-    Arial,
+    "Noto Sans JP",
     sans-serif;
-
   background:
-    linear-gradient(
-      135deg,
-      #eef2f7 0%,
-      #f8fafc 45%,
-      #e7edf4 100%
+    radial-gradient(
+      circle at 50% -10%,
+      #29476b 0%,
+      #102238 38%,
+      #07111f 75%
     );
-
-  color: #18212b;
+  color: #172033;
 }
 
-
-/* ==============================
-   メインコンテナ
-   ============================== */
+/* =========================================
+   全体
+   ========================================= */
 
 .container {
-  width: min(94%, 680px);
-
+  width: min(100%, 520px);
   margin: 0 auto;
-
-  padding:
-    28px
-    0
-    60px;
+  padding: 28px 18px 50px;
 }
 
-
-/* ==============================
-   ページタイトル
-   ============================== */
+/* =========================================
+   ヘッダー
+   ========================================= */
 
 .container > h1 {
   margin: 0 0 28px;
-
+  color: #ffffff;
   text-align: center;
-
-  font-size: 30px;
-  font-weight: 900;
-
+  font-size: 27px;
+  font-weight: 800;
   letter-spacing: 0.08em;
-
-  color: #111820;
 }
 
+.container > h1::before {
+  content: "✈";
+  display: block;
+  margin-bottom: 8px;
+  font-size: 30px;
+}
 
-/* ==============================
+.container > h1::after {
+  content: "1-B AIRLINES";
+  display: block;
+  margin-top: 8px;
+  color: #91a8c5;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+}
+
+/* =========================================
    セクション
-   ============================== */
+   ========================================= */
 
 section {
-  background: #ffffff;
-
-  border-radius: 22px;
-
-  padding: 24px;
-
-  margin-bottom: 24px;
-
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 24px;
+  padding: 24px 20px;
   box-shadow:
-    0 12px 35px rgba(20, 35, 50, 0.08);
+    0 18px 45px rgba(0, 0, 0, 0.28),
+    0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
-
-/* ==============================
+/* =========================================
    見出し
-   ============================== */
+   ========================================= */
 
 section h2 {
-  margin:
-    0
-    0
-    22px;
-
+  margin: 0 0 22px;
+  color: #101b2c;
   font-size: 21px;
-  font-weight: 900;
-
-  letter-spacing: 0.04em;
+  font-weight: 800;
+  letter-spacing: 0.03em;
 }
 
-
-/* ==============================
+/* =========================================
    ラベル
-   ============================== */
+   ========================================= */
 
 label {
   display: block;
-
-  margin:
-    18px
-    0
-    8px;
-
-  font-size: 14px;
+  margin: 18px 0 8px;
+  color: #657084;
+  font-size: 12px;
   font-weight: 800;
-
-  color: #475463;
+  letter-spacing: 0.08em;
 }
 
+label:first-of-type {
+  margin-top: 0;
+}
 
-/* ==============================
+/* =========================================
    入力欄
-   ============================== */
+   ========================================= */
 
 input,
 select {
   width: 100%;
-
-  min-height: 52px;
-
-  padding:
-    12px
-    14px;
-
-  border:
-    1px solid
-    #d4dbe3;
-
-  border-radius: 13px;
-
-  background: #f8fafc;
-
-  color: #17212b;
-
-  font-size: 16px;
-
+  height: 54px;
+  padding: 0 16px;
+  border: 1px solid #dce2ea;
+  border-radius: 14px;
   outline: none;
-
+  background: #f7f9fc;
+  color: #172033;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
   transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    background 0.15s ease;
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
-
 
 input:focus,
 select:focus {
-  border-color: #596b7d;
-
+  border-color: #315f91;
   background: #ffffff;
-
-  box-shadow:
-    0 0 0 4px rgba(89, 107, 125, 0.12);
+  box-shadow: 0 0 0 4px rgba(49, 95, 145, 0.12);
 }
 
+/* =========================================
+   時間選択
+   ========================================= */
 
-/* ==============================
-   時間枠情報
-   ============================== */
+#slot {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+/* =========================================
+   残り枠表示
+   ========================================= */
 
 .slot-info {
-  margin:
-    10px
-    0
-    0;
-
-  padding:
-    10px
-    13px;
-
-  border-radius: 10px;
-
-  background: #f1f4f7;
-
-  color: #536170;
-
+  min-height: 20px;
+  margin: 10px 3px 0;
+  color: #607087;
   font-size: 13px;
-
-  font-weight: 700;
+  font-weight: 600;
 }
 
-
-/* ==============================
+/* =========================================
    予約ボタン
-   ============================== */
+   ========================================= */
 
 #reserve {
   width: 100%;
-
-  min-height: 56px;
-
+  min-height: 58px;
   margin-top: 22px;
-
-  padding:
-    14px
-    18px;
-
-  border: none;
-
-  border-radius: 14px;
-
-  background: #17212b;
-
-  color: #ffffff;
-
-  font-size: 16px;
-
-  font-weight: 900;
-
-  letter-spacing: 0.04em;
-
-  cursor: pointer;
-
-  box-shadow:
-    0 8px 18px rgba(23, 33, 43, 0.18);
-
-  transition:
-    transform 0.15s ease,
-    opacity 0.15s ease;
-}
-
-
-#reserve:active {
-  transform: scale(0.98);
-}
-
-
-#reserve:disabled {
-  opacity: 0.5;
-
-  cursor: not-allowed;
-}
-
-
-/* ==============================
-   エラー・メッセージ
-   ============================== */
-
-.error {
-  margin:
-    14px
-    0
-    0;
-
-  text-align: center;
-
-  font-size: 14px;
-
-  font-weight: 700;
-
-  color: #c23a3a;
-}
-
-
-/* ==============================
-   予約済みエリア
-   ============================== */
-
-#reservationArea {
-  background: transparent;
-
-  box-shadow: none;
-
-  padding:
-    0
-    0;
-}
-
-
-#reservationArea > h2 {
-  margin:
-    0
-    14px;
-
-  text-align: center;
-
-  font-size: 20px;
-}
-
-
-/* =========================================================
-   搭乗券
-   ========================================================= */
-
-.boarding-pass {
-  position: relative;
-
-  overflow: hidden;
-
-  margin:
-    0
-    0
-    26px;
-
-  background: #ffffff;
-
-  border-radius: 22px;
-
-  box-shadow:
-    0 18px 45px rgba(17, 30, 43, 0.14);
-
-  border:
-    1px solid
-    #dce2e8;
-}
-
-
-/* ==============================
-   上部ヘッダー
-   ============================== */
-
-.boarding-pass-header {
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  gap: 16px;
-
-  padding:
-    20px
-    22px;
-
-  background: #17212b;
-
-  color: #ffffff;
-}
-
-
-/* 航空会社名 */
-
-.boarding-pass-header h2 {
-  margin: 0;
-
-  font-size: 18px;
-
-  font-weight: 900;
-
-  letter-spacing: 0.12em;
-}
-
-
-/* サブタイトル */
-
-.boarding-pass-header p {
-  margin:
-    5px
-    0
-    0;
-
-  font-size: 10px;
-
-  letter-spacing: 0.12em;
-
-  opacity: 0.65;
-
-  text-transform: uppercase;
-}
-
-
-/* 便名 */
-
-.boarding-pass-header strong {
-  flex-shrink: 0;
-
-  font-size: 25px;
-
-  font-weight: 900;
-
-  letter-spacing: 0.08em;
-}
-
-
-/* ==============================
-   メイン部分
-   ============================== */
-
-.boarding-pass-main {
-  padding:
-    24px
-    22px
-    20px;
-}
-
-
-/* ==============================
-   来場時間
-   ============================== */
-
-.boarding-arrival {
-  padding:
-    18px
-    18px;
-
-  margin-bottom: 20px;
-
-  border-radius: 15px;
-
+  border: 0;
+  border-radius: 16px;
   background:
     linear-gradient(
       135deg,
-      #f5f7f9,
-      #e9eef3
+      #193b62 0%,
+      #275d91 100%
     );
-
-  border:
-    1px solid
-    #dce2e8;
-}
-
-
-.boarding-arrival span {
-  display: block;
-
-  margin-bottom: 7px;
-
-  font-size: 11px;
-
-  font-weight: 900;
-
-  letter-spacing: 0.12em;
-
-  color: #697786;
-
-  text-transform: uppercase;
-}
-
-
-.boarding-arrival strong {
-  display: block;
-
-  font-size: 27px;
-
-  line-height: 1.2;
-
-  font-weight: 900;
-
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 800;
   letter-spacing: 0.04em;
-
-  color: #121a22;
-}
-
-
-/* ==============================
-   情報グリッド
-   ============================== */
-
-.boarding-info-grid {
-  display: grid;
-
-  grid-template-columns:
-    repeat(2, 1fr);
-
-  gap:
-    16px
-    20px;
-
-  padding:
-    4px
-    0
-    20px;
-
-  border-bottom:
-    1px solid
-    #e2e7ec;
-}
-
-
-.boarding-info-grid > div {
-  min-width: 0;
-}
-
-
-.boarding-info-grid span {
-  display: block;
-
-  margin-bottom: 5px;
-
-  font-size: 10px;
-
-  font-weight: 800;
-
-  letter-spacing: 0.12em;
-
-  color: #7a8794;
-
-  text-transform: uppercase;
-}
-
-
-.boarding-info-grid strong {
-  display: block;
-
-  font-size: 17px;
-
-  font-weight: 900;
-
-  color: #17212b;
-
-  overflow-wrap: anywhere;
-}
-
-
-/* ==============================
-   代表者
-   ============================== */
-
-.boarding-pass-passenger {
-  display: flex;
-
-  align-items: center;
-
-  justify-content: space-between;
-
-  gap: 15px;
-
-  padding-top: 18px;
-}
-
-
-.boarding-pass-passenger span {
-  font-size: 11px;
-
-  font-weight: 800;
-
-  letter-spacing: 0.12em;
-
-  color: #7a8794;
-
-  text-transform: uppercase;
-}
-
-
-.boarding-pass-passenger strong {
-  font-size: 17px;
-
-  font-weight: 900;
-
-  text-align: right;
-
-  overflow-wrap: anywhere;
-}
-
-
-/* ==============================
-   ミシン目
-   ============================== */
-
-.boarding-pass-footer {
-  position: relative;
-
-  padding:
-    18px
-    22px
-    22px;
-
-  border-top:
-    2px dashed
-    #d5dce3;
-
-  background: #fafbfc;
-}
-
-
-/* ミシン目の丸い切り欠き */
-
-.boarding-pass-footer::before,
-.boarding-pass-footer::after {
-  content: "";
-
-  position: absolute;
-
-  top: -11px;
-
-  width: 20px;
-
-  height: 20px;
-
-  border-radius: 50%;
-
-  background: #eef2f7;
-}
-
-
-.boarding-pass-footer::before {
-  left: -10px;
-}
-
-
-.boarding-pass-footer::after {
-  right: -10px;
-}
-
-
-/* ==============================
-   注意書き
-   ============================== */
-
-.boarding-note {
-  margin:
-    0
-    0
-    16px;
-
-  text-align: center;
-
-  font-size: 11px;
-
-  line-height: 1.7;
-
-  color: #667483;
-
-  font-weight: 700;
-}
-
-
-/* ==============================
-   バーコード風装飾
-   ============================== */
-
-.boarding-pass-footer::marker {
-  display: none;
-}
-
-
-/* ==============================
-   キャンセルボタン
-   ============================== */
-
-.cancel-reservation {
-  width: 100%;
-
-  min-height: 44px;
-
-  padding:
-    10px
-    14px;
-
-  border:
-    1px solid
-    #d7dde3;
-
-  border-radius: 10px;
-
-  background: #ffffff;
-
-  color: #687583;
-
-  font-size: 13px;
-
-  font-weight: 800;
-
   cursor: pointer;
-
+  box-shadow:
+    0 10px 22px rgba(25, 59, 98, 0.28);
   transition:
-    background 0.15s ease,
-    color 0.15s ease;
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
 }
 
-
-.cancel-reservation:hover {
-  background: #f1f4f6;
+#reserve:active {
+  transform: translateY(2px);
+  box-shadow:
+    0 5px 12px rgba(25, 59, 98, 0.22);
 }
 
-
-.cancel-reservation:active {
-  transform: scale(0.98);
+#reserve:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
+/* =========================================
+   エラー
+   ========================================= */
 
-/* ==============================
-   受付停止画面
-   ============================== */
+.error {
+  margin: 14px 2px 0;
+  color: #c0392b;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+/* =========================================
+   予約完了エリア
+   ========================================= */
+
+#reservationArea {
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* =========================================
+   搭乗券
+   ========================================= */
+
+.boarding-pass {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.32);
+}
+
+/* 上部 */
+
+.boarding-pass-header {
+  padding: 22px 22px 20px;
+  background:
+    linear-gradient(
+      135deg,
+      #0b1b30 0%,
+      #193d62 100%
+    );
+  color: #ffffff;
+}
+
+.boarding-pass-header h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.boarding-pass-header p {
+  margin: 7px 0 0;
+  color: #9db2ca;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+}
+
+/* =========================================
+   搭乗券中央
+   ========================================= */
+
+.boarding-pass-body {
+  padding: 25px 22px;
+}
+
+.boarding-pass-route {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.boarding-pass-time {
+  color: #0c1a2c;
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.boarding-pass-time:last-child {
+  text-align: right;
+}
+
+.boarding-pass-arrow {
+  color: #8b98aa;
+  font-size: 20px;
+}
+
+/* =========================================
+   ゲート
+   ========================================= */
+
+.boarding-pass-gate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 23px;
+  padding-top: 18px;
+  border-top: 1px solid #e8ecf1;
+}
+
+.boarding-pass-gate-label {
+  color: #7b8797;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.boarding-pass-gate-value {
+  color: #10253f;
+  font-size: 25px;
+  font-weight: 900;
+}
+
+/* =========================================
+   詳細情報
+   ========================================= */
+
+.boarding-pass-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 12px;
+  margin-top: 22px;
+}
+
+.boarding-pass-info-item span {
+  display: block;
+  margin-bottom: 5px;
+  color: #8a95a4;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.boarding-pass-info-item strong {
+  display: block;
+  overflow: hidden;
+  color: #182438;
+  font-size: 15px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================
+   ミシン目
+   ========================================= */
+
+.boarding-pass-divider {
+  position: relative;
+  height: 1px;
+  margin: 0 20px;
+  border-top: 2px dashed #dce1e8;
+}
+
+.boarding-pass-divider::before,
+.boarding-pass-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #0d1c2e;
+  transform: translateY(-50%);
+}
+
+.boarding-pass-divider::before {
+  left: -32px;
+}
+
+.boarding-pass-divider::after {
+  right: -32px;
+}
+
+/* =========================================
+   バーコード風デザイン
+   ========================================= */
+
+.boarding-pass-barcode {
+  height: 46px;
+  margin: 22px 0 8px;
+  opacity: 0.8;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #111827 0,
+      #111827 2px,
+      transparent 2px,
+      transparent 5px,
+      #111827 5px,
+      #111827 6px,
+      transparent 6px,
+      transparent 9px
+    );
+}
+
+.boarding-pass-code {
+  margin: 0;
+  color: #8994a3;
+  text-align: center;
+  font-family: monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+}
+
+/* =========================================
+   キャンセルボタン
+   ========================================= */
+
+.cancel-button {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 22px;
+  border: 1px solid #d9dee6;
+  border-radius: 13px;
+  background: #ffffff;
+  color: #697586;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cancel-button:active {
+  background: #f2f4f7;
+}
+
+/* =========================================
+   受付停止
+   ========================================= */
 
 #closedArea {
   text-align: center;
-
-  padding:
-    36px
-    24px;
 }
-
 
 #closedArea h2 {
-  margin-bottom: 12px;
-
-  font-size: 21px;
+  margin-bottom: 10px;
 }
-
 
 #closedArea p {
   margin: 0;
-
-  color: #667483;
-
+  color: #6f7b8c;
   font-size: 14px;
-
   line-height: 1.7;
 }
 
-
-/* =========================================================
+/* =========================================
    スマホ
-   ========================================================= */
+   ========================================= */
 
-@media (max-width: 520px) {
+@media (max-width: 420px) {
 
   .container {
-    width: 94%;
-
-    padding-top: 20px;
+    padding: 22px 14px 40px;
   }
-
 
   .container > h1 {
-    font-size: 25px;
-
     margin-bottom: 22px;
+    font-size: 24px;
   }
-
 
   section {
-    padding: 19px;
-
-    border-radius: 18px;
+    padding: 21px 17px;
+    border-radius: 21px;
   }
 
-
-  .boarding-pass {
-    border-radius: 19px;
+  .boarding-pass-body {
+    padding: 22px 18px;
   }
 
-
-  .boarding-pass-header {
-    padding:
-      17px
-      18px;
+  .boarding-pass-time {
+    font-size: 36px;
   }
 
-
-  .boarding-pass-header h2 {
-    font-size: 15px;
+  .boarding-pass-route {
+    gap: 8px;
   }
 
-
-  .boarding-pass-header strong {
-    font-size: 20px;
+  .boarding-pass-arrow {
+    font-size: 16px;
   }
-
-
-  .boarding-pass-main {
-    padding:
-      19px
-      18px
-      17px;
-  }
-
-
-  .boarding-arrival {
-    padding:
-      15px
-      15px;
-  }
-
-
-  .boarding-arrival strong {
-    font-size: 23px;
-  }
-
-
-  .boarding-info-grid {
-    gap:
-      14px
-      12px;
-  }
-
-
-  .boarding-info-grid strong {
-    font-size: 15px;
-  }
-
-
-  .boarding-pass-footer {
-    padding:
-      16px
-      18px
-      19px;
-  }
-
 }
 
+/* =========================================
+   小さい画面
+   ========================================= */
 
-/* =========================================================
-   かなり小さいスマホ
-   ========================================================= */
+@media (max-width: 340px) {
 
-@media (max-width: 360px) {
-
-  .boarding-pass-header {
-    align-items: flex-start;
+  .container {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
-
-  .boarding-pass-header strong {
-    font-size: 17px;
+  .boarding-pass-time {
+    font-size: 31px;
   }
 
-
-  .boarding-arrival strong {
-    font-size: 21px;
+  .boarding-pass-info {
+    gap: 15px 8px;
   }
-
 }
