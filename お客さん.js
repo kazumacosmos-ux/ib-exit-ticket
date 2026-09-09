@@ -14,6 +14,7 @@ import {
   onChildRemoved,
   runTransaction,
   set,
+  update,
   remove
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 
@@ -73,6 +74,9 @@ let selfCancelInProgress =
 
 let lastResetAt =
   0;
+
+let editMode =
+  false;
 
 
 const RESERVATION_KEY =
@@ -780,6 +784,773 @@ function updateReserveButton() {
 
 
 // ==============================
+// 予約内容変更画面
+// ==============================
+
+function showEditReservation() {
+
+  const localReservation =
+    getLocalReservation();
+
+  if (!localReservation) return;
+
+
+  editMode =
+    true;
+
+
+  const area =
+    document.getElementById(
+      "reservationArea"
+    );
+
+  if (!area) return;
+
+
+  const generatedSlots =
+    generateSlots();
+
+
+  area.hidden =
+    false;
+
+  area.style.display =
+    "";
+
+
+  area.innerHTML = `
+
+    <div
+      class="boarding-pass"
+      style="
+        padding: 24px;
+      "
+    >
+
+      <div
+        style="
+          font-size: 22px;
+          font-weight: bold;
+          margin-bottom: 20px;
+        "
+      >
+        予約内容を変更
+      </div>
+
+
+      <div
+        style="
+          margin-bottom: 18px;
+        "
+      >
+
+        <div
+          style="
+            font-weight: bold;
+            margin-bottom: 8px;
+          "
+        >
+          ご来場時間
+        </div>
+
+        <select
+          id="edit-slot"
+          style="
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+          "
+        >
+
+          ${generatedSlots.map(slot => {
+
+            const count =
+              Number(
+                slot.count || 0
+              );
+
+            const max =
+              Number(
+                settings.maxGroups || 0
+              );
+
+            const isCurrent =
+              slot.key ===
+              localReservation.slot;
+
+            const available =
+              isCurrent ||
+              count < max;
+
+            const status =
+              isCurrent
+                ? {
+                    icon: "🟢",
+                    text: "現在の予約"
+                  }
+                : getSlotStatus(
+                    count,
+                    max
+                  );
+
+
+            return `
+              <option
+                value="${escapeHtml(slot.key)}"
+                ${isCurrent ? "selected" : ""}
+                ${!available ? "disabled" : ""}
+              >
+                ${status.icon}
+                ${escapeHtml(slot.start)}
+                ～
+                ${escapeHtml(slot.end)}
+                （${escapeHtml(status.text)}）
+              </option>
+            `;
+
+          }).join("")}
+
+        </select>
+
+      </div>
+
+
+      <div
+        style="
+          margin-bottom: 22px;
+        "
+      >
+
+        <div
+          style="
+            font-weight: bold;
+            margin-bottom: 8px;
+          "
+        >
+          人数
+        </div>
+
+        <select
+          id="edit-size"
+          style="
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+          "
+        >
+
+          ${[1, 2, 3, 4].map(size => `
+
+            <option
+              value="${size}"
+              ${
+                Number(
+                  localReservation.size
+                ) === size
+                  ? "selected"
+                  : ""
+              }
+            >
+              ${size}名
+            </option>
+
+          `).join("")}
+
+        </select>
+
+      </div>
+
+
+      <p
+        id="edit-error"
+        style="
+          color: #c62828;
+          margin-bottom: 16px;
+        "
+      ></p>
+
+
+      <button
+        id="save-edit-reservation"
+        type="button"
+        style="
+          width: 100%;
+          padding: 13px;
+          margin-bottom: 10px;
+          font-size: 16px;
+          font-weight: bold;
+        "
+      >
+        変更する
+      </button>
+
+
+      <button
+        id="cancel-edit-reservation"
+        type="button"
+        style="
+          width: 100%;
+          padding: 11px;
+          font-size: 15px;
+        "
+      >
+        戻る
+      </button>
+
+    </div>
+
+  `;
+
+
+  const saveButton =
+    document.getElementById(
+      "save-edit-reservation"
+    );
+
+
+  if (saveButton) {
+
+    saveButton.addEventListener(
+      "click",
+      saveEditedReservation
+    );
+
+  }
+
+
+  const backButton =
+    document.getElementById(
+      "cancel-edit-reservation"
+    );
+
+
+  if (backButton) {
+
+    backButton.addEventListener(
+      "click",
+      () => {
+
+        editMode =
+          false;
+
+        renderReservations();
+
+      }
+    );
+
+  }
+
+}
+
+
+// ==============================
+// 予約内容変更処理
+// ==============================
+
+async function saveEditedReservation() {
+
+  const localReservation =
+    getLocalReservation();
+
+
+  if (!localReservation) {
+
+    editMode =
+      false;
+
+    renderReservations();
+
+    return;
+
+  }
+
+
+  const slotSelect =
+    document.getElementById(
+      "edit-slot"
+    );
+
+
+  const sizeSelect =
+    document.getElementById(
+      "edit-size"
+    );
+
+
+  const error =
+    document.getElementById(
+      "edit-error"
+    );
+
+
+  const saveButton =
+    document.getElementById(
+      "save-edit-reservation"
+    );
+
+
+  if (error) {
+
+    error.textContent =
+      "";
+
+  }
+
+
+  const newSlotKey =
+    slotSelect?.value ||
+    "";
+
+
+  const newSize =
+    Number(
+      sizeSelect?.value || 0
+    );
+
+
+  if (!newSlotKey) {
+
+    if (error) {
+
+      error.textContent =
+        "ご来場時間を選択してください。";
+
+    }
+
+    return;
+
+  }
+
+
+  if (
+    newSize < 1 ||
+    newSize > 4
+  ) {
+
+    if (error) {
+
+      error.textContent =
+        "人数は1〜4名で選択してください。";
+
+    }
+
+    return;
+
+  }
+
+
+  const oldSlotKey =
+    String(
+      localReservation.slot
+    );
+
+
+  /*
+   * 時間が同じなら
+   * 人数だけ変更
+   */
+
+  if (
+    newSlotKey ===
+    oldSlotKey
+  ) {
+
+    const reservationRef =
+      ref(
+        db,
+        `Queue/reservations/${localReservation.number}`
+      );
+
+
+    if (saveButton) {
+
+      saveButton.disabled =
+        true;
+
+      saveButton.textContent =
+        "変更処理中…";
+
+    }
+
+
+    try {
+
+      await update(
+        reservationRef,
+        {
+          size:
+            newSize
+        }
+      );
+
+
+      const updated =
+        {
+          ...localReservation,
+          size:
+            newSize
+        };
+
+
+      saveLocalReservation(
+        updated
+      );
+
+
+      reservations[
+        localReservation.number
+      ] =
+        {
+          ...reservations[
+            localReservation.number
+          ],
+          size:
+            newSize
+        };
+
+
+      editMode =
+        false;
+
+      renderReservations();
+
+
+    } catch (e) {
+
+      if (error) {
+
+        error.textContent =
+          "変更できませんでした。もう一度お試しください。";
+
+      }
+
+    } finally {
+
+      if (saveButton) {
+
+        saveButton.disabled =
+          false;
+
+        saveButton.textContent =
+          "変更する";
+
+      }
+
+    }
+
+    return;
+
+  }
+
+
+  /*
+   * 新しい時間枠を確認
+   */
+
+  const generatedSlots =
+    generateSlots();
+
+
+  const newSlot =
+    generatedSlots.find(
+      slot =>
+        slot.key ===
+        newSlotKey
+    );
+
+
+  if (!newSlot) {
+
+    if (error) {
+
+      error.textContent =
+        "選択した時間枠が見つかりません。";
+
+    }
+
+    return;
+
+  }
+
+
+  const currentNewCount =
+    Number(
+      slots[newSlotKey]?.count || 0
+    );
+
+
+  const maxGroups =
+    Number(
+      settings.maxGroups || 0
+    );
+
+
+  /*
+   * 新しい枠が満員なら
+   * 元の予約はそのまま
+   */
+
+  if (
+    currentNewCount >=
+    maxGroups
+  ) {
+
+    if (error) {
+
+      error.textContent =
+        "申し訳ありません。この時間枠は満員になりました。";
+
+    }
+
+    renderSlots();
+
+    return;
+
+  }
+
+
+  if (saveButton) {
+
+    saveButton.disabled =
+      true;
+
+    saveButton.textContent =
+      "変更処理中…";
+
+  }
+
+
+  const newSlotRef =
+    ref(
+      db,
+      `Queue/slots/${newSlotKey}/count`
+    );
+
+
+  const oldSlotRef =
+    ref(
+      db,
+      `Queue/slots/${oldSlotKey}/count`
+    );
+
+
+  let newSlotIncremented =
+    false;
+
+
+  try {
+
+    /*
+     * 新しい枠を先に確保
+     */
+
+    const newSlotResult =
+      await runTransaction(
+        newSlotRef,
+        current => {
+
+          const count =
+            Number(
+              current || 0
+            );
+
+
+          if (
+            count >=
+            maxGroups
+          ) {
+
+            return;
+
+          }
+
+
+          return count + 1;
+
+        }
+      );
+
+
+    if (
+      !newSlotResult.committed
+    ) {
+
+      throw new Error(
+        "変更先の時間枠が満員です。"
+      );
+
+    }
+
+
+    newSlotIncremented =
+      true;
+
+
+    /*
+     * 新しい予約内容
+     */
+
+    const newReservation = {
+
+      ...localReservation,
+
+      slot:
+        newSlotKey,
+
+      start:
+        newSlot.start,
+
+      end:
+        newSlot.end,
+
+      size:
+        newSize
+
+    };
+
+
+    /*
+     * Firebaseの予約を更新
+     */
+
+    await update(
+      ref(
+        db,
+        `Queue/reservations/${localReservation.number}`
+      ),
+      {
+        slot:
+          newSlotKey,
+
+        start:
+          newSlot.start,
+
+        end:
+          newSlot.end,
+
+        size:
+          newSize
+      }
+    );
+
+
+    /*
+     * 元の時間枠を1つ戻す
+     */
+
+    await runTransaction(
+      oldSlotRef,
+      current => {
+
+        const count =
+          Number(
+            current || 0
+          );
+
+        return Math.max(
+          0,
+          count - 1
+        );
+
+      }
+    );
+
+
+    /*
+     * localStorage更新
+     */
+
+    saveLocalReservation(
+      newReservation
+    );
+
+
+    reservations[
+      localReservation.number
+    ] =
+      {
+        ...reservations[
+          localReservation.number
+        ],
+        ...newReservation
+      };
+
+
+    editMode =
+      false;
+
+    renderReservations();
+
+
+  } catch (e) {
+
+    /*
+     * 予約更新に失敗した場合、
+     * 確保した新しい枠を戻す
+     */
+
+    if (
+      newSlotIncremented
+    ) {
+
+      try {
+
+        await runTransaction(
+          newSlotRef,
+          current => {
+
+            const count =
+              Number(
+                current || 0
+              );
+
+            return Math.max(
+              0,
+              count - 1
+            );
+
+          }
+        );
+
+      } catch {
+
+        // 何もしない
+
+      }
+
+    }
+
+
+    if (error) {
+
+      error.textContent =
+        e?.message ||
+        "変更できませんでした。もう一度お試しください。";
+
+    }
+
+
+    renderSlots();
+
+
+  } finally {
+
+    if (saveButton) {
+
+      saveButton.disabled =
+        false;
+
+      saveButton.textContent =
+        "変更する";
+
+    }
+
+  }
+
+}
+
+
+// ==============================
 // 搭乗券表示
 // ==============================
 
@@ -802,6 +1573,9 @@ function renderReservations() {
    */
 
   if (!localReservation) {
+
+    editMode =
+      false;
 
     hideReservationArea();
 
@@ -842,6 +1616,9 @@ function renderReservations() {
       "completed"
   ) {
 
+    editMode =
+      false;
+
     clearLocalReservation();
 
     hideReservationArea();
@@ -855,11 +1632,21 @@ function renderReservations() {
 
   /*
    * Firebaseにまだ存在しない場合
-   *
-   * 予約直後の同期待ち
    */
 
   if (!remoteReservation) {
+
+    return;
+
+  }
+
+
+  /*
+   * 変更画面を表示中なら
+   * 搭乗券を上書きしない
+   */
+
+  if (editMode) {
 
     return;
 
@@ -1061,7 +1848,7 @@ function renderReservations() {
           </div>
 
           <div>
-            ・予約後に時間を変更する場合は、一度キャンセルしてから再度ご予約いただくか、受付スタッフまでお申し出ください。
+            ・予約内容を変更する場合は、「予約内容を変更する」から変更してください。
           </div>
 
           <div>
@@ -1073,6 +1860,18 @@ function renderReservations() {
           </div>
 
         </div>
+
+
+        <button
+          id="edit-reservation"
+          type="button"
+          style="
+            width: 100%;
+            margin-bottom: 10px;
+          "
+        >
+          予約内容を変更する
+        </button>
 
 
         <button
@@ -1090,6 +1889,22 @@ function renderReservations() {
     </div>
 
   `;
+
+
+  const editButton =
+    document.getElementById(
+      "edit-reservation"
+    );
+
+
+  if (editButton) {
+
+    editButton.addEventListener(
+      "click",
+      showEditReservation
+    );
+
+  }
 
 
   const cancelButton =
@@ -1849,6 +2664,9 @@ onValue(
           "completed"
       ) {
 
+        editMode =
+          false;
+
         clearLocalReservation();
 
         hideReservationArea();
@@ -1906,6 +2724,10 @@ onChildRemoved(
       }
 
 
+      editMode =
+        false;
+
+
       clearLocalReservation();
 
 
@@ -1958,6 +2780,10 @@ onValue(
       saveLocalResetAt(
         value
       );
+
+
+      editMode =
+        false;
 
 
       clearLocalReservation();
