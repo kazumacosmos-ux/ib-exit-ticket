@@ -1,6 +1,10 @@
 import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  getDatabase,
+  ref,
+  ...
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+alert("お客さん.js 読み込みOK");
 
 import {
   getDatabase,
