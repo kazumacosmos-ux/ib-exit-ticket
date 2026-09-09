@@ -6,7 +6,8 @@
 
   <title>1-B出口搭乗券</title>
 
-  <link rel="stylesheet" href="./デザイン.css">
+  <!-- デザインCSS -->
+  <link rel="stylesheet" href="./デザイン.css?v=20260909-3">
 </head>
 
 <body>
@@ -15,21 +16,11 @@
 
     <h1>1-B出口 予約</h1>
 
-    <!-- ==========================
-         予約エリア
-         ========================== -->
-
     <section id="reserveArea">
 
       <h2>ご予約</h2>
 
-
-      <!-- 代表者の名前 -->
-
-      <label for="name">
-        代表者の名前
-      </label>
-
+      <label for="name">代表者の名前</label>
       <input
         id="name"
         type="text"
@@ -37,94 +28,32 @@
         placeholder="代表者の名前"
       >
 
-
-      <!-- 人数 -->
-
-      <label for="size">
-        人数
-      </label>
-
+      <label for="size">人数</label>
       <select id="size">
-
-        <option value="1">
-          1人
-        </option>
-
-        <option value="2">
-          2人
-        </option>
-
-        <option value="3">
-          3人
-        </option>
-
-        <option value="4">
-          4人
-        </option>
-
+        <option value="1">1人</option>
+        <option value="2">2人</option>
+        <option value="3">3人</option>
+        <option value="4">4人</option>
       </select>
 
+      <label for="slot">ご来場時間</label>
+      <select id="slot"></select>
 
-      <!-- 来場時間 -->
+      <p id="slotInfo" class="slot-info"></p>
 
-      <label for="slot">
-        ご来場時間
-      </label>
-
-      <select id="slot">
-      </select>
-
-
-      <!-- 選択中の時間枠 -->
-
-      <p
-        id="slotInfo"
-        class="slot-info"
-      ></p>
-
-
-      <!-- 予約ボタン -->
-
-      <button
-        id="reserve"
-        type="button"
-      >
+      <button id="reserve" type="button">
         この時間帯で予約する
       </button>
 
-
-      <!-- エラーメッセージ -->
-
-      <p
-        id="error"
-        class="error"
-      ></p>
+      <p id="error" class="error"></p>
 
     </section>
 
+    <section id="reservationArea" hidden></section>
 
-    <!-- ==========================
-         予約済み搭乗券
-         ========================== -->
+    <section id="closedArea" hidden>
 
-    <section
-      id="reservationArea"
-      hidden
-    ></section>
-
-
-    <!-- ==========================
-         受付停止
-         ========================== -->
-
-    <section
-      id="closedArea"
-      hidden
-    >
-
-      <h2>
-        現在受付停止中です
-      </h2>
+      <h2>現在受付停止中です</h2>
 
       <p>
         スタッフから案内があるまでお待ちください。
@@ -133,14 +62,6 @@
     </section>
 
   </main>
-
-
-  <!-- ==========================
-       お客さん用JavaScript
-       
-       キャッシュ対策として
-       バージョン番号を更新
-       ========================== -->
 
   <script
     type="module"
