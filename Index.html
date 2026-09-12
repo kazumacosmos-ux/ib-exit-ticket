@@ -6,9 +6,7 @@
   <title>1-B出口 搭乗券予約</title>
   <style>
 /* =========================================
-   1-B出口 AIRLINES
-   DEGUCHI DREAM SKYLINE AIRLINES
-   PREMIUM BOARDING PASS RESERVATION
+   1-B出口 AIRLINEN
    ========================================= */
 * {
   box-sizing: border-box;
@@ -991,8 +989,6 @@ body {
       height: 190px;
       pointer-events: none;
       background:
-        /* 下部の空港らしい淡いグラデーションだけを残し、
-           画面に白い縦帯が出る装飾は削除 */
         linear-gradient(
           180deg,
           transparent,
@@ -1013,9 +1009,9 @@ body {
       padding:
         24px 0 50px;
     }
-    /*
-     * 空港案内板っぽいヘッダー
-     */
+  / * 
+    * 空港案内板っぽいヘッダー 
+    */
     .airline-header {
       position: relative;
       overflow: hidden;
@@ -2169,7 +2165,6 @@ body {
 /* ===== 統合ページ用 ===== */
 .integrated-page-hidden{display:none !important;}
   .walk-in-area{margin-top:18px;padding:18px;border-radius:16px;background:#fff8ed;border:1px solid #ead7b8}.walk-in-area h2{margin:0 0 16px;color:#7a4b12;font-size:22px;font-weight:900}.walk-in-area label{display:block;margin:14px 0 7px;color:#586579;font-size:12px;font-weight:800}.walk-in-area input,.walk-in-area select{width:100%;min-height:48px;padding:0 14px;border:1px solid #d6dde7;border-radius:12px;background:#fff;color:#142039;font-family:inherit;font-size:16px}.walk-in-area button{width:100%;min-height:48px;margin-top:16px;border:none;border-radius:12px;background:linear-gradient(135deg,#9b5f16,#70400d);color:#fff;font-family:inherit;font-size:15px;font-weight:900;cursor:pointer}#walkInMessage{min-height:20px;margin:10px 0 0;color:#a45a12;font-size:13px;font-weight:700}.walk-in-record{margin-top:12px;padding:12px 14px;border-radius:12px;background:#fff;border:1px solid #eadfce}.walk-in-record strong{color:#6f4311}.walk-in-delete{margin-top:8px!important;min-height:38px!important;background:#fff!important;border:1px solid #d2d8e0!important;color:#d64545!important;font-size:12px!important}
-/* スタッフ・管理者の人数変更ドロップダウンを常に読みやすくする */
 .walk-in-area select option,
 .staff-edit-area select option,
 .admin-walkin-size-select option {
@@ -3746,10 +3741,6 @@ async function saveEditedReservation() {
       false;
     renderReservations();
   } catch (e) {
-    /*
-     * 予約更新に失敗した場合、
-     * 確保した新しい枠を戻す
-     */
     if (
       newSlotIncremented
     ) {
@@ -3811,12 +3802,6 @@ function renderReservations() {
     }
     return;
   }
-  /*
-   * 現在の受付日と予約日の不一致を処理
-   * 例：1日目の予約を持ったまま管理者が2日目へ切り替えた場合、
-   * 2日目の画面には1日目の搭乗券を表示しない。
-   * 1日目へ戻れば同じ予約を再表示する。
-   */
   const activeDay =
     settings.currentDay === "2" ? "2" : "1";
   if (String(localReservation.day || "1") !== activeDay) {
@@ -3825,11 +3810,6 @@ function renderReservations() {
     hideBookingArea();
     return;
   }
-  /*
-   * 自分の予約がある時点で
-   * 予約フォームは必ず非表示にする。
-   * Firebaseの反映前でも表示が戻らないようにする。
-   */
   hideBookingArea();
   /*
    * Firebase上の予約
@@ -3859,10 +3839,6 @@ function renderReservations() {
   if (!remoteReservation) {
     return;
   }
-  /*
-   * 変更画面を表示中なら
-   * 搭乗券を上書きしない
-   */
   if (editMode) {
     return;
   }
@@ -4735,8 +4711,6 @@ function createSlots() {
     toMinutes(
       currentSettings.start
     );
-  // 文化祭の終了時刻は14:30。古いFirebase設定が残っていても、
-  // スタッフ画面では14:30以降の時間枠を作らない。
   const endMinutes =
     Math.min(
       toMinutes(currentSettings.end),
@@ -6465,9 +6439,7 @@ let currentSettings = {
 let adminAuthenticated = false;
 let firebaseSigningIn = false;
 // ==============================
-// 管理者：予約状況
-// スタッフ画面と同じ見た目・集計で
-// 1日目 / 2日目 / トータルの予約状況を表示
+// 管理者の予約状況確認
 // ==============================
 let adminReservationsData = {};
 let adminSlotsData = {};
@@ -7017,8 +6989,7 @@ saveSettingsButton.addEventListener(
   }
 );
 // ==============================
-// 管理者：4種類のリセット
-// 1日目 / 2日目 / 全予約状況 / 予約状況以外
+// 管理者の予約状況の4種類のリセット
 // ==============================
 const resetDay1Button = getAdminElement("resetDay1Button");
 const resetDay2Button = getAdminElement("resetDay2Button");
@@ -7090,8 +7061,6 @@ if (resetAllButtonFinal) {
     }
   });
 }
-// 予約状況以外：予約データ・予約番号・時間枠の予約数は残し、
-// 開催日・開始終了時刻・枠時間・最大グループ数・受付状態だけ初期値へ戻す。
 if (resetNonReservationButton) {
   resetNonReservationButton.addEventListener("click", async () => {
     if (!adminAuthenticated) return;
