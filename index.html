@@ -11360,15 +11360,33 @@ if (page === "staff") {
     const startLen=diag*.95;
     const planeStartLen=diag*.95;
     const endLen=diag*1.05;
-    const spread=diag*.82;
+    const spread=diag*.45;
     lanes=[];
+    function boundaryTs(cx,cy){
+      const ts=[];
+      const candidates=[
+        (0-cx)/dx,
+        (w-cx)/dx,
+        (0-cy)/dy,
+        (h-cy)/dy
+      ];
+      for(const t of candidates){
+        const x=cx+dx*t, y=cy+dy*t;
+        if(x>=-0.001 && x<=w+0.001 && y>=-0.001 && y<=h+0.001) ts.push(t);
+      }
+      return ts.length ? {entry:Math.min(...ts), exit:Math.max(...ts)} : null;
+    }
     for(let i=0;i<planeCount;i++){
       const off=((i/(planeCount-1))-.5)*2*spread;
       const cx=centerX+px*off, cy=centerY+py*off;
+      const bt=boundaryTs(cx,cy);
+      if(!bt) continue;
+      const planeOutside=70;
+      const trailOutside=180;
       lanes.push({
-        sx:cx-dx*startLen, sy:cy-dy*startLen,
-        psx:cx-dx*planeStartLen, psy:cy-dy*planeStartLen,
-        ex:cx+dx*endLen, ey:cy+dy*endLen,
+        sx:cx+dx*(bt.entry-trailOutside), sy:cy+dy*(bt.entry-trailOutside),
+        psx:cx+dx*(bt.entry-planeOutside), psy:cy+dy*(bt.entry-planeOutside),
+        ex:cx+dx*(bt.exit+planeOutside), ey:cy+dy*(bt.exit+planeOutside),
         off
       });
     }
@@ -11426,12 +11444,12 @@ if (page === "staff") {
       const lane=lanes[i];
       const local=(elapsed-startDelay-i*laneDelay)/duration;
       const p=Math.max(0,Math.min(1,local));
-      const e=ease(p);
+      const e=p;
       maxProgress=Math.max(maxProgress,p);
       if(p<=0) continue;
 
-      const x=lerp(lane.sx,lane.ex,e);
-      const y=lerp(lane.sy,lane.ey,e);
+      const x=lerp(lane.psx,lane.ex,e);
+      const y=lerp(lane.psy,lane.ey,e);
       const dx=lane.ex-lane.sx, dy=lane.ey-lane.sy;
       const angle=Math.atan2(dy,dx);
 
