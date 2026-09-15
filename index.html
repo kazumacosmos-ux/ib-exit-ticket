@@ -11336,7 +11336,7 @@ if (page === "staff") {
   if(!ctx){ canvas.remove(); return; }
 
   const planeCount=28;
-  const startDelay=800;
+  const startDelay=4900;
   const duration=11000;
   const laneDelay=35;
   const trailWidth=34;
@@ -11356,15 +11356,16 @@ if (page === "staff") {
     const dx=1/Math.sqrt(2), dy=-1/Math.sqrt(2);
     const px=1/Math.sqrt(2), py=1/Math.sqrt(2);
     const centerX=w/2, centerY=h/2;
-    const length=diag*1.22;
-    const spread=diag*.56;
+    const startLen=diag*.35;
+    const endLen=diag*1.05;
+    const spread=diag*.82;
     lanes=[];
     for(let i=0;i<planeCount;i++){
       const off=((i/(planeCount-1))-.5)*2*spread;
       const cx=centerX+px*off, cy=centerY+py*off;
       lanes.push({
-        sx:cx-dx*length, sy:cy-dy*length,
-        ex:cx+dx*length, ey:cy+dy*length,
+        sx:cx-dx*startLen, sy:cy-dy*startLen,
+        ex:cx+dx*endLen, ey:cy+dy*endLen,
         off
       });
     }
