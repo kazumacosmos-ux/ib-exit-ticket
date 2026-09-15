@@ -3567,6 +3567,23 @@ body.customer-page-active .realistic-gate-overlay{
 @keyframes planeRun{0%{opacity:0;transform:translate(-8vw,8vh) rotate(0deg) scale(.82)}7%{opacity:1}100%{opacity:1;transform:translate(72vw,-100vh) rotate(0deg) scale(1.04)}}
 @keyframes leftBottomWhiteout{0%{opacity:0;transform:scale(.04)}14%{opacity:.18;transform:scale(.18)}34%{opacity:.42;transform:scale(.42)}58%{opacity:.72;transform:scale(.78)}78%{opacity:.92;transform:scale(1.25)}92%{opacity:.99;transform:scale(1.65)}100%{opacity:1;transform:scale(2.05)}}
 </style>
+
+<style id="smooth-whiteout-final">
+/* 白化時のガビガビを抑え、飛行機雲は太いまま滑らかにする */
+.realistic-gate-overlay .flight .contrail{
+  filter:blur(3px) !important;
+  opacity:.72 !important;
+  box-shadow:0 0 18px rgba(255,255,255,.58),0 0 36px rgba(255,255,255,.28) !important;
+}
+.realistic-gate-overlay .flight .contrail:after{
+  filter:blur(6px) !important;
+  opacity:.72 !important;
+}
+.realistic-gate-overlay .flight-white-origin{
+  filter:none !important;
+  background:radial-gradient(circle at 0% 100%,#fff 0 28%,rgba(255,255,255,.99) 45%,rgba(255,255,255,.94) 60%,rgba(255,255,255,.72) 74%,rgba(255,255,255,0) 88%) !important;
+}
+</style>
 </head>
 <body>
 
