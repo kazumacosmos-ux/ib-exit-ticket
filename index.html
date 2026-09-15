@@ -3654,6 +3654,102 @@ body.customer-page-active .realistic-gate-overlay{
 /* 既存のぼかし・繰り返し模様が白化直前まで残らないよう抑える */
 .realistic-gate-overlay .flight-cloud{display:none !important}
 </style>
+<style id="contrail-final-cleanup">
+/* 最終版：長く太い飛行機雲を主役にし、最後は雲そのもので画面全体を覆う */
+.realistic-gate-overlay .flight-transition{
+  animation:flightTransitionIn 3s ease 4.8s forwards !important;
+}
+.realistic-gate-overlay .flight{
+  width:88px !important;
+  height:44px !important;
+  animation:planeRunLane 3.2s linear forwards !important;
+  overflow:visible !important;
+}
+/* 飛行機雲：十分な長さ＋太さ。細かい縞模様は使わない */
+.realistic-gate-overlay .flight .contrail{
+  left:-620px !important;
+  top:30px !important;
+  width:650px !important;
+  height:58px !important;
+  border-radius:999px !important;
+  background:rgba(255,255,255,.96) !important;
+  box-shadow:0 0 18px rgba(255,255,255,.9),0 0 42px rgba(255,255,255,.65) !important;
+  filter:blur(5px) !important;
+  transform:rotate(-34deg) !important;
+  transform-origin:right center !important;
+  opacity:1 !important;
+  animation:none !important;
+  z-index:-1 !important;
+}
+.realistic-gate-overlay .flight .contrail:after{
+  content:"" !important;
+  left:-8px !important;
+  top:-38px !important;
+  width:640px !important;
+  height:135px !important;
+  border-radius:50% !important;
+  background:rgba(255,255,255,.72) !important;
+  filter:blur(13px) !important;
+  opacity:1 !important;
+}
+/* 各機の後ろに残る白い雲を、飛行機雲から連続して膨らませる */
+.realistic-gate-overlay .flight-white-origin{
+  display:block !important;
+  position:absolute !important;
+  left:-100% !important;
+  top:-100% !important;
+  width:300% !important;
+  height:300% !important;
+  inset:auto !important;
+  z-index:999 !important;
+  pointer-events:none !important;
+  opacity:0 !important;
+  background:
+    radial-gradient(ellipse at 0% 100%,#fff 0 18%,rgba(255,255,255,.98) 28%,rgba(255,255,255,.88) 40%,rgba(255,255,255,.62) 53%,rgba(255,255,255,.25) 66%,rgba(255,255,255,0) 78%) !important;
+  filter:blur(5px) !important;
+  transform-origin:0% 100% !important;
+  animation:contrailScreenCover 3.4s cubic-bezier(.18,.72,.12,1) 7.05s forwards !important;
+}
+@keyframes contrailScreenCover{
+  0%{opacity:0;transform:scale(.03)}
+  12%{opacity:.12;transform:scale(.18)}
+  28%{opacity:.30;transform:scale(.42)}
+  48%{opacity:.52;transform:scale(.82)}
+  68%{opacity:.72;transform:scale(1.35)}
+  84%{opacity:.88;transform:scale(2.15)}
+  94%{opacity:.97;transform:scale(3.15)}
+  100%{opacity:1;transform:scale(4.4)}
+}
+/* 上側まで通る28機。距離は広めのまま */
+.realistic-gate-overlay .flight.f1{left:-42% !important;top:94% !important;animation-delay:4.80s !important}
+.realistic-gate-overlay .flight.f2{left:-34% !important;top:90% !important;animation-delay:4.91s !important}
+.realistic-gate-overlay .flight.f3{left:-26% !important;top:86% !important;animation-delay:5.02s !important}
+.realistic-gate-overlay .flight.f4{left:-18% !important;top:82% !important;animation-delay:5.13s !important}
+.realistic-gate-overlay .flight.f5{left:-10% !important;top:78% !important;animation-delay:5.24s !important}
+.realistic-gate-overlay .flight.f6{left:-2% !important;top:74% !important;animation-delay:5.35s !important}
+.realistic-gate-overlay .flight.f7{left:6% !important;top:70% !important;animation-delay:5.46s !important}
+.realistic-gate-overlay .flight.f8{left:14% !important;top:66% !important;animation-delay:5.57s !important}
+.realistic-gate-overlay .flight.f9{left:22% !important;top:62% !important;animation-delay:5.68s !important}
+.realistic-gate-overlay .flight.f10{left:30% !important;top:58% !important;animation-delay:5.79s !important}
+.realistic-gate-overlay .flight.f11{left:38% !important;top:54% !important;animation-delay:5.90s !important}
+.realistic-gate-overlay .flight.f12{left:46% !important;top:50% !important;animation-delay:6.01s !important}
+.realistic-gate-overlay .flight.f13{left:54% !important;top:46% !important;animation-delay:6.12s !important}
+.realistic-gate-overlay .flight.f14{left:62% !important;top:42% !important;animation-delay:6.23s !important}
+.realistic-gate-overlay .flight.f15{left:70% !important;top:38% !important;animation-delay:6.34s !important}
+.realistic-gate-overlay .flight.f16{left:78% !important;top:34% !important;animation-delay:6.45s !important}
+.realistic-gate-overlay .flight.f17{left:86% !important;top:30% !important;animation-delay:6.56s !important}
+.realistic-gate-overlay .flight.f18{left:94% !important;top:26% !important;animation-delay:6.67s !important}
+.realistic-gate-overlay .flight.f19{left:102% !important;top:22% !important;animation-delay:6.78s !important}
+.realistic-gate-overlay .flight.f20{left:110% !important;top:18% !important;animation-delay:6.89s !important}
+.realistic-gate-overlay .flight.f21{left:118% !important;top:14% !important;animation-delay:7.00s !important}
+.realistic-gate-overlay .flight.f22{left:126% !important;top:10% !important;animation-delay:7.11s !important}
+.realistic-gate-overlay .flight.f23{left:134% !important;top:6% !important;animation-delay:7.22s !important}
+.realistic-gate-overlay .flight.f24{left:142% !important;top:2% !important;animation-delay:7.33s !important}
+.realistic-gate-overlay .flight.f25{left:150% !important;top:-2% !important;animation-delay:7.44s !important}
+.realistic-gate-overlay .flight.f26{left:158% !important;top:-6% !important;animation-delay:7.55s !important}
+.realistic-gate-overlay .flight.f27{left:166% !important;top:-10% !important;animation-delay:7.66s !important}
+.realistic-gate-overlay .flight.f28{left:174% !important;top:-14% !important;animation-delay:7.77s !important}
+</style>
 </head>
 <body>
 
@@ -11309,7 +11405,7 @@ if (page === "staff") {
   document.body.classList.add('customer-page-active');
   requestAnimationFrame(()=>requestAnimationFrame(()=>gate.classList.add('open')));
   setTimeout(()=>{ gate.style.pointerEvents='none'; },5200);
-  setTimeout(()=>{ gate.remove(); },10150);
+  setTimeout(()=>{ gate.remove(); },12500);
 })();
 </script>
 
