@@ -3586,6 +3586,45 @@ body.customer-page-active .realistic-gate-overlay{
   background:radial-gradient(circle at 0% 100%,#fff 0 28%,rgba(255,255,255,.99) 45%,rgba(255,255,255,.94) 60%,rgba(255,255,255,.72) 74%,rgba(255,255,255,0) 88%) !important;
 }
 </style>
+
+<style id="flight-lane-fix">
+/* 飛行機ごとに独立した斜めレーン。白い線は各機の後ろだけに残す */
+.realistic-gate-overlay .flight-transition{animation:flightTransitionIn 3s ease 4.8s forwards !important}
+.realistic-gate-overlay .flight{width:88px !important;height:44px !important;animation:planeRunLane 3s linear forwards !important;overflow:visible !important}
+.realistic-gate-overlay .flight .contrail{left:-230px !important;top:42px !important;width:250px !important;height:22px !important;border-radius:999px !important;filter:blur(3px) !important;transform:rotate(-34deg) !important;transform-origin:right center !important;z-index:-1 !important}
+.realistic-gate-overlay .flight .contrail:after{left:0 !important;top:-22px !important;width:245px !important;height:62px !important;filter:blur(6px) !important}
+.realistic-gate-overlay .flight-white-origin{display:block !important;inset:-20% !important;background:radial-gradient(circle at 0% 100%,rgba(255,255,255,0) 0 13%,rgba(255,255,255,.18) 28%,rgba(255,255,255,.55) 48%,rgba(255,255,255,.9) 68%,#fff 88%) !important;filter:blur(10px) !important;animation:leftBottomWhiteoutLane 2.6s cubic-bezier(.18,.72,.16,1) 7.0s forwards !important}
+.realistic-gate-overlay .flight.f1{left:-42.0% !important;top:82% !important;animation-delay:4.80s !important}
+.realistic-gate-overlay .flight.f2{left:-34.0% !important;top:82% !important;animation-delay:4.91s !important}
+.realistic-gate-overlay .flight.f3{left:-26.0% !important;top:82% !important;animation-delay:5.02s !important}
+.realistic-gate-overlay .flight.f4{left:-18.0% !important;top:82% !important;animation-delay:5.13s !important}
+.realistic-gate-overlay .flight.f5{left:-10.0% !important;top:82% !important;animation-delay:5.24s !important}
+.realistic-gate-overlay .flight.f6{left:-2.0% !important;top:82% !important;animation-delay:5.35s !important}
+.realistic-gate-overlay .flight.f7{left:6.0% !important;top:82% !important;animation-delay:5.46s !important}
+.realistic-gate-overlay .flight.f8{left:14.0% !important;top:82% !important;animation-delay:5.57s !important}
+.realistic-gate-overlay .flight.f9{left:22.0% !important;top:82% !important;animation-delay:5.68s !important}
+.realistic-gate-overlay .flight.f10{left:30.0% !important;top:82% !important;animation-delay:5.79s !important}
+.realistic-gate-overlay .flight.f11{left:38.0% !important;top:82% !important;animation-delay:5.90s !important}
+.realistic-gate-overlay .flight.f12{left:46.0% !important;top:82% !important;animation-delay:6.01s !important}
+.realistic-gate-overlay .flight.f13{left:54.0% !important;top:82% !important;animation-delay:6.12s !important}
+.realistic-gate-overlay .flight.f14{left:62.0% !important;top:82% !important;animation-delay:6.23s !important}
+.realistic-gate-overlay .flight.f15{left:70.0% !important;top:82% !important;animation-delay:6.34s !important}
+.realistic-gate-overlay .flight.f16{left:78.0% !important;top:82% !important;animation-delay:6.45s !important}
+.realistic-gate-overlay .flight.f17{left:86.0% !important;top:82% !important;animation-delay:6.56s !important}
+.realistic-gate-overlay .flight.f18{left:94.0% !important;top:82% !important;animation-delay:6.67s !important}
+.realistic-gate-overlay .flight.f19{left:102.0% !important;top:82% !important;animation-delay:6.78s !important}
+.realistic-gate-overlay .flight.f20{left:110.0% !important;top:82% !important;animation-delay:6.89s !important}
+.realistic-gate-overlay .flight.f21{left:118.0% !important;top:82% !important;animation-delay:7.00s !important}
+.realistic-gate-overlay .flight.f22{left:126.0% !important;top:82% !important;animation-delay:7.11s !important}
+.realistic-gate-overlay .flight.f23{left:134.0% !important;top:82% !important;animation-delay:7.22s !important}
+.realistic-gate-overlay .flight.f24{left:142.0% !important;top:82% !important;animation-delay:7.33s !important}
+.realistic-gate-overlay .flight.f25{left:150.0% !important;top:82% !important;animation-delay:7.44s !important}
+.realistic-gate-overlay .flight.f26{left:158.0% !important;top:82% !important;animation-delay:7.55s !important}
+.realistic-gate-overlay .flight.f27{left:166.0% !important;top:82% !important;animation-delay:7.66s !important}
+.realistic-gate-overlay .flight.f28{left:174.0% !important;top:82% !important;animation-delay:7.77s !important}
+@keyframes planeRunLane{0%{opacity:0;transform:translate(-5vw,5vh) rotate(0deg) scale(.86)}8%{opacity:1}100%{opacity:1;transform:translate(78vw,-100vh) rotate(0deg) scale(1.04)}}
+@keyframes leftBottomWhiteoutLane{0%{opacity:0;transform:scale(.04)}22%{opacity:.06;transform:scale(.16)}48%{opacity:.18;transform:scale(.36)}72%{opacity:.42;transform:scale(.72)}90%{opacity:.78;transform:scale(1.35)}100%{opacity:1;transform:scale(2.0)}}
+</style>
 </head>
 <body>
 
