@@ -3654,102 +3654,6 @@ body.customer-page-active .realistic-gate-overlay{
 /* 既存のぼかし・繰り返し模様が白化直前まで残らないよう抑える */
 .realistic-gate-overlay .flight-cloud{display:none !important}
 </style>
-<style id="contrail-final-cleanup">
-/* 最終版：長く太い飛行機雲を主役にし、最後は雲そのもので画面全体を覆う */
-.realistic-gate-overlay .flight-transition{
-  animation:flightTransitionIn 3s ease 4.8s forwards !important;
-}
-.realistic-gate-overlay .flight{
-  width:88px !important;
-  height:44px !important;
-  animation:planeRunLane 3.2s linear forwards !important;
-  overflow:visible !important;
-}
-/* 飛行機雲：十分な長さ＋太さ。細かい縞模様は使わない */
-.realistic-gate-overlay .flight .contrail{
-  left:-620px !important;
-  top:30px !important;
-  width:650px !important;
-  height:58px !important;
-  border-radius:999px !important;
-  background:rgba(255,255,255,.96) !important;
-  box-shadow:0 0 18px rgba(255,255,255,.9),0 0 42px rgba(255,255,255,.65) !important;
-  filter:blur(5px) !important;
-  transform:rotate(-34deg) !important;
-  transform-origin:right center !important;
-  opacity:1 !important;
-  animation:none !important;
-  z-index:-1 !important;
-}
-.realistic-gate-overlay .flight .contrail:after{
-  content:"" !important;
-  left:-8px !important;
-  top:-38px !important;
-  width:640px !important;
-  height:135px !important;
-  border-radius:50% !important;
-  background:rgba(255,255,255,.72) !important;
-  filter:blur(13px) !important;
-  opacity:1 !important;
-}
-/* 各機の後ろに残る白い雲を、飛行機雲から連続して膨らませる */
-.realistic-gate-overlay .flight-white-origin{
-  display:block !important;
-  position:absolute !important;
-  left:-100% !important;
-  top:-100% !important;
-  width:300% !important;
-  height:300% !important;
-  inset:auto !important;
-  z-index:999 !important;
-  pointer-events:none !important;
-  opacity:0 !important;
-  background:
-    radial-gradient(ellipse at 0% 100%,#fff 0 18%,rgba(255,255,255,.98) 28%,rgba(255,255,255,.88) 40%,rgba(255,255,255,.62) 53%,rgba(255,255,255,.25) 66%,rgba(255,255,255,0) 78%) !important;
-  filter:blur(5px) !important;
-  transform-origin:0% 100% !important;
-  animation:contrailScreenCover 3.4s cubic-bezier(.18,.72,.12,1) 7.05s forwards !important;
-}
-@keyframes contrailScreenCover{
-  0%{opacity:0;transform:scale(.03)}
-  12%{opacity:.12;transform:scale(.18)}
-  28%{opacity:.30;transform:scale(.42)}
-  48%{opacity:.52;transform:scale(.82)}
-  68%{opacity:.72;transform:scale(1.35)}
-  84%{opacity:.88;transform:scale(2.15)}
-  94%{opacity:.97;transform:scale(3.15)}
-  100%{opacity:1;transform:scale(4.4)}
-}
-/* 上側まで通る28機。距離は広めのまま */
-.realistic-gate-overlay .flight.f1{left:-42% !important;top:94% !important;animation-delay:4.80s !important}
-.realistic-gate-overlay .flight.f2{left:-34% !important;top:90% !important;animation-delay:4.91s !important}
-.realistic-gate-overlay .flight.f3{left:-26% !important;top:86% !important;animation-delay:5.02s !important}
-.realistic-gate-overlay .flight.f4{left:-18% !important;top:82% !important;animation-delay:5.13s !important}
-.realistic-gate-overlay .flight.f5{left:-10% !important;top:78% !important;animation-delay:5.24s !important}
-.realistic-gate-overlay .flight.f6{left:-2% !important;top:74% !important;animation-delay:5.35s !important}
-.realistic-gate-overlay .flight.f7{left:6% !important;top:70% !important;animation-delay:5.46s !important}
-.realistic-gate-overlay .flight.f8{left:14% !important;top:66% !important;animation-delay:5.57s !important}
-.realistic-gate-overlay .flight.f9{left:22% !important;top:62% !important;animation-delay:5.68s !important}
-.realistic-gate-overlay .flight.f10{left:30% !important;top:58% !important;animation-delay:5.79s !important}
-.realistic-gate-overlay .flight.f11{left:38% !important;top:54% !important;animation-delay:5.90s !important}
-.realistic-gate-overlay .flight.f12{left:46% !important;top:50% !important;animation-delay:6.01s !important}
-.realistic-gate-overlay .flight.f13{left:54% !important;top:46% !important;animation-delay:6.12s !important}
-.realistic-gate-overlay .flight.f14{left:62% !important;top:42% !important;animation-delay:6.23s !important}
-.realistic-gate-overlay .flight.f15{left:70% !important;top:38% !important;animation-delay:6.34s !important}
-.realistic-gate-overlay .flight.f16{left:78% !important;top:34% !important;animation-delay:6.45s !important}
-.realistic-gate-overlay .flight.f17{left:86% !important;top:30% !important;animation-delay:6.56s !important}
-.realistic-gate-overlay .flight.f18{left:94% !important;top:26% !important;animation-delay:6.67s !important}
-.realistic-gate-overlay .flight.f19{left:102% !important;top:22% !important;animation-delay:6.78s !important}
-.realistic-gate-overlay .flight.f20{left:110% !important;top:18% !important;animation-delay:6.89s !important}
-.realistic-gate-overlay .flight.f21{left:118% !important;top:14% !important;animation-delay:7.00s !important}
-.realistic-gate-overlay .flight.f22{left:126% !important;top:10% !important;animation-delay:7.11s !important}
-.realistic-gate-overlay .flight.f23{left:134% !important;top:6% !important;animation-delay:7.22s !important}
-.realistic-gate-overlay .flight.f24{left:142% !important;top:2% !important;animation-delay:7.33s !important}
-.realistic-gate-overlay .flight.f25{left:150% !important;top:-2% !important;animation-delay:7.44s !important}
-.realistic-gate-overlay .flight.f26{left:158% !important;top:-6% !important;animation-delay:7.55s !important}
-.realistic-gate-overlay .flight.f27{left:166% !important;top:-10% !important;animation-delay:7.66s !important}
-.realistic-gate-overlay .flight.f28{left:174% !important;top:-14% !important;animation-delay:7.77s !important}
-</style>
 </head>
 <body>
 
@@ -11405,10 +11309,186 @@ if (page === "staff") {
   document.body.classList.add('customer-page-active');
   requestAnimationFrame(()=>requestAnimationFrame(()=>gate.classList.add('open')));
   setTimeout(()=>{ gate.style.pointerEvents='none'; },5200);
-  setTimeout(()=>{ gate.remove(); },12500);
+  setTimeout(()=>{ gate.remove(); },10150);
 })();
 </script>
 
+
+
+<style id="flight-rebuild-final">
+/* 最終版：28本の独立レーンをCanvasで描画。旧飛行機雲・白化処理とは競合させない */
+.realistic-gate-overlay .flight-transition{display:none!important}
+#flightRebuildCanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:999999;pointer-events:none;display:block}
+</style>
+
+<script id="flight-rebuild-final-script">
+(function(){
+  const gate=document.getElementById('realisticBoardingGate');
+  if(!gate) return;
+  let page='';
+  try{ page=new URLSearchParams(location.search).get('page')||''; }catch(e){}
+  if(page && page!=='customer') return;
+
+  const canvas=document.createElement('canvas');
+  canvas.id='flightRebuildCanvas';
+  document.body.appendChild(canvas);
+  const ctx=canvas.getContext('2d');
+  if(!ctx){ canvas.remove(); return; }
+
+  const planeCount=28;
+  const startDelay=4800;
+  const duration=4400;
+  const laneDelay=35;
+  const trailWidth=34;
+  const outerWidth=44;
+  let startTime=null;
+  let raf=0;
+  let w=0,h=0,dpr=1;
+  let lanes=[];
+
+  function resize(){
+    dpr=Math.min(window.devicePixelRatio||1,2);
+    w=window.innerWidth; h=window.innerHeight;
+    canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
+    canvas.style.width=w+'px'; canvas.style.height=h+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const diag=Math.hypot(w,h);
+    const dx=1/Math.sqrt(2), dy=-1/Math.sqrt(2);
+    const px=1/Math.sqrt(2), py=1/Math.sqrt(2);
+    const centerX=w/2, centerY=h/2;
+    const length=diag*1.22;
+    const spread=diag*.56;
+    lanes=[];
+    for(let i=0;i<planeCount;i++){
+      const off=((i/(planeCount-1))-.5)*2*spread;
+      const cx=centerX+px*off, cy=centerY+py*off;
+      lanes.push({
+        sx:cx-dx*length, sy:cy-dy*length,
+        ex:cx+dx*length, ey:cy+dy*length,
+        off
+      });
+    }
+  }
+  resize();
+  window.addEventListener('resize',resize,{passive:true});
+
+  function lerp(a,b,t){return a+(b-a)*t;}
+  function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+
+  let planeImage=null;
+  try{
+    const sourcePlane=document.querySelector('.realistic-gate-overlay .flight.f1');
+    const bg=sourcePlane ? getComputedStyle(sourcePlane).backgroundImage : '';
+    const m=bg.match(/url\(["']?(.*?)["']?\)/);
+    if(m && m[1]){ planeImage=new Image(); planeImage.src=m[1]; }
+  }catch(e){}
+
+  function drawPlane(x,y,size){
+    ctx.save();
+    ctx.translate(x-size/2,y-size/2);
+    if(planeImage && planeImage.complete && planeImage.naturalWidth){
+      ctx.drawImage(planeImage,0,0,size,size);
+    }else{
+      ctx.fillStyle='#050505';
+      ctx.beginPath();
+      ctx.moveTo(size*.92,size*.50);
+      ctx.lineTo(size*.62,size*.37);
+      ctx.lineTo(size*.18,size*.06);
+      ctx.lineTo(size*.27,size*.38);
+      ctx.lineTo(size*.03,size*.28);
+      ctx.lineTo(size*.08,size*.45);
+      ctx.lineTo(size*.34,size*.50);
+      ctx.lineTo(size*.08,size*.55);
+      ctx.lineTo(size*.03,size*.72);
+      ctx.lineTo(size*.27,size*.62);
+      ctx.lineTo(size*.18,size*.94);
+      ctx.lineTo(size*.62,size*.63);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function frame(now){
+    if(startTime===null) startTime=now;
+    const elapsed=now-startTime;
+    ctx.clearRect(0,0,w,h);
+
+    if(elapsed<startDelay){
+      raf=requestAnimationFrame(frame); return;
+    }
+
+    let maxProgress=0;
+    for(let i=0;i<lanes.length;i++){
+      const lane=lanes[i];
+      const local=(elapsed-startDelay-i*laneDelay)/duration;
+      const p=Math.max(0,Math.min(1,local));
+      const e=ease(p);
+      maxProgress=Math.max(maxProgress,p);
+      if(p<=0) continue;
+
+      const x=lerp(lane.sx,lane.ex,e);
+      const y=lerp(lane.sy,lane.ey,e);
+      const dx=lane.ex-lane.sx, dy=lane.ey-lane.sy;
+      const angle=Math.atan2(dy,dx);
+
+      // 飛行機が通ったところまで、1本の白い飛行機雲を残す
+      const tailGap=26;
+      const tx=x-Math.cos(angle)*tailGap;
+      const ty=y-Math.sin(angle)*tailGap;
+      const startX=lane.sx, startY=lane.sy;
+
+      ctx.save();
+      ctx.lineCap='round';
+      ctx.lineJoin='round';
+      ctx.strokeStyle='rgba(255,255,255,.30)';
+      ctx.lineWidth=outerWidth;
+      ctx.beginPath(); ctx.moveTo(startX,startY); ctx.lineTo(tx,ty); ctx.stroke();
+      ctx.strokeStyle='#ffffff';
+      ctx.lineWidth=trailWidth;
+      ctx.beginPath(); ctx.moveTo(startX,startY); ctx.lineTo(tx,ty); ctx.stroke();
+      ctx.restore();
+
+      if(p<1.03){
+        drawPlane(x,y,Math.min(72,Math.max(52,w*.17)));
+      }
+    }
+
+    // 全レーンが画面を通り切ったあと、最後の雲を少しだけ太らせて完全に覆う
+    if(maxProgress>=1){
+      const cover=(elapsed-(startDelay+duration+(planeCount-1)*laneDelay))/900;
+      if(cover>0){
+        const a=Math.min(1,cover);
+        // レーンそのものを太らせる。白い板を突然被せるのではなく、雲が膨らむ。
+        ctx.save();
+        ctx.globalAlpha=a;
+        ctx.lineCap='round';
+        ctx.strokeStyle='#fff';
+        ctx.lineWidth=trailWidth+Math.min(150,190*a);
+        const diag=Math.hypot(w,h), dx=1/Math.sqrt(2), dy=-1/Math.sqrt(2), px=1/Math.sqrt(2), py=1/Math.sqrt(2);
+        const centerX=w/2, centerY=h/2, length=diag*1.22, spread=diag*.56;
+        for(let i=0;i<planeCount;i++){
+          const off=((i/(planeCount-1))-.5)*2*spread;
+          const cx=centerX+px*off, cy=centerY+py*off;
+          ctx.beginPath();
+          ctx.moveTo(cx-dx*length,cy-dy*length);
+          ctx.lineTo(cx+dx*length,cy+dy*length);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+    }
+
+    if(elapsed < startDelay+duration+(planeCount-1)*laneDelay+1900){
+      raf=requestAnimationFrame(frame);
+    }else{
+      // 飛行機雲のレーンだけで画面全体を覆った状態を保持
+      setTimeout(()=>canvas.remove(),700);
+      setTimeout(()=>{ if(gate) gate.remove(); },500);
+    }
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
 
 </body>
 </html>
