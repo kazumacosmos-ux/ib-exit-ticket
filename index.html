@@ -11358,7 +11358,7 @@ if (page === "staff") {
     const px=1/Math.sqrt(2), py=1/Math.sqrt(2);
     const centerX=w/2, centerY=h/2;
     const startLen=diag*.95;
-    const planeStartLen=diag*.45;
+    const planeStartLen=diag*.95;
     const endLen=diag*1.05;
     const spread=diag*.82;
     lanes=[];
@@ -11430,8 +11430,8 @@ if (page === "staff") {
       maxProgress=Math.max(maxProgress,p);
       if(p<=0) continue;
 
-      const x=lerp(lane.psx,lane.ex,e);
-      const y=lerp(lane.psy,lane.ey,e);
+      const x=lerp(lane.sx,lane.ex,e);
+      const y=lerp(lane.sy,lane.ey,e);
       const dx=lane.ex-lane.sx, dy=lane.ey-lane.sy;
       const angle=Math.atan2(dy,dx);
 
