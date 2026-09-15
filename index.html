@@ -11318,6 +11318,7 @@ if (page === "staff") {
 <style id="flight-rebuild-final">
 /* 最終版：28本の独立レーンをCanvasで描画。旧飛行機雲・白化処理とは競合させない */
 .realistic-gate-overlay .flight-transition{display:none!important}
+.realistic-gate-overlay .flight{display:none!important}
 #flightRebuildCanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:999999;pointer-events:none;display:block}
 </style>
 
@@ -11336,7 +11337,7 @@ if (page === "staff") {
   if(!ctx){ canvas.remove(); return; }
 
   const planeCount=28;
-  const startDelay=5200;
+  const startDelay=2000;
   const duration=11000;
   const laneDelay=80;
   const trailWidth=46;
@@ -11357,7 +11358,7 @@ if (page === "staff") {
     const px=1/Math.sqrt(2), py=1/Math.sqrt(2);
     const centerX=w/2, centerY=h/2;
     const startLen=diag*.95;
-    const planeStartLen=diag*.28;
+    const planeStartLen=diag*.72;
     const endLen=diag*1.05;
     const spread=diag*.82;
     lanes=[];
