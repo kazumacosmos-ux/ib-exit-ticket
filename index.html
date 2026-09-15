@@ -3625,6 +3625,35 @@ body.customer-page-active .realistic-gate-overlay{
 @keyframes planeRunLane{0%{opacity:0;transform:translate(-5vw,5vh) rotate(0deg) scale(.86)}8%{opacity:1}100%{opacity:1;transform:translate(78vw,-100vh) rotate(0deg) scale(1.04)}}
 @keyframes leftBottomWhiteoutLane{0%{opacity:0;transform:scale(.04)}22%{opacity:.06;transform:scale(.16)}48%{opacity:.18;transform:scale(.36)}72%{opacity:.42;transform:scale(.72)}90%{opacity:.78;transform:scale(1.35)}100%{opacity:1;transform:scale(2.0)}}
 </style>
+
+<style id="final-smooth-whiteout-fix">
+/* 最終白化：背景の上に確実に乗せ、画面全体を滑らかに真っ白にする */
+.realistic-gate-overlay .flight-white-origin{
+  display:block !important;
+  position:absolute !important;
+  left:-100% !important;
+  top:-100% !important;
+  width:300% !important;
+  height:300% !important;
+  inset:auto !important;
+  z-index:999 !important;
+  pointer-events:none !important;
+  background:#fff !important;
+  filter:none !important;
+  opacity:0 !important;
+  transform:none !important;
+  transform-origin:center !important;
+  animation:finalFullWhiteout 1.9s ease-in 8.75s forwards !important;
+}
+@keyframes finalFullWhiteout{
+  0%{opacity:0}
+  45%{opacity:.22}
+  75%{opacity:.68}
+  100%{opacity:1}
+}
+/* 既存のぼかし・繰り返し模様が白化直前まで残らないよう抑える */
+.realistic-gate-overlay .flight-cloud{display:none !important}
+</style>
 </head>
 <body>
 
@@ -11285,76 +11314,5 @@ if (page === "staff") {
 </script>
 
 
-<div id="contrailCover" aria-hidden="true">
-  <div id="contrailSmoke"></div>
-  <div id="contrailWhite"></div>
-</div>
-<script id="airplane-contrail-script">
-(function(){
-  const cover=document.getElementById('contrailCover');
-  const smoke=document.getElementById('contrailSmoke');
-  const white=document.getElementById('contrailWhite');
-  if(!cover||!smoke||!white) return;
-  let isCustomer=false;
-  try{ const page=new URLSearchParams(location.search).get('page'); isCustomer=!page||page==='customer'; }catch(e){ isCustomer=true; }
-  if(!isCustomer){ cover.remove(); return; }
-  cover.classList.add('active');
-  const vw=window.innerWidth, vh=window.innerHeight;
-  const duration=4200;
-  const start=performance.now();
-  const puffs=[];
-  let lastPuff=0;
-
-  function puff(x,y,size,opacity){
-    const el=document.createElement('span');
-    el.className='contrail-puff';
-    el.style.width=size+'px'; el.style.height=size+'px';
-    el.style.left=x+'px'; el.style.top=y+'px';
-    smoke.appendChild(el);
-    puffs.push({el,born:performance.now(),life:430+Math.random()*520,scale:.85+Math.random()*1.8,opacity});
-  }
-
-  function frame(now){
-    const t=Math.min(1,(now-start)/duration);
-    const eased=t*t*(3-2*t);
-    const x=-.03*vw + (1.22*vw)*eased;
-    const y=.74*vh - .82*vh*eased;
-    const smokeX=x+8, smokeY=y+28;
-    const growth=Math.min(1,Math.max(0,(t-.08)/.82));
-    smoke.style.left=smokeX+'px'; smoke.style.top=smokeY+'px';
-    smoke.style.width=(vw*(.12+.9*growth))+'px';
-    smoke.style.height=(vh*(.05+.8*growth))+'px';
-    smoke.style.filter='blur('+(1+18*growth)+'px)';
-
-    if(now-lastPuff>65 && t<.86){
-      lastPuff=now;
-      const spread=8+growth*180;
-      puff(smokeX-(20+Math.random()*65),smokeY+(Math.random()-.5)*spread,24+growth*105, .62+.2*growth);
-      if(growth>.32) puff(smokeX-(50+Math.random()*150),smokeY+(Math.random()-.5)*spread*1.5,18+growth*120,.5);
-    }
-
-    for(let i=puffs.length-1;i>=0;i--){
-      const q=puffs[i], age=now-q.born, a=Math.min(1,age/q.life);
-      q.el.style.transform='translate(-50%,-50%) scale('+(0.2+q.scale*a)+' )';
-      q.el.style.opacity=String(q.opacity*(1-a*.92));
-      if(a>=1){q.el.remove();puffs.splice(i,1);}
-    }
-
-    const coverStart=.68;
-    if(t>coverStart){
-      const w=Math.min(1,(t-coverStart)/(1-coverStart));
-      white.style.opacity=String(Math.min(1, Math.pow(w, .72)));
-      white.style.transform='scale('+(0.7+0.55*w)+')';
-    }
-    if(t<1) requestAnimationFrame(frame);
-    else {
-      white.style.opacity='1';
-      white.style.transform='scale(1.25)';
-      setTimeout(()=>cover.remove(),4000);
-    }
-  }
-  requestAnimationFrame(frame);
-})();
-</script>
 </body>
 </html>
