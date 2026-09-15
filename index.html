@@ -11336,14 +11336,14 @@ if (page === "staff") {
   const ctx=canvas.getContext('2d');
   if(!ctx){ canvas.remove(); return; }
 
-  const planeCount=28;
-  const startDelay=3700;
-  const duration=11000;
-  const laneDelay=80;
-  const trailWidth=46;
-  const outerWidth=58;
+  const startDelay=3300;       // ゲートがゆっくり開いている途中から開始
+  const duration=9000;         // スポーン直後から一定速度
+  const laneDelay=105;         // 飛行機同士を適度に離す
+  let planeCount=28;
+  let trailWidth=52;
+  let outerWidth=66;
+  let planeSize=62;
   let startTime=null;
-  let raf=0;
   let w=0,h=0,dpr=1;
   let lanes=[];
 
@@ -11353,31 +11353,42 @@ if (page === "staff") {
     canvas.width=Math.round(w*dpr); canvas.height=Math.round(h*dpr);
     canvas.style.width=w+'px'; canvas.style.height=h+'px';
     ctx.setTransform(dpr,0,0,dpr,0,0);
+
     const diag=Math.hypot(w,h);
     const dx=1/Math.sqrt(2), dy=-1/Math.sqrt(2);
     const px=1/Math.sqrt(2), py=1/Math.sqrt(2);
-    const centerX=w/2, centerY=h/2;
-    const startLen=diag*.95;
-    const planeStartLen=diag*.95;
-    const endLen=diag*1.05;
-    const spread=diag*.82;
+    const cx=w/2, cy=h/2;
+
+    // 端末の縦横比に左右されないよう、画面を斜め方向へ投影して
+    // 「画面を横切るレーン」そのものを基準に配置する。
+    // iPhoneでもiPadでも、同じくらいの密度になるよう本数も自動調整。
+    planeCount=Math.max(24,Math.min(40,Math.round(Math.min(w,h)/14)));
+    const short=Math.min(w,h);
+    trailWidth=Math.max(38,Math.min(68,short*.125));
+    outerWidth=trailWidth+14;
+    planeSize=Math.max(50,Math.min(76,short*.16));
+
+    // p方向（x+y方向）で見た画面の半幅。各レーンが必ず画面を横切る範囲に置く。
+    const halfProjection=(w+h)/(2*Math.sqrt(2));
+    const spread=halfProjection*1.06;
+    // 画面外で確実にスポーンし、そこから画面へ入ってくる距離。
+    const startT=-(halfProjection+short*.18);
+    const endT=(halfProjection+short*.18);
     lanes=[];
+
     for(let i=0;i<planeCount;i++){
       const off=((i/(planeCount-1))-.5)*2*spread;
-      const cx=centerX+px*off, cy=centerY+py*off;
-      lanes.push({
-        sx:cx-dx*startLen, sy:cy-dy*startLen,
-        psx:cx-dx*planeStartLen, psy:cy-dy*planeStartLen,
-        ex:cx+dx*endLen, ey:cy+dy*endLen,
-        off
-      });
+      const x0=cx+dx*startT+px*off;
+      const y0=cy+dy*startT+py*off;
+      const x1=cx+dx*endT+px*off;
+      const y1=cy+dy*endT+py*off;
+      lanes.push({sx:x0,sy:y0,ex:x1,ey:y1});
     }
   }
   resize();
   window.addEventListener('resize',resize,{passive:true});
 
   function lerp(a,b,t){return a+(b-a)*t;}
-  function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
 
   let planeImage=null;
   try{
@@ -11422,52 +11433,48 @@ if (page === "staff") {
     }
 
     let maxProgress=0;
+    const dx=1/Math.sqrt(2), dy=-1/Math.sqrt(2);
     for(let i=0;i<lanes.length;i++){
       const lane=lanes[i];
       const local=(elapsed-startDelay-i*laneDelay)/duration;
       const p=Math.max(0,Math.min(1,local));
-      const e=ease(p);
       maxProgress=Math.max(maxProgress,p);
       if(p<=0) continue;
 
-      const x=lerp(lane.sx,lane.ex,e);
-      const y=lerp(lane.sy,lane.ey,e);
-      const dx=lane.ex-lane.sx, dy=lane.ey-lane.sy;
-      const angle=Math.atan2(dy,dx);
-
-      // 飛行機が通ったところまで、1本の白い飛行機雲を残す
-      const tailGap=26;
+      // スポーン直後から一定速度。最初だけゆっくりになるイージングは使わない。
+      const x=lerp(lane.sx,lane.ex,p);
+      const y=lerp(lane.sy,lane.ey,p);
+      const angle=Math.atan2(lane.ey-lane.sy,lane.ex-lane.sx);
+      const tailGap=30;
       const tx=x-Math.cos(angle)*tailGap;
       const ty=y-Math.sin(angle)*tailGap;
-      const startX=lane.sx, startY=lane.sy;
 
       ctx.save();
       ctx.lineCap='round';
       ctx.lineJoin='round';
-      ctx.strokeStyle='rgba(255,255,255,.30)';
+      ctx.strokeStyle='rgba(255,255,255,.34)';
       ctx.lineWidth=outerWidth;
-      ctx.beginPath(); ctx.moveTo(startX,startY); ctx.lineTo(tx,ty); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(lane.sx,lane.sy); ctx.lineTo(tx,ty); ctx.stroke();
       ctx.strokeStyle='#ffffff';
       ctx.lineWidth=trailWidth;
-      ctx.beginPath(); ctx.moveTo(startX,startY); ctx.lineTo(tx,ty); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(lane.sx,lane.sy); ctx.lineTo(tx,ty); ctx.stroke();
       ctx.restore();
 
-      if(p<1.03){
-        drawPlane(x,y,Math.min(72,Math.max(52,w*.17)));
-      }
+      // 飛行機本体も常に画面外から入る。
+      if(p<1.02) drawPlane(x,y,planeSize);
     }
 
-    // 全レーンが画面を通り切ったあと、最後の雲を少しだけ太らせて完全に覆う
+    // 全レーン通過後に太らせて隙間をなくし、最後は完全に白へ。
     if(maxProgress>=1){
-      const cover=(elapsed-(startDelay+duration+(planeCount-1)*laneDelay))/900;
+      const cover=(elapsed-(startDelay+duration+(planeCount-1)*laneDelay))/850;
       if(cover>0){
         const a=Math.min(1,cover);
-        // 同じレーンを太らせて、線の隙間を順番に埋める。
         ctx.save();
         ctx.globalAlpha=a;
+        ctx.globalCompositeOperation='source-over';
         ctx.lineCap='round';
         ctx.strokeStyle='#fff';
-        ctx.lineWidth=trailWidth+Math.min(300,340*a);
+        ctx.lineWidth=trailWidth+Math.min(360,390*a);
         for(const lane of lanes){
           ctx.beginPath();
           ctx.moveTo(lane.sx,lane.sy);
@@ -11476,8 +11483,7 @@ if (page === "staff") {
         }
         ctx.restore();
 
-        // 最後に画面全体を白へ滑らかに収束させ、左下・四隅の隙間を残さない。
-        const finalA=Math.max(0,Math.min(1,(cover-.55)/.45));
+        const finalA=Math.max(0,Math.min(1,(cover-.42)/.58));
         if(finalA>0){
           ctx.save();
           ctx.globalAlpha=finalA;
@@ -11488,12 +11494,11 @@ if (page === "staff") {
       }
     }
 
-    if(elapsed < startDelay+duration+(planeCount-1)*laneDelay+1900){
+    if(elapsed < startDelay+duration+(planeCount-1)*laneDelay+1800){
       raf=requestAnimationFrame(frame);
     }else{
-      // 飛行機雲のレーンだけで画面全体を覆った状態を保持
-      setTimeout(()=>canvas.remove(),700);
-      setTimeout(()=>{ if(gate) gate.remove(); },500);
+      setTimeout(()=>canvas.remove(),500);
+      setTimeout(()=>{ if(gate) gate.remove(); },300);
     }
   }
   requestAnimationFrame(frame);
