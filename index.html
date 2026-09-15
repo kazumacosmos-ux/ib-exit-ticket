@@ -11336,9 +11336,9 @@ if (page === "staff") {
   const ctx=canvas.getContext('2d');
   if(!ctx){ canvas.remove(); return; }
 
-  const startDelay=3300;       // ゲートがゆっくり開いている途中から開始
-  const duration=9000;         // スポーン直後から一定速度
-  const laneDelay=105;         // 飛行機同士を適度に離す
+  const startDelay=2500;       // ゲートのゆっくりした動きの途中から早めに開始
+  const duration=7000;         // スポーン直後から一定速度。前回より少し速く
+  const laneDelay=55;          // 飛行機がテンポよく続いてくる間隔
   let planeCount=28;
   let trailWidth=52;
   let outerWidth=66;
