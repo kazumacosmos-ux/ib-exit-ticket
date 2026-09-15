@@ -11339,8 +11339,8 @@ if (page === "staff") {
   const startDelay=2800;
   const duration=11000;
   const laneDelay=35;
-  const trailWidth=34;
-  const outerWidth=44;
+  const trailWidth=46;
+  const outerWidth=58;
   let startTime=null;
   let raf=0;
   let w=0,h=0,dpr=1;
@@ -11356,7 +11356,8 @@ if (page === "staff") {
     const dx=1/Math.sqrt(2), dy=-1/Math.sqrt(2);
     const px=1/Math.sqrt(2), py=1/Math.sqrt(2);
     const centerX=w/2, centerY=h/2;
-    const startLen=diag*.75;
+    const startLen=diag*.95;
+    const planeStartLen=diag*.58;
     const endLen=diag*1.05;
     const spread=diag*.82;
     lanes=[];
@@ -11365,6 +11366,7 @@ if (page === "staff") {
       const cx=centerX+px*off, cy=centerY+py*off;
       lanes.push({
         sx:cx-dx*startLen, sy:cy-dy*startLen,
+        psx:cx-dx*planeStartLen, psy:cy-dy*planeStartLen,
         ex:cx+dx*endLen, ey:cy+dy*endLen,
         off
       });
@@ -11427,8 +11429,8 @@ if (page === "staff") {
       maxProgress=Math.max(maxProgress,p);
       if(p<=0) continue;
 
-      const x=lerp(lane.sx,lane.ex,e);
-      const y=lerp(lane.sy,lane.ey,e);
+      const x=lerp(lane.psx,lane.ex,e);
+      const y=lerp(lane.psy,lane.ey,e);
       const dx=lane.ex-lane.sx, dy=lane.ey-lane.sy;
       const angle=Math.atan2(dy,dx);
 
@@ -11464,7 +11466,7 @@ if (page === "staff") {
         ctx.globalAlpha=a;
         ctx.lineCap='round';
         ctx.strokeStyle='#fff';
-        ctx.lineWidth=trailWidth+Math.min(260,300*a);
+        ctx.lineWidth=trailWidth+Math.min(300,340*a);
         for(const lane of lanes){
           ctx.beginPath();
           ctx.moveTo(lane.sx,lane.sy);
