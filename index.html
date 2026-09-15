@@ -3494,7 +3494,7 @@ body.customer-page-active .realistic-gate-overlay{
 .realistic-gate-overlay .status{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);font:600 9px/1 Arial,sans-serif;letter-spacing:.2em;color:#334047;opacity:.65;white-space:nowrap}
 .realistic-gate-overlay .white{display:none}
 /* ホワイトアウトの代わり：大量の黒い飛行機が「＼」に一直線で並び、白い飛行機雲が画面を覆う */
-.realistic-gate-overlay .flight-transition{position:absolute;inset:0;z-index:20;overflow:hidden;pointer-events:none;opacity:0;animation:flightTransitionIn 3.9s ease 6.35s forwards}
+.realistic-gate-overlay .flight-transition{position:absolute;inset:0;z-index:20;overflow:hidden;pointer-events:none;opacity:0;animation:flightTransitionIn 3.9s ease 7.2s forwards}
 /* 雲そのもの。硬い白板ではなく、複数のぼけた雲塊が重なって自然に広がる */
 .realistic-gate-overlay .flight-cloud{display:none;position:absolute;inset:-30%;z-index:1;opacity:0;filter:blur(9px);background:
   radial-gradient(ellipse at 6% 88%,rgba(255,255,255,.98) 0 7%,rgba(255,255,255,.82) 13%,transparent 25%),
@@ -3532,7 +3532,7 @@ body.customer-page-active .realistic-gate-overlay{
 .realistic-gate-overlay .flight .contrail{position:absolute;left:-1050px;top:63px;width:1060px;height:17px;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,.18),rgba(255,255,255,.36) 18%,rgba(255,255,255,.66) 52%,rgba(255,255,255,.99) 100%);box-shadow:0 0 12px rgba(255,255,255,.72),0 0 28px rgba(255,255,255,.38);filter:blur(3px);transform-origin:right center;transform:rotate(-34deg);z-index:-1}
 .realistic-gate-overlay .flight .contrail:after{content:"";position:absolute;left:0;top:-34px;width:1025px;height:85px;border-radius:50%;background:radial-gradient(ellipse at 8% 50%,rgba(255,255,255,.82),rgba(255,255,255,.58) 24%,rgba(255,255,255,.30) 50%,rgba(255,255,255,0) 78%);filter:blur(8px);transform-origin:right center}
 /* 画面上では「＼」の斜め一直線に大量配置 */
-.realistic-gate-overlay .flight.f1{left:-3%;top:4%;animation-delay:6.35s}.realistic-gate-overlay .flight.f2{left:1%;top:8%;animation-delay:6.39s}.realistic-gate-overlay .flight.f3{left:5%;top:12%;animation-delay:6.43s}.realistic-gate-overlay .flight.f4{left:9%;top:16%;animation-delay:6.47s}.realistic-gate-overlay .flight.f5{left:13%;top:20%;animation-delay:6.51s}.realistic-gate-overlay .flight.f6{left:17%;top:24%;animation-delay:6.55s}.realistic-gate-overlay .flight.f7{left:21%;top:28%;animation-delay:6.59s}.realistic-gate-overlay .flight.f8{left:25%;top:32%;animation-delay:6.63s}.realistic-gate-overlay .flight.f9{left:29%;top:36%;animation-delay:6.67s}.realistic-gate-overlay .flight.f10{left:33%;top:40%;animation-delay:6.71s}.realistic-gate-overlay .flight.f11{left:37%;top:44%;animation-delay:6.75s}.realistic-gate-overlay .flight.f12{left:41%;top:48%;animation-delay:6.79s}.realistic-gate-overlay .flight.f13{left:45%;top:52%;animation-delay:6.83s}.realistic-gate-overlay .flight.f14{left:49%;top:56%;animation-delay:6.87s}.realistic-gate-overlay .flight.f15{left:53%;top:60%;animation-delay:6.91s}.realistic-gate-overlay .flight.f16{left:57%;top:64%;animation-delay:6.95s}
+.realistic-gate-overlay .flight.f1{left:-3%;top:4%;animation-delay:7.2s}.realistic-gate-overlay .flight.f2{left:1%;top:8%;animation-delay:7.24s}.realistic-gate-overlay .flight.f3{left:5%;top:12%;animation-delay:7.28s}.realistic-gate-overlay .flight.f4{left:9%;top:16%;animation-delay:7.32s}.realistic-gate-overlay .flight.f5{left:13%;top:20%;animation-delay:7.36s}.realistic-gate-overlay .flight.f6{left:17%;top:24%;animation-delay:7.40s}.realistic-gate-overlay .flight.f7{left:21%;top:28%;animation-delay:7.44s}.realistic-gate-overlay .flight.f8{left:25%;top:32%;animation-delay:7.48s}.realistic-gate-overlay .flight.f9{left:29%;top:36%;animation-delay:7.52s}.realistic-gate-overlay .flight.f10{left:33%;top:40%;animation-delay:7.56s}.realistic-gate-overlay .flight.f11{left:37%;top:44%;animation-delay:7.60s}.realistic-gate-overlay .flight.f12{left:41%;top:48%;animation-delay:7.64s}.realistic-gate-overlay .flight.f13{left:45%;top:52%;animation-delay:7.68s}.realistic-gate-overlay .flight.f14{left:49%;top:56%;animation-delay:7.72s}.realistic-gate-overlay .flight.f15{left:53%;top:60%;animation-delay:7.76s}.realistic-gate-overlay .flight.f16{left:57%;top:64%;animation-delay:7.80s}
 @keyframes flightTransitionIn{0%{opacity:0}8%{opacity:1}100%{opacity:1}}
 @keyframes planeRun{0%{opacity:0;transform:translate(-18vw,18vh) rotate(0deg) scale(.9)}7%{opacity:1}100%{opacity:1;transform:translate(82vw,-82vh) rotate(0deg) scale(1.04)}}
 @keyframes flightCloudSweep{0%{opacity:0;transform:translate(-22vw,22vh) scale(.72) rotate(-2deg)}18%{opacity:.32;transform:translate(-12vw,12vh) scale(.8) rotate(-2deg)}42%{opacity:.58;transform:translate(-4vw,4vh) scale(.9) rotate(-2deg)}68%{opacity:.78;transform:translate(2vw,-2vh) scale(1.02) rotate(-2deg)}86%{opacity:.93;transform:translate(4vw,-4vh) scale(1.14) rotate(-2deg)}100%{opacity:1;transform:translate(6vw,-6vh) scale(1.3) rotate(-2deg)}}
@@ -3555,14 +3555,7 @@ body.customer-page-active .realistic-gate-overlay{
 </style>
 
 
-<style id="airplane-contrail-overlay-style">
-#contrailCover{position:fixed;inset:0;z-index:999999;pointer-events:none;overflow:hidden;opacity:0;visibility:hidden;background:transparent}
-#contrailCover.active{opacity:1;visibility:visible}
-#contrailPlane{position:absolute;left:-12vw;top:17vh;font-size:clamp(34px,6vw,72px);line-height:1;filter:drop-shadow(0 3px 5px rgba(0,0,0,.18));transform:rotate(45deg);will-change:left,top}
-#contrailSmoke{position:absolute;left:-12vw;top:calc(17vh + 27px);width:0;height:0;will-change:left,width,height,filter}
-.contrail-puff{position:absolute;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.84);box-shadow:0 0 18px rgba(255,255,255,.72);transform:translate(-50%,-50%) scale(.2);opacity:0;will-change:transform,opacity}
-#contrailWhite{position:absolute;inset:-25%;width:150%;height:150%;background:#fff;opacity:0;transform:scale(.7);will-change:opacity,transform;z-index:10}
-</style>
+
 </head>
 <body>
 
