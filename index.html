@@ -11385,8 +11385,8 @@ if (page === "staff") {
 </style>
 
 <style id="gate-panel-clean-final">
-/* 黒い板は元の仕様：中央の扉を左右それぞれ外側の蝶番を軸に奥へ開く。
-   3Dの遠近感を親側で持たせ、扉の輪郭がギザギザに見えにくい描画にする。 */
+/* 黒い板：元仕様のまま、外側の蝶番を軸に奥へ回転。
+   ズーム時のギザギザは、開き切った扉を塔の後ろへ退避させてから前進させることで防ぐ。 */
 .realistic-gate-overlay .gate-machine{
   perspective:1400px !important;
   -webkit-perspective:1400px !important;
@@ -11395,17 +11395,22 @@ if (page === "staff") {
   transform-style:preserve-3d !important;
   -webkit-transform-style:preserve-3d !important;
 }
+/* 塔を必ず扉より手前に置く */
+.realistic-gate-overlay .side{
+  z-index:20 !important;
+  transform:translateZ(45px) !important;
+  -webkit-transform:translateZ(45px) !important;
+}
 .realistic-gate-overlay .panel{
+  z-index:3 !important;
   -webkit-backface-visibility:hidden !important;
   backface-visibility:hidden !important;
   -webkit-transform-style:preserve-3d !important;
   transform-style:preserve-3d !important;
-  -webkit-transform:translateZ(0) rotateY(0deg) !important;
-  transform:translateZ(0) rotateY(0deg) !important;
   border:2px solid #11171b !important;
   box-shadow:0 7px 20px rgba(0,0,0,.45),inset 0 0 16px rgba(255,255,255,.04) !important;
   outline:none !important;
-  will-change:transform;
+  will-change:transform,opacity;
 }
 .realistic-gate-overlay .panel.left{
   transform-origin:left center !important;
@@ -11423,7 +11428,19 @@ if (page === "staff") {
 }
 .realistic-gate-overlay .panel,
 .realistic-gate-overlay.open .panel{
-  transition:transform 4.8s cubic-bezier(.22,.78,.16,1) 2s !important;
+  transition:transform 4.8s cubic-bezier(.22,.78,.16,1) 2s,opacity .12s linear 6.8s !important;
+}
+/* 扉が完全に開いた6.8秒後、ズーム開始と同時に扉だけを描画対象から外す。
+   塔やゲート本体のズームはそのままなので、開き方は変わらない。 */
+.realistic-gate-overlay.open .panel{
+  opacity:1 !important;
+}
+.realistic-gate-overlay.open .panel.left,
+.realistic-gate-overlay.open .panel.right{
+  animation:gatePanelRetire .12s linear 6.8s forwards !important;
+}
+@keyframes gatePanelRetire{
+  to{opacity:0}
 }
 /* 右塔の上向き矢印は塔の左側 */
 .realistic-gate-overlay .side.right .arrow{
@@ -11570,11 +11587,11 @@ if (page === "staff") {
     const outEraseY=meetY+(startY-meetY)*q;
     strokeSegment(startX,startY,outEraseX-ux*tail,outEraseY-uy*tail,lane.trailWidth);
 
-    // 帰り側の雲：
-    // 飛行機は右上→左下へ進むので、前方は左下側。
-    // 前方には雲を残さず、飛行機の後ろ（右上側）だけを描く。
-    // 雲の消える境界を「帰りの飛行機そのもの」に同期させる。
-    strokeSegment(ax+ux*tail,ay+uy*tail,endX,endY,lane.trailWidth);
+    // 帰り側も行き側と同じ考え方にする。
+    // 右上→左下へ進む飛行機の「後ろ側（右上側）」の雲は、
+    // 飛行機が進むのに合わせて後ろから消していく。
+    // そのため、残すのは現在位置より前（左下側）の雲だけ。
+    strokeSegment(startX,startY,bx-ux*tail,by-uy*tail,lane.trailWidth);
   }
 
   function frame(now){
