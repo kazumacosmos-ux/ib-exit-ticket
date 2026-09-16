@@ -11517,7 +11517,7 @@ if (page === "staff") {
     // すれ違った後、飛行機雲がほぼ完全に消えた瞬間に切り替える。
     // すれ違った直後に画面を消したり、飛行機自体を途中で消したりはしない。
     // まず飛行機が最後まで進み、雲が飛行機と一緒に消え切るのを待つ。
-    const switchAt=startDelay+duration*1.03;
+    const switchAt=startDelay+duration*1.00;
     if(!switched && elapsed>=switchAt){
       switched=true;
       ctx.save();
