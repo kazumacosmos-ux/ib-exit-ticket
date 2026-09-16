@@ -11341,7 +11341,7 @@ if (page === "staff") {
   document.body.classList.add('customer-page-active');
   requestAnimationFrame(()=>requestAnimationFrame(()=>gate.classList.add('open')));
   setTimeout(()=>{ gate.style.pointerEvents='none'; },5200);
-  setTimeout(()=>{ gate.remove(); },10150);
+  setTimeout(()=>{ /* flight animation controls the transition */ },30000);
 })();
 </script>
 
@@ -11478,7 +11478,7 @@ if (page === "staff") {
       // その瞬間までにできた雲だけを残し、
       // 飛行機の進行に合わせて、すれ違い点側から即座に消していく。
       // つまり新しい雲は一切生成しない。
-      const eraseProgress=Math.min(1,Math.max(0,(p-.5)/.075));
+      const eraseProgress=Math.min(1,Math.max(0,(p-.5)/.22));
       const keepT=1-eraseProgress;
       const keepX=startX+(meetX-startX)*keepT;
       const keepY=startY+(meetY-startY)*keepT;
@@ -11514,25 +11514,20 @@ if (page === "staff") {
 
     let finishedPairs=0;
 
-    // すれ違った後、飛行機雲がほぼ完全に消えた瞬間に切り替える。
-    // すれ違った直後に画面を消したり、飛行機自体を途中で消したりはしない。
-    // まず飛行機が最後まで進み、雲が飛行機と一緒に消え切るのを待つ。
-    const switchAt=startDelay+duration*0.575;
+    // すれ違った後、雲は飛行機の進行に合わせて即座に消していく。
+    // 雲が完全に消える瞬間を「画面切り替え」に使う。
+    // ここでは飛行機もCanvasも消さず、そのまま次の画面へつなげる。
+    const switchAt=startDelay+duration*0.54;
     if(!switched && elapsed>=switchAt){
       switched=true;
-      ctx.save();
-      ctx.globalCompositeOperation='source-over';
-      ctx.fillStyle='#fff';
-      ctx.fillRect(0,0,w,h);
-      ctx.restore();
       if(gate){
         gate.style.transition='none';
         gate.style.opacity='0';
         gate.style.pointerEvents='none';
+        gate.remove();
       }
-      // 白くなった瞬間に次の画面へ切り替える。
-      canvas.remove();
-      if(gate) gate.remove();
+      // Canvasは絶対に消さない。
+      // 次の画面が見えてからも、飛行機はそのまま飛び続ける。
     }
 
     lanes.forEach((lane,i)=>{
