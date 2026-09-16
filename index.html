@@ -11352,6 +11352,8 @@ if (page === "staff") {
 .realistic-gate-overlay .flight-transition{display:none!important}
 .realistic-gate-overlay .flight{display:none!important}
 #flightRebuildCanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:999999;pointer-events:none;display:block}
+/* 飛行機を飛行機雲より必ず前面に表示 */
+#flightRebuildCanvas{isolation:isolate}
 /* ゲート：開く間はその場で止まり、開き切った瞬間にグッと加速して前進 */
 .realistic-gate-overlay .gate-world{animation:gateApproachHoldThenZoom 8.2s linear forwards !important}
 @keyframes gateApproachHoldThenZoom{
@@ -11407,7 +11409,7 @@ if (page === "staff") {
     const ny=w/diag;
 
     const short=Math.min(w,h);
-    const planeSize=Math.max(52,Math.min(76,short*.15));
+    const planeSize=Math.max(58,Math.min(82,short*.16));
     const trailWidth=Math.max(52,Math.min(82,short*.18));
     const outerWidth=trailWidth+20;
 
@@ -11442,6 +11444,8 @@ if (page === "staff") {
     ctx.translate(x,y);
     // 元画像は右上向き。進行方向にそのまま合わせる。
     ctx.rotate(angle-Math.PI/4);
+    ctx.globalCompositeOperation='source-over';
+    ctx.globalAlpha=1;
     ctx.drawImage(planeImage,-size/2,-size/2,size,size);
     ctx.restore();
   }
@@ -11452,7 +11456,7 @@ if (page === "staff") {
     // 「すでに通過した部分」を後ろから順番に消していく。
     const baseAngle=Math.atan2(lane.ey-lane.sy,lane.ex-lane.sx);
     const angle=reverse ? baseAngle+Math.PI : baseAngle;
-    const tail=lane.planeSize*.38;
+    const tail=lane.planeSize*.72;
     const tx=x-Math.cos(angle)*tail;
     const ty=y-Math.sin(angle)*tail;
 
