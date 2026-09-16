@@ -11385,12 +11385,23 @@ if (page === "staff") {
 </style>
 
 <style id="gate-panel-clean-final">
-/* 黒い板は元の仕様：中央の扉を左右それぞれ外側の蝶番を軸に奥へ開く */
+/* 黒い板は元の仕様：中央の扉を左右それぞれ外側の蝶番を軸に奥へ開く。
+   3Dの遠近感を親側で持たせ、扉の輪郭がギザギザに見えにくい描画にする。 */
+.realistic-gate-overlay .gate-machine{
+  perspective:1400px !important;
+  -webkit-perspective:1400px !important;
+}
+.realistic-gate-overlay .gate-world{
+  transform-style:preserve-3d !important;
+  -webkit-transform-style:preserve-3d !important;
+}
 .realistic-gate-overlay .panel{
   -webkit-backface-visibility:hidden !important;
   backface-visibility:hidden !important;
   -webkit-transform-style:preserve-3d !important;
   transform-style:preserve-3d !important;
+  -webkit-transform:translateZ(0) rotateY(0deg) !important;
+  transform:translateZ(0) rotateY(0deg) !important;
   border:2px solid #11171b !important;
   box-shadow:0 7px 20px rgba(0,0,0,.45),inset 0 0 16px rgba(255,255,255,.04) !important;
   outline:none !important;
