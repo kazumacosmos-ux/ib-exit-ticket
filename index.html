@@ -11319,6 +11319,21 @@ if (page === "staff") {
 }
 
   </script>
+<script id="remove-stray-nn">
+(function(){
+  function clean(){
+    const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    while(walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n=>{
+      if((n.nodeValue||'').trim()==='/n/n') n.nodeValue=(n.nodeValue||'').replace('/n/n','');
+    });
+  }
+  if(document.body) clean();
+  window.addEventListener('load',clean,{once:true});
+})();
+</script>
+
 <script id="customer-animation-routing">
 (function(){
   try {
@@ -11343,8 +11358,22 @@ if (page === "staff") {
   if(seen){ gate.remove(); return; }
   try{ sessionStorage.setItem('ibExitGateSeen','1'); }catch(e){}
   document.body.classList.add('customer-page-active');
-  requestAnimationFrame(()=>requestAnimationFrame(()=>gate.classList.add('open')));
-  setTimeout(()=>{ gate.style.pointerEvents='none'; },5200);
+  // 開始直後は黒い板を閉じたまま停止。カードリーダーを押したら開く。
+  const reader=gate.querySelector('.reader');
+  if(reader){
+    reader.setAttribute('role','button');
+    reader.setAttribute('tabindex','0');
+    reader.style.cursor='pointer';
+    const openGate=()=>{
+      if(gate.classList.contains('open')) return;
+      gate.classList.add('open');
+    };
+    reader.addEventListener('click',openGate);
+    reader.addEventListener('keydown',(e)=>{
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openGate(); }
+    });
+  }
+  // 自動で板を開く処理はしない。クリック後にだけ開く。
   setTimeout(()=>{ /* flight animation controls the transition */ },30000);
 })();
 </script>
@@ -11374,12 +11403,17 @@ if (page === "staff") {
 .realistic-gate-overlay.open .panel{
   -webkit-backface-visibility:hidden !important;
   backface-visibility:hidden !important;
-  -webkit-transform-style:preserve-3d !important;
-  transform-style:preserve-3d !important;
+  -webkit-transform-style:flat !important;
+  transform-style:flat !important;
+  transform:translate3d(0,0,0) !important;
+  border:0 !important;
+  box-shadow:none !important;
+  outline:1px solid rgba(0,0,0,.98);
   will-change:transform;
+  contain:paint;
 }
-.realistic-gate-overlay.open .panel.left{transform:rotateY(90deg) !important}
-.realistic-gate-overlay.open .panel.right{transform:rotateY(-90deg) !important}
+.realistic-gate-overlay.open .panel.left{transform:rotateY(90deg) translateZ(0) !important}
+.realistic-gate-overlay.open .panel.right{transform:rotateY(-90deg) translateZ(0) !important}
 @media(prefers-reduced-motion:reduce){
   .realistic-gate-overlay.open .panel.left{transform:rotateY(90deg) !important}
   .realistic-gate-overlay.open .panel.right{transform:rotateY(-90deg) !important}
@@ -11404,7 +11438,7 @@ if (page === "staff") {
   const startDelay=4500;
   const duration=9000;
   const pairDelay=0;
-  const pairCount=32;
+  const pairCount=24;
   let w=0,h=0,dpr=1;
   let lanes=[];
   let planeImage=null;
