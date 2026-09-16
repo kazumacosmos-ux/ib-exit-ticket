@@ -11466,7 +11466,7 @@ if (page === "staff") {
     if(p>.5){
       // すれ違った直後から即座に消去開始。待ち時間を作らず、
       // 飛行機が通過した部分を後ろから高速で消していく。
-      const erase=Math.min(1,(p-.5)/.12);
+      const erase=Math.min(1,(p-.5)/.008);
       if(reverse){
         fromX=lane.ex+(tx-lane.ex)*erase;
         fromY=lane.ey+(ty-lane.ey)*erase;
