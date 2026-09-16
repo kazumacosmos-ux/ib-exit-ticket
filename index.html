@@ -11431,7 +11431,7 @@ if (page === "staff") {
     ctx.save();
     ctx.translate(x,y);
     // 元画像は右上向きなので、画面の実際の対角線方向へ正確に合わせる。
-    ctx.rotate(angle+Math.PI/4);
+    ctx.rotate(angle-Math.PI/4);
     ctx.translate(-size/2,-size/2);
     if(planeImage && planeImage.complete && planeImage.naturalWidth){
       ctx.drawImage(planeImage,0,0,size,size);
