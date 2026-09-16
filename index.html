@@ -11517,17 +11517,29 @@ if (page === "staff") {
       toY=ty;
     }else{
       // すれ違った瞬間に「雲を出す」のを停止。
-      // その瞬間までにできた雲だけを残し、
-      // 飛行機の進行に合わせて、すれ違い点側から即座に消していく。
-      // つまり新しい雲は一切生成しない。
+      // 行き（左下→右上）はこれまで通り、飛行機の後ろ側から消す。
+      // 帰り（右上→左下）は、飛行機の「前側」にある雲から消す。
+      // そのため帰りは、すれ違い点から進行方向側へ伸びる区間を
+      // 飛行機の位置に合わせて短くしていく。
       const eraseProgress=Math.min(1,Math.max(0,(p-.5)/.5));
-      const keepT=1-eraseProgress;
-      const keepX=startX+(meetX-startX)*keepT;
-      const keepY=startY+(meetY-startY)*keepT;
-      fromX=startX;
-      fromY=startY;
-      toX=keepX;
-      toY=keepY;
+      if(reverse){
+        // 帰り：前方（右上→左下方向の進行先）を即座に消す。
+        // 残すのは飛行機の後ろ側＝すれ違い点〜右上側。
+        const keepT=eraseProgress;
+        fromX=meetX+(startX-meetX)*keepT;
+        fromY=meetY+(startY-meetY)*keepT;
+        toX=startX;
+        toY=startY;
+      }else{
+        // 行き：従来通り、すれ違い点側から消す。
+        const keepT=1-eraseProgress;
+        const keepX=startX+(meetX-startX)*keepT;
+        const keepY=startY+(meetY-startY)*keepT;
+        fromX=startX;
+        fromY=startY;
+        toX=keepX;
+        toY=keepY;
+      }
     }
 
     if(Math.hypot(toX-fromX,toY-fromY)<2) return;
