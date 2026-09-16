@@ -11354,7 +11354,7 @@ if (page === "staff") {
   const startDelay=4500;
   const duration=7800;
   const pairDelay=105;
-  const pairCount=14;
+  const pairCount=21;
   let w=0,h=0,dpr=1;
   let lanes=[];
   let planeImage=null;
@@ -11381,8 +11381,8 @@ if (page === "staff") {
 
     const short=Math.min(w,h);
     const planeSize=Math.max(52,Math.min(76,short*.15));
-    const trailWidth=Math.max(38,Math.min(64,short*.12));
-    const outerWidth=trailWidth+16;
+    const trailWidth=Math.max(52,Math.min(82,short*.18));
+    const outerWidth=trailWidth+20;
 
     // 各ペアの「すれ違う点」を左上→右下の対角線上に配置。
     // その点を中心に、同じ一本の斜め線を反対方向へ伸ばす。
