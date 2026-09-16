@@ -11320,6 +11320,14 @@ if (page === "staff") {
 .realistic-gate-overlay .flight-transition{display:none!important}
 .realistic-gate-overlay .flight{display:none!important}
 #flightRebuildCanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:999999;pointer-events:none;display:block}
+/* ゲート：開く間はその場で止まり、開き切った瞬間にグッと加速して前進 */
+.realistic-gate-overlay .gate-world{animation:gateApproachHoldThenZoom 7.2s linear forwards !important}
+@keyframes gateApproachHoldThenZoom{
+  0%{transform:translate3d(0,0,-120px) scale(.82)}
+  33.33%{transform:translate3d(0,0,8px) scale(1.02)}
+  66.66%{transform:translate3d(0,0,8px) scale(1.02)}
+  100%{transform:translate3d(0,0,230px) scale(1.52)}
+}
 </style>
 
 <script id="flight-rebuild-final-script">
@@ -11336,9 +11344,9 @@ if (page === "staff") {
   const ctx=canvas.getContext('2d');
   if(!ctx){ canvas.remove(); return; }
 
-  const startDelay=2500;       // ゲートのゆっくりした動きの途中から早めに開始
-  const duration=7000;         // スポーン直後から一定速度。前回より少し速く
-  const laneDelay=55;          // 飛行機がテンポよく続いてくる間隔
+  const startDelay=1800;       // ゲートがゆっくり開いている途中から飛行開始
+  const duration=5800;         // スポーン直後から一定速度。前回より速く
+  const laneDelay=48;          // 飛行機がテンポよく続いてくる間隔
   let planeCount=28;
   let trailWidth=52;
   let outerWidth=66;
