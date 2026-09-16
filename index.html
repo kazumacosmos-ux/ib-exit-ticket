@@ -11451,33 +11451,35 @@ if (page === "staff") {
   }
 
   function strokeTrail(lane,x,y,reverse,p){
-    // 飛行機の「後ろ側」にだけ飛行機雲を描く。
-    // すれ違うまでは後方へ長く伸び、すれ違った瞬間から
-    // 「すでに通過した部分」を後ろから順番に消していく。
+    // 飛行機の後ろ側にだけ飛行機雲を描く。
+    // すれ違う前は出発側から飛行機の後ろまで雲を残す。
+    // すれ違った瞬間からは「飛行機が通過した部分」を
+    // 飛行機の移動と完全に同期して後ろから消していく。
     const baseAngle=Math.atan2(lane.ey-lane.sy,lane.ex-lane.sx);
     const angle=reverse ? baseAngle+Math.PI : baseAngle;
-    const tail=lane.planeSize*.72;
+    const tail=lane.planeSize*1.05;
     const tx=x-Math.cos(angle)*tail;
     const ty=y-Math.sin(angle)*tail;
 
-    let fromX=reverse ? lane.ex : lane.sx;
-    let fromY=reverse ? lane.ey : lane.sy;
+    let fromX,fromY,toX,toY;
+    const meetX=lane.cx, meetY=lane.cy;
 
-    if(p>.5){
-      // すれ違った直後から即座に消去開始。待ち時間を作らず、
-      // 飛行機が通過した部分を後ろから高速で消していく。
-      const erase=Math.min(1,(p-.5)/.008);
-      if(reverse){
-        fromX=lane.ex+(tx-lane.ex)*erase;
-        fromY=lane.ey+(ty-lane.ey)*erase;
-      }else{
-        fromX=lane.sx+(tx-lane.sx)*erase;
-        fromY=lane.sy+(ty-lane.sy)*erase;
-      }
+    if(p<=.5){
+      fromX=reverse ? lane.ex : lane.sx;
+      fromY=reverse ? lane.ey : lane.sy;
+      toX=tx;
+      toY=ty;
+    }else{
+      // すれ違った瞬間から、通過済みの雲を即座に消す。
+      // 残すのは「すれ違い点～飛行機の後ろ」だけ。
+      // 飛行機が進むほどこの区間が縮み、飛行機と一緒に雲が消える。
+      fromX=tx;
+      fromY=ty;
+      toX=meetX;
+      toY=meetY;
     }
 
-    // 消去点が飛行機の後ろ側を越えたら、この雲は描かない。
-    if(Math.hypot(tx-fromX,ty-fromY)<2) return;
+    if(Math.hypot(toX-fromX,toY-fromY)<2) return;
 
     ctx.save();
     ctx.lineCap='round';
@@ -11486,7 +11488,7 @@ if (page === "staff") {
     ctx.lineWidth=lane.trailWidth;
     ctx.beginPath();
     ctx.moveTo(fromX,fromY);
-    ctx.lineTo(tx,ty);
+    ctx.lineTo(toX,toY);
     ctx.stroke();
     ctx.restore();
   }
