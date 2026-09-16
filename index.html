@@ -11392,18 +11392,29 @@ if (page === "staff") {
   backface-visibility:hidden !important;
   -webkit-transform-style:flat !important;
   transform-style:flat !important;
-  transform:translate3d(0,0,0) !important;
   border:0 !important;
   box-shadow:none !important;
   outline:1px solid rgba(0,0,0,.98);
   will-change:transform;
   contain:paint;
+  /* 3D回転を使わず、2Dで左右へ逃がすことで
+     接近中のギザギザと塔をすり抜ける現象を防ぐ。 */
+  transform:translate3d(0,0,0) scaleX(1) !important;
 }
-.realistic-gate-overlay.open .panel.left{transform:rotateY(82deg) translateZ(0) !important}
-.realistic-gate-overlay.open .panel.right{transform:rotateY(-82deg) translateZ(0) !important}
+.realistic-gate-overlay.open .panel.left{
+  transform:translate3d(-125%,0,0) scaleX(.16) !important;
+}
+.realistic-gate-overlay.open .panel.right{
+  transform:translate3d(125%,0,0) scaleX(.16) !important;
+}
+/* 右塔の上向き矢印は塔の左側へ */
+.realistic-gate-overlay .side.right .arrow{
+  left:11% !important;
+  right:auto !important;
+}
 @media(prefers-reduced-motion:reduce){
-  .realistic-gate-overlay.open .panel.left{transform:rotateY(90deg) !important}
-  .realistic-gate-overlay.open .panel.right{transform:rotateY(-90deg) !important}
+  .realistic-gate-overlay.open .panel.left{transform:translate3d(-125%,0,0) scaleX(.16) !important}
+  .realistic-gate-overlay.open .panel.right{transform:translate3d(125%,0,0) scaleX(.16) !important}
 }
 </style>
 <script id="flight-rebuild-final-script">
