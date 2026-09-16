@@ -11445,23 +11445,38 @@ if (page === "staff") {
     ctx.restore();
   }
 
-  function strokeTrail(lane,x,y,reverse){
+  function strokeTrail(lane,x,y,reverse,p){
     // 飛行機の「後ろ側」にだけ飛行機雲を描く。
-    // 2機は同じ1本の斜めラインを逆方向に進むので、
-    // それぞれの進行方向の反対側へ雲を伸ばす。
+    // すれ違うまでは後方へ長く伸び、すれ違った瞬間から
+    // 「すでに通過した部分」を後ろから順番に消していく。
     const baseAngle=Math.atan2(lane.ey-lane.sy,lane.ex-lane.sx);
     const angle=reverse ? baseAngle+Math.PI : baseAngle;
     const tail=lane.planeSize*.38;
     const tx=x-Math.cos(angle)*tail;
     const ty=y-Math.sin(angle)*tail;
-    const fromX=reverse ? lane.ex : lane.sx;
-    const fromY=reverse ? lane.ey : lane.sy;
+
+    let fromX=reverse ? lane.ex : lane.sx;
+    let fromY=reverse ? lane.ey : lane.sy;
+
+    if(p>.5){
+      // p=.5 で消去開始、p=1 で飛行機の直後まで雲が縮む。
+      const erase=Math.min(1,(p-.5)/.5);
+      if(reverse){
+        fromX=lane.ex+(tx-lane.ex)*erase;
+        fromY=lane.ey+(ty-lane.ey)*erase;
+      }else{
+        fromX=lane.sx+(tx-lane.sx)*erase;
+        fromY=lane.sy+(ty-lane.sy)*erase;
+      }
+    }
+
+    // 消去点が飛行機の後ろ側を越えたら、この雲は描かない。
+    if(Math.hypot(tx-fromX,ty-fromY)<2) return;
 
     ctx.save();
     ctx.lineCap='round';
     ctx.lineJoin='round';
-    // 外側の薄い白い縁取りは使わず、飛行機雲本体だけを描く。
-    ctx.strokeStyle='rgba(255,255,255,.94)';
+    ctx.strokeStyle='#fff';
     ctx.lineWidth=lane.trailWidth;
     ctx.beginPath();
     ctx.moveTo(fromX,fromY);
@@ -11494,8 +11509,8 @@ if (page === "staff") {
       const bx=lane.ex+(lane.sx-lane.ex)*p;
       const by=lane.ey+(lane.sy-lane.ey)*p;
 
-      strokeTrail(lane,ax,ay,false);
-      strokeTrail(lane,bx,by,true);
+      strokeTrail(lane,ax,ay,false,p);
+      strokeTrail(lane,bx,by,true,p);
 
       const a1=Math.atan2(lane.ey-lane.sy,lane.ex-lane.sx);
       const a2=a1+Math.PI;
