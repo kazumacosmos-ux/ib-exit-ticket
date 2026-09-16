@@ -11587,11 +11587,12 @@ if (page === "staff") {
     const outEraseY=meetY+(startY-meetY)*q;
     strokeSegment(startX,startY,outEraseX-ux*tail,outEraseY-uy*tail,lane.trailWidth);
 
-    // 帰り側も行き側と同じ考え方にする。
-    // 右上→左下へ進む飛行機の「後ろ側（右上側）」の雲は、
-    // 飛行機が進むのに合わせて後ろから消していく。
-    // そのため、残すのは現在位置より前（左下側）の雲だけ。
-    strokeSegment(startX,startY,bx-ux*tail,by-uy*tail,lane.trailWidth);
+    // 帰り側：右上→左下。
+    // すれ違った瞬間に雲を消さず、すでにできた雲をそのまま残す。
+    // その後、飛行機の「後ろ側（右上側）」から順に消していく。
+    const retEraseX=meetX+(endX-meetX)*q;
+    const retEraseY=meetY+(endY-meetY)*q;
+    strokeSegment(retEraseX+ux*tail,retEraseY+uy*tail,bx+ux*tail,by+uy*tail,lane.trailWidth);
   }
 
   function frame(now){
