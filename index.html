@@ -11358,23 +11358,9 @@ if (page === "staff") {
   if(seen){ gate.remove(); return; }
   try{ sessionStorage.setItem('ibExitGateSeen','1'); }catch(e){}
   document.body.classList.add('customer-page-active');
-  // 開始直後は黒い板を閉じたまま停止。カードリーダーを押したら開く。
-  const reader=gate.querySelector('.reader');
-  if(reader){
-    reader.setAttribute('role','button');
-    reader.setAttribute('tabindex','0');
-    reader.style.cursor='pointer';
-    const openGate=()=>{
-      if(gate.classList.contains('open')) return;
-      gate.classList.add('open');
-    };
-    reader.addEventListener('click',openGate);
-    reader.addEventListener('keydown',(e)=>{
-      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openGate(); }
-    });
-  }
-  // 自動で板を開く処理はしない。クリック後にだけ開く。
-  setTimeout(()=>{ /* flight animation controls the transition */ },30000);
+  // カードリーダーのクリック操作は使わず、従来どおり自動で黒い板を開く。
+  // 1フレーム待ってから開くことで、閉じた状態を確実に描画してからアニメーションを開始。
+  requestAnimationFrame(()=>requestAnimationFrame(()=>gate.classList.add('open')));
 })();
 </script>
 
