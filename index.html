@@ -11324,8 +11324,7 @@ if (page === "staff") {
 .realistic-gate-overlay .gate-world{animation:gateApproachHoldThenZoom 7.2s linear forwards !important}
 @keyframes gateApproachHoldThenZoom{
   0%{transform:translate3d(0,0,-120px) scale(.82)}
-  33.33%{transform:translate3d(0,0,8px) scale(1.02)}
-  66.66%{transform:translate3d(0,0,8px) scale(1.02)}
+  66.66%{transform:translate3d(0,0,-120px) scale(.82)}
   100%{transform:translate3d(0,0,230px) scale(1.52)}
 }
 </style>
@@ -11344,9 +11343,9 @@ if (page === "staff") {
   const ctx=canvas.getContext('2d');
   if(!ctx){ canvas.remove(); return; }
 
-  const startDelay=1800;       // ゲートがゆっくり開いている途中から飛行開始
-  const duration=5800;         // スポーン直後から一定速度。前回より速く
-  const laneDelay=48;          // 飛行機がテンポよく続いてくる間隔
+  const startDelay=4800;       // ゲートがゆっくり開いている途中から飛行開始
+  const duration=8000;         // スポーン直後から一定速度。前回より速く
+  const laneDelay=80;          // 飛行機がテンポよく続いてくる間隔
   let planeCount=28;
   let trailWidth=52;
   let outerWidth=66;
