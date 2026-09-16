@@ -11372,7 +11372,7 @@ if (page === "staff") {
     const diag=Math.hypot(w,h);
     // 画面そのものの左下→右上対角線に平行な方向
     const dx=w/diag, dy=-h/diag;
-    // その直角方向（レーンをずらす方向）
+    // 左下→右上の対角線に直角な方向。これで全レーンが必ず同じ対角線と平行になる。
     const px=h/diag, py=w/diag;
     const cx=w/2, cy=h/2;
 
@@ -11427,9 +11427,12 @@ if (page === "staff") {
     if(m && m[1]){ planeImage=new Image(); planeImage.src=m[1]; }
   }catch(e){}
 
-  function drawPlane(x,y,size){
+  function drawPlane(x,y,size,angle){
     ctx.save();
-    ctx.translate(x-size/2,y-size/2);
+    ctx.translate(x,y);
+    // 元画像は右上向きなので、画面の実際の対角線方向へ正確に合わせる。
+    ctx.rotate(angle-Math.PI/4);
+    ctx.translate(-size/2,-size/2);
     if(planeImage && planeImage.complete && planeImage.naturalWidth){
       ctx.drawImage(planeImage,0,0,size,size);
     }else{
@@ -11491,7 +11494,7 @@ if (page === "staff") {
       ctx.restore();
 
       // 飛行機本体も常に画面外から入る。
-      if(p<1.02) drawPlane(x,y,planeSize);
+      if(p<1.02) drawPlane(x,y,planeSize,angle);
     }
 
     // 逆方向：右上 → 左下。前方の飛行機と同じ速度・飛行機雲で飛ばす。
@@ -11520,33 +11523,7 @@ if (page === "staff") {
       ctx.beginPath(); ctx.moveTo(lane.sx,lane.sy); ctx.lineTo(tx,ty); ctx.stroke();
       ctx.restore();
 
-      if(p<1.02){
-        ctx.save();
-        ctx.translate(x,y);
-        // 元の機体画像（右上向き）を、左下へ進む向きに180度反転。
-        ctx.rotate(Math.PI);
-        ctx.translate(-planeSize/2,-planeSize/2);
-        if(planeImage && planeImage.complete && planeImage.naturalWidth){
-          ctx.drawImage(planeImage,0,0,planeSize,planeSize);
-        }else{
-          ctx.fillStyle='#050505';
-          ctx.beginPath();
-          ctx.moveTo(planeSize*.92,planeSize*.50);
-          ctx.lineTo(planeSize*.62,planeSize*.37);
-          ctx.lineTo(planeSize*.18,planeSize*.06);
-          ctx.lineTo(planeSize*.27,planeSize*.38);
-          ctx.lineTo(planeSize*.03,planeSize*.28);
-          ctx.lineTo(planeSize*.08,planeSize*.45);
-          ctx.lineTo(planeSize*.34,planeSize*.50);
-          ctx.lineTo(planeSize*.08,planeSize*.55);
-          ctx.lineTo(planeSize*.03,planeSize*.72);
-          ctx.lineTo(planeSize*.27,planeSize*.62);
-          ctx.lineTo(planeSize*.18,planeSize*.94);
-          ctx.lineTo(planeSize*.62,planeSize*.63);
-          ctx.closePath(); ctx.fill();
-        }
-        ctx.restore();
-      }
+if(p<1.02) drawPlane(x,y,planeSize,angle);
     }
 
     // 全レーン通過後に太らせて隙間をなくし、最後は完全に白へ。
