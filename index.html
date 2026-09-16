@@ -11388,7 +11388,8 @@ if (page === "staff") {
 /* 飛行機を飛行機雲より必ず前面に表示 */
 #flightRebuildCanvas{isolation:isolate}
 /* ゲート：開く間はその場で止まり、開き切った瞬間にグッと加速して前進 */
-.realistic-gate-overlay .gate-world{animation:gateApproachHoldThenZoom 8.2s linear forwards !important}
+.realistic-gate-overlay .gate-world{animation:none !important}
+.realistic-gate-overlay.open .gate-world{animation:gateApproachHoldThenZoom 8.2s linear forwards !important}
 @keyframes gateApproachHoldThenZoom{
   0%{transform:translate3d(0,0,-120px) scale(.82)}
   24.39%{transform:translate3d(0,0,-55px) scale(.98)}
@@ -11412,8 +11413,8 @@ if (page === "staff") {
   will-change:transform;
   contain:paint;
 }
-.realistic-gate-overlay.open .panel.left{transform:rotateY(90deg) translateZ(0) !important}
-.realistic-gate-overlay.open .panel.right{transform:rotateY(-90deg) translateZ(0) !important}
+.realistic-gate-overlay.open .panel.left{transform:rotateY(82deg) translateZ(0) !important}
+.realistic-gate-overlay.open .panel.right{transform:rotateY(-82deg) translateZ(0) !important}
 @media(prefers-reduced-motion:reduce){
   .realistic-gate-overlay.open .panel.left{transform:rotateY(90deg) !important}
   .realistic-gate-overlay.open .panel.right{transform:rotateY(-90deg) !important}
@@ -11438,7 +11439,7 @@ if (page === "staff") {
   const startDelay=4500;
   const duration=9000;
   const pairDelay=0;
-  const pairCount=24;
+  const pairCount=16;
   let w=0,h=0,dpr=1;
   let lanes=[];
   let planeImage=null;
@@ -11597,9 +11598,22 @@ if (page === "staff") {
       const bx=lane.ex+(lane.sx-lane.ex)*p;
       const by=lane.ey+(lane.sy-lane.ey)*p;
 
+      // まず全レーンの雲を描く。
+      // その後で全機体をまとめて描くことで、後ろの雲が
+      // 別レーンの飛行機を絶対に覆わないようにする。
       strokeTrail(lane,ax,ay,false,p);
       strokeTrail(lane,bx,by,true,p);
+    });
 
+    // 全飛行機を最後に描画して必ず最前面へ。
+    lanes.forEach((lane)=>{
+      const pairStart=startDelay;
+      const p=Math.max(0,Math.min(1,(elapsed-pairStart)/duration));
+      if(p<=0) return;
+      const ax=lane.sx+(lane.ex-lane.sx)*p;
+      const ay=lane.sy+(lane.ey-lane.sy)*p;
+      const bx=lane.ex+(lane.sx-lane.ex)*p;
+      const by=lane.ey+(lane.sy-lane.ey)*p;
       const a1=Math.atan2(lane.ey-lane.sy,lane.ex-lane.sx);
       const a2=a1+Math.PI;
       if(planeImage && planeImage.complete && planeImage.naturalWidth){
@@ -11607,7 +11621,6 @@ if (page === "staff") {
         drawPlane(bx,by,lane.planeSize,a2);
       }
     });
-
 
     if(elapsed<startDelay+(lanes.length-1)*pairDelay+duration+1800){
       raf=requestAnimationFrame(frame);
