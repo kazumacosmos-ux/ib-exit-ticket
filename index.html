@@ -11459,8 +11459,9 @@ if (page === "staff") {
     let fromY=reverse ? lane.ey : lane.sy;
 
     if(p>.5){
-      // p=.5 で消去開始、p=1 で飛行機の直後まで雲が縮む。
-      const erase=Math.min(1,(p-.5)/.5);
+      // すれ違った直後から即座に消去開始。待ち時間を作らず、
+      // 飛行機が通過した部分を後ろから高速で消していく。
+      const erase=Math.min(1,(p-.5)/.12);
       if(reverse){
         fromX=lane.ex+(tx-lane.ex)*erase;
         fromY=lane.ey+(ty-lane.ey)*erase;
