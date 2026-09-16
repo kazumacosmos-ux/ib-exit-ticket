@@ -3382,7 +3382,7 @@ body {
   will-change:transform;
 }
 .realistic-gate-overlay.open .airport-photo-bg{
-  animation:airportBackgroundHoldThenZoom 9.2s linear forwards;
+  animation:airportBackgroundHoldThenZoom 8.2s linear forwards;
 }
 @keyframes airportBackgroundForward{
   0%{transform:scale(1) translate3d(0,0,0)}
@@ -3390,8 +3390,8 @@ body {
 }
 @keyframes airportBackgroundHoldThenZoom{
   0%{transform:scale(1) translate3d(0,0,0)}
-  21.74%{transform:scale(1.08) translate3d(0,-.25%,0)}
-  73.91%{transform:scale(1.08) translate3d(0,-.25%,0)}
+  24.39%{transform:scale(1.08) translate3d(0,-.25%,0)}
+  82.93%{transform:scale(1.08) translate3d(0,-.25%,0)}
   100%{transform:scale(1.55) translate3d(0,-1.5%,0)}
 }
 
@@ -11327,11 +11327,11 @@ if (page === "staff") {
 .realistic-gate-overlay .flight{display:none!important}
 #flightRebuildCanvas{position:fixed;inset:0;width:100vw;height:100vh;z-index:999999;pointer-events:none;display:block}
 /* ゲート：開く間はその場で止まり、開き切った瞬間にグッと加速して前進 */
-.realistic-gate-overlay .gate-world{animation:gateApproachHoldThenZoom 9.2s linear forwards !important}
+.realistic-gate-overlay .gate-world{animation:gateApproachHoldThenZoom 8.2s linear forwards !important}
 @keyframes gateApproachHoldThenZoom{
   0%{transform:translate3d(0,0,-120px) scale(.82)}
-  21.74%{transform:translate3d(0,0,-55px) scale(.98)}
-  73.91%{transform:translate3d(0,0,-55px) scale(.98)}
+  24.39%{transform:translate3d(0,0,-55px) scale(.98)}
+  82.93%{transform:translate3d(0,0,-55px) scale(.98)}
   100%{transform:translate3d(0,0,230px) scale(1.52)}
 }
 </style>
@@ -11350,8 +11350,8 @@ if (page === "staff") {
   const ctx=canvas.getContext('2d');
   if(!ctx){ canvas.remove(); return; }
 
-  const startDelay=6800;       // ゲートがゆっくり開いている途中から飛行開始
-  const duration=9000;         // スポーン直後から一定速度。前回より速く
+  const startDelay=2500;       // ゲートがゆっくり開いている途中から飛行開始
+  const duration=7800;         // スポーン直後から一定速度。前回より速く
   const laneDelay=100;          // 飛行機がテンポよく続いてくる間隔
   let planeCount=28;
   let trailWidth=52;
