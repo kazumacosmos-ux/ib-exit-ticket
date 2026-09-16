@@ -11389,6 +11389,7 @@ if (page === "staff") {
   let planeImage=null;
   let startTime=null;
   let raf=0;
+  let switched=false;
 
   function resize(){
     dpr=Math.min(window.devicePixelRatio||1,2);
@@ -11512,6 +11513,28 @@ if (page === "staff") {
     }
 
     let finishedPairs=0;
+
+    // 32組が同時にすれ違う中央の瞬間に画面を切り替える。
+    // ここでは一瞬だけ完全な白で覆ってから、ゲート画面を外して
+    // 下の本来のページをそのまま表示する。
+    const switchAt=startDelay+duration*0.5;
+    if(!switched && elapsed>=switchAt){
+      switched=true;
+      ctx.save();
+      ctx.globalCompositeOperation='source-over';
+      ctx.fillStyle='#fff';
+      ctx.fillRect(0,0,w,h);
+      ctx.restore();
+      if(gate){
+        gate.style.transition='none';
+        gate.style.opacity='0';
+        gate.style.pointerEvents='none';
+      }
+      setTimeout(()=>{
+        canvas.remove();
+        if(gate) gate.remove();
+      },80);
+    }
 
     lanes.forEach((lane,i)=>{
       const pairStart=startDelay+i*pairDelay;
