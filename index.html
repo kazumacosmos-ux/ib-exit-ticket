@@ -11444,7 +11444,7 @@ if (page === "staff") {
     ctx.save();
     ctx.translate(x,y);
     // 元画像は右上向き。進行方向にそのまま合わせる。
-    ctx.rotate(angle-Math.PI/4);
+    ctx.rotate(angle+Math.PI/4);
     ctx.globalCompositeOperation='source-over';
     ctx.globalAlpha=1;
     ctx.drawImage(planeImage,-size/2,-size/2,size,size);
