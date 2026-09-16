@@ -11370,8 +11370,11 @@ if (page === "staff") {
     ctx.setTransform(dpr,0,0,dpr,0,0);
 
     const diag=Math.hypot(w,h);
-    const dx=1/Math.sqrt(2), dy=-1/Math.sqrt(2);
-    const px=1/Math.sqrt(2), py=1/Math.sqrt(2);
+    const diag=Math.hypot(w,h);
+    // 画面そのものの左下→右上対角線に平行な方向
+    const dx=w/diag, dy=-h/diag;
+    // その直角方向（レーンをずらす方向）
+    const px=h/diag, py=w/diag;
     const cx=w/2, cy=h/2;
 
     // 端末の縦横比に左右されないよう、画面を斜め方向へ投影して
@@ -11460,7 +11463,8 @@ if (page === "staff") {
     }
 
     let maxProgress=0;
-    const dx=1/Math.sqrt(2), dy=-1/Math.sqrt(2);
+    const diag=Math.hypot(w,h);
+    const dx=w/diag, dy=-h/diag;
     for(let i=0;i<lanes.length;i++){
       const lane=lanes[i];
       const local=(elapsed-startDelay-i*laneDelay)/duration;
@@ -11520,8 +11524,8 @@ if (page === "staff") {
       if(p<1.02){
         ctx.save();
         ctx.translate(x,y);
-        // 元の機体画像（右上向き）を、左下へ進む向きに90度回転。
-        ctx.rotate(Math.PI/2);
+        // 元の機体画像（右上向き）を、左下へ進む向きに180度反転。
+        ctx.rotate(Math.PI);
         ctx.translate(-planeSize/2,-planeSize/2);
         if(planeImage && planeImage.complete && planeImage.naturalWidth){
           ctx.drawImage(planeImage,0,0,planeSize,planeSize);
