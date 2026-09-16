@@ -3660,7 +3660,33 @@ body.customer-page-active .realistic-gate-overlay{
 /* 既存のぼかし・繰り返し模様が白化直前まで残らないよう抑える */
 .realistic-gate-overlay .flight-cloud{display:none !important}
 </style>
-</head>
+<style id="pure-white-contrail-final">
+/* 飛行機雲は半透明・ぼかし・影を一切使わず、完全な白だけにする */
+.realistic-gate-overlay .flight .contrail,
+.realistic-gate-overlay .flight .contrail:after{
+  background:#fff !important;
+  background-image:none !important;
+  opacity:1 !important;
+  filter:none !important;
+  box-shadow:none !important;
+  mix-blend-mode:normal !important;
+}
+.realistic-gate-overlay .flight-white-origin{
+  background:#fff !important;
+  opacity:1 !important;
+  filter:none !important;
+  box-shadow:none !important;
+  mix-blend-mode:normal !important;
+}
+.realistic-gate-overlay .flight-cloud,
+.realistic-gate-overlay .flight-cloud:before,
+.realistic-gate-overlay .flight-cloud:after{
+  background:none !important;
+  opacity:0 !important;
+  filter:none !important;
+  box-shadow:none !important;
+}
+</style></head>
 <body>
 
 <div class="realistic-gate-overlay" id="realisticBoardingGate" aria-hidden="true">
