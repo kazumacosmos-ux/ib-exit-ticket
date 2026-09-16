@@ -11420,25 +11420,26 @@ if (page === "staff") {
   }
 
   function strokeTrail(lane,x,y,reverse){
-    const angle=Math.atan2(lane.ey-lane.sy,lane.ex-lane.sx);
+    // 飛行機の「後ろ側」にだけ飛行機雲を描く。
+    // 2機は同じ1本の斜めラインを逆方向に進むので、
+    // それぞれの進行方向の反対側へ雲を伸ばす。
+    const baseAngle=Math.atan2(lane.ey-lane.sy,lane.ex-lane.sx);
+    const angle=reverse ? baseAngle+Math.PI : baseAngle;
     const tail=lane.planeSize*.38;
     const tx=x-Math.cos(angle)*tail;
     const ty=y-Math.sin(angle)*tail;
+    const fromX=reverse ? lane.ex : lane.sx;
+    const fromY=reverse ? lane.ey : lane.sy;
 
     ctx.save();
     ctx.lineCap='round';
     ctx.lineJoin='round';
-    ctx.strokeStyle='rgba(255,255,255,.28)';
-    ctx.lineWidth=lane.outerWidth;
-    ctx.beginPath();
-    if(reverse){ctx.moveTo(lane.ex,lane.ey);ctx.lineTo(tx,ty)}
-    else{ctx.moveTo(lane.sx,lane.sy);ctx.lineTo(tx,ty)}
-    ctx.stroke();
-    ctx.strokeStyle='rgba(255,255,255,.88)';
+    // 外側の薄い白い縁取りは使わず、飛行機雲本体だけを描く。
+    ctx.strokeStyle='rgba(255,255,255,.94)';
     ctx.lineWidth=lane.trailWidth;
     ctx.beginPath();
-    if(reverse){ctx.moveTo(lane.ex,lane.ey);ctx.lineTo(tx,ty)}
-    else{ctx.moveTo(lane.sx,lane.sy);ctx.lineTo(tx,ty)}
+    ctx.moveTo(fromX,fromY);
+    ctx.lineTo(tx,ty);
     ctx.stroke();
     ctx.restore();
   }
