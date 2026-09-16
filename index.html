@@ -11451,6 +11451,12 @@ if (page === "staff") {
   .realistic-gate-overlay.open .panel.left{transform:rotateY(82deg) !important}
   .realistic-gate-overlay.open .panel.right{transform:rotateY(-82deg) !important}
 }
+<style id="gate-passage-hide-final">
+/* 閉じた扉の中央に出ていた薄い四角を表示しない */
+.realistic-gate-overlay .passage{
+  display:none !important;
+}
+</style>
 </style>
 <script id="flight-rebuild-final-script">
 (function(){
