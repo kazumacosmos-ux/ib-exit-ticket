@@ -11402,6 +11402,7 @@ if (page === "staff") {
     }
 
     // 逆方向のレーン：右上の画面外から左下の画面外へ。
+    // 進行方向はすべて「左下↔右上」の同一直線方向（平行）にする。
     for(let i=0;i<planeCount;i++){
       const off=((i/(planeCount-1))-.5)*2*spread;
       const x0=cx+dx*endT+px*off;
@@ -11519,8 +11520,8 @@ if (page === "staff") {
       if(p<1.02){
         ctx.save();
         ctx.translate(x,y);
-        // 元の機体画像は右上向きなので、飛行方向（左下）へ180度反転。
-        ctx.rotate(angle-Math.PI/4);
+        // 元の機体画像（右上向き）を、左下へ進む向きに90度回転。
+        ctx.rotate(Math.PI/2);
         ctx.translate(-planeSize/2,-planeSize/2);
         if(planeImage && planeImage.complete && planeImage.naturalWidth){
           ctx.drawImage(planeImage,0,0,planeSize,planeSize);
