@@ -11588,8 +11588,8 @@ if (page === "staff") {
     const outEraseY=startY+(lane.cy-startY)*q;
     // すれ違い前に作った「左下→すれ違い点」の雲だけを残す。
     // 左下側から消えていき、残るのは消去境界からすれ違い点まで。
-    strokeSegment(outEraseX-ux*tail,outEraseY-uy*tail,
-                  lane.cx-ux*tail,lane.cy-uy*tail,lane.trailWidth);
+    strokeSegment(startX,startY,
+                  outEraseX-ux*tail,outEraseY-uy*tail,lane.trailWidth);
 
     // 帰りも、すれ違い前に作った「すれ違い点→右上」の雲だけを残す。
     // 帰りの飛行機が左下へ進むので、後ろ側＝右上側から消えていく。
