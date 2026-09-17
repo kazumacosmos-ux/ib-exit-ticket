@@ -11586,19 +11586,26 @@ if (page === "staff") {
     // 毎フレームclearRectされたCanvasに「残っている雲」だけを描く。
     //
     // 左下側：
-    // q=0（すれ違った直後）では、左下→すれ違い点まで全部残す。
-    // q=1（アニメーション終了）では、雲を0まで縮める。
-    const outRemainX=lane.cx+(startX-lane.cx)*q;
-    const outRemainY=lane.cy+(startY-lane.cy)*q;
+    // すれ違った直後(q=0)は、すれ違い点の少し手前まで全部残す。
+    // qが1へ進むにつれて、雲の「残す終点」を左下側へ縮める。
+    // 最後は終点そのものをstartX/startYに一致させるので、
+    // tail分の短い雲が最後まで残ることもない。
+    const outFullX=lane.cx-ux*tail;
+    const outFullY=lane.cy-uy*tail;
+    const outRemainX=startX+(outFullX-startX)*(1-q);
+    const outRemainY=startY+(outFullY-startY)*(1-q);
     strokeSegment(startX,startY,
-                  outRemainX-ux*tail,outRemainY-uy*tail,lane.trailWidth);
+                  outRemainX,outRemainY,lane.trailWidth);
 
-    // 右上側も同じ。
-    // q=0では全部残し、q=1で完全に消える。
-    const retRemainX=lane.cx+(lane.ex-lane.cx)*q;
-    const retRemainY=lane.cy+(lane.ey-lane.cy)*q;
-    strokeSegment(retRemainX+ux*tail,retRemainY+uy*tail,
-                  endX+ux*tail,endY+uy*tail,lane.trailWidth);
+    // 右上側もまったく同じ考え方。
+    // q=0では従来の雲をそのまま残し、
+    // q=1では始点と終点が同じになって完全に消える。
+    const retFullX=lane.cx+ux*tail;
+    const retFullY=lane.cy+uy*tail;
+    const retRemainX=endX+(retFullX-endX)*(1-q);
+    const retRemainY=endY+(retFullY-endY)*(1-q);
+    strokeSegment(retRemainX,retRemainY,
+                  endX,endY,lane.trailWidth);
   }
 
   function frame(now){
