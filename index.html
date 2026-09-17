@@ -11611,20 +11611,14 @@ if (page === "staff") {
 
     let finishedPairs=0;
 
-    // すれ違った後、雲は飛行機の進行に合わせて即座に消していく。
-    // 雲が完全に消える瞬間を「画面切り替え」に使う。
-    // ここでは飛行機もCanvasも消さず、そのまま次の画面へつなげる。
+    // すれ違った瞬間には画面や雲を消さない。
+    // すれ違い後の帰り道で、drawPairClouds() が雲を後ろ側から
+    // 少しずつ短くして消していく。
+    // 途中で gate / canvas を remove すると雲消しが見えなくなるため、
+    // ここでは絶対に削除しない。
     const switchAt=startDelay+duration*0.50;
     if(!switched && elapsed>=switchAt){
       switched=true;
-      if(gate){
-        // 白い飛行機雲で完全に隠れているこの瞬間に、下の画面へ切り替える。
-        // Canvasは残すので、飛行機と雲は切り替え後も描画され続ける。
-        gate.style.transition='none';
-        gate.style.opacity='0';
-        gate.style.pointerEvents='none';
-        gate.remove();
-      }
     }
 
     lanes.forEach((lane,i)=>{
@@ -11646,8 +11640,8 @@ if (page === "staff") {
     });
 
     // 全飛行機を最後に描画して必ず最前面へ。
-    lanes.forEach((lane)=>{
-      const pairStart=startDelay;
+    lanes.forEach((lane,i)=>{
+      const pairStart=startDelay+i*pairDelay;
       const p=Math.max(0,Math.min(1,(elapsed-pairStart)/duration));
       if(p<=0) return;
       const ax=lane.sx+(lane.ex-lane.sx)*p;
@@ -11711,5 +11705,19 @@ if (page === "staff") {
 })();
 </script>
 
+<style id="contrail-return-final">
+/* すれ違い前は消さず、帰り道だけ徐々に消す */
+.realistic-gate-overlay .flight .contrail{
+  opacity:1 !important;
+  animation:none !important;
+}
+.realistic-gate-overlay .flight .contrail.is-returning{
+  animation:contrailReturnFadeFinal 1.6s linear forwards !important;
+}
+@keyframes contrailReturnFadeFinal{
+  0%{opacity:1}
+  100%{opacity:0}
+}
+</style>
 </body>
 </html>
