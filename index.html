@@ -11011,13 +11011,13 @@ saveSettingsButton.addEventListener(
     const maxGroups =
       Number(maxGroupsInput.value);
 
-    if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(start)) {
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(start)) {
       settingsMessage.textContent =
         "開始時刻を正しく入力してください。";
       return;
     }
 
-    if (!/^([01]\\d|2[0-3]):[0-5]\\d$/.test(end)) {
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(end)) {
       settingsMessage.textContent =
         "終了時刻を正しく入力してください。";
       return;
