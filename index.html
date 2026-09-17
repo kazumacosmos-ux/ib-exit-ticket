@@ -11582,20 +11582,22 @@ if (page === "staff") {
 
     const q=Math.min(1,Math.max(0,(p-.5)/.5));
 
-    // 行きの雲は、すれ違い点から左下方向へ飛行機が進むにつれて、
-    // 「飛行機の後ろ側」にある部分から消していく。
-    const outEraseX=startX+(lane.cx-startX)*q;
-    const outEraseY=startY+(lane.cy-startY)*q;
-    // すれ違い前に作った「左下→すれ違い点」の雲だけを残す。
-    // 左下側から消えていき、残るのは消去境界からすれ違い点まで。
+    // すれ違った後は「消すための線」を描かず、
+    // 毎フレームclearRectされたCanvasに「残っている雲」だけを描く。
+    //
+    // 左下側：
+    // q=0（すれ違った直後）では、左下→すれ違い点まで全部残す。
+    // q=1（アニメーション終了）では、雲を0まで縮める。
+    const outRemainX=lane.cx+(startX-lane.cx)*q;
+    const outRemainY=lane.cy+(startY-lane.cy)*q;
     strokeSegment(startX,startY,
-                  outEraseX-ux*tail,outEraseY-uy*tail,lane.trailWidth);
+                  outRemainX-ux*tail,outRemainY-uy*tail,lane.trailWidth);
 
-    // 帰りも、すれ違い前に作った「すれ違い点→右上」の雲だけを残す。
-    // 帰りの飛行機が左下へ進むので、後ろ側＝右上側から消えていく。
-    const retEraseX=lane.cx+(lane.ex-lane.cx)*q;
-    const retEraseY=lane.cy+(lane.ey-lane.cy)*q;
-    strokeSegment(retEraseX+ux*tail,retEraseY+uy*tail,
+    // 右上側も同じ。
+    // q=0では全部残し、q=1で完全に消える。
+    const retRemainX=lane.cx+(lane.ex-lane.cx)*q;
+    const retRemainY=lane.cy+(lane.ey-lane.cy)*q;
+    strokeSegment(retRemainX+ux*tail,retRemainY+uy*tail,
                   endX+ux*tail,endY+uy*tail,lane.trailWidth);
   }
 
