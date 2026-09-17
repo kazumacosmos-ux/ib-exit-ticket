@@ -11595,8 +11595,8 @@ if (page === "staff") {
     // 帰りの飛行機が左下へ進むので、後ろ側＝右上側から消えていく。
     const retEraseX=lane.cx+(lane.ex-lane.cx)*q;
     const retEraseY=lane.cy+(lane.ey-lane.cy)*q;
-    strokeSegment(lane.cx+ux*tail,lane.cy+uy*tail,
-                  retEraseX+ux*tail,retEraseY+uy*tail,lane.trailWidth);
+    strokeSegment(retEraseX+ux*tail,retEraseY+uy*tail,
+                  endX+ux*tail,endY+uy*tail,lane.trailWidth);
   }
 
   function frame(now){
@@ -11611,14 +11611,20 @@ if (page === "staff") {
 
     let finishedPairs=0;
 
-    // すれ違った瞬間には画面や雲を消さない。
-    // すれ違い後の帰り道で、drawPairClouds() が雲を後ろ側から
-    // 少しずつ短くして消していく。
-    // 途中で gate / canvas を remove すると雲消しが見えなくなるため、
-    // ここでは絶対に削除しない。
+    // すれ違った後、雲は飛行機の進行に合わせて即座に消していく。
+    // 雲が完全に消える瞬間を「画面切り替え」に使う。
+    // ここでは飛行機もCanvasも消さず、そのまま次の画面へつなげる。
     const switchAt=startDelay+duration*0.50;
     if(!switched && elapsed>=switchAt){
       switched=true;
+      if(gate){
+        // 白い飛行機雲で完全に隠れているこの瞬間に、下の画面へ切り替える。
+        // Canvasは残すので、飛行機と雲は切り替え後も描画され続ける。
+        gate.style.transition='none';
+        gate.style.opacity='0';
+        gate.style.pointerEvents='none';
+        gate.remove();
+      }
     }
 
     lanes.forEach((lane,i)=>{
@@ -11640,8 +11646,8 @@ if (page === "staff") {
     });
 
     // 全飛行機を最後に描画して必ず最前面へ。
-    lanes.forEach((lane,i)=>{
-      const pairStart=startDelay+i*pairDelay;
+    lanes.forEach((lane)=>{
+      const pairStart=startDelay;
       const p=Math.max(0,Math.min(1,(elapsed-pairStart)/duration));
       if(p<=0) return;
       const ax=lane.sx+(lane.ex-lane.sx)*p;
@@ -11668,56 +11674,5 @@ if (page === "staff") {
 })();
 </script>
 
-
-<style id="contrail-return-fix">
-/* すれ違うまでは飛行機雲を残し、帰り道にだけ後ろから消す */
-.realistic-gate-overlay .flight .contrail{
-  animation: none !important;
-  opacity: .9 !important;
-}
-.realistic-gate-overlay .flight .contrail.is-returning{
-  animation: contrailReturnFade 1.45s ease-out forwards !important;
-}
-@keyframes contrailReturnFade{
-  0%{opacity:.9;filter:blur(6px)}
-  100%{opacity:0;filter:blur(2px)}
-}
-</style>
-<script>
-/* 飛行機ごとの出発時刻に合わせて、すれ違い後に雲を消す */
-(function(){
-  function setupContrailReturn(){
-    document.querySelectorAll('.realistic-gate-overlay .flight').forEach(function(plane){
-      var trail=plane.querySelector('.contrail');
-      if(!trail || trail.dataset.returnFix==='1') return;
-      trail.dataset.returnFix='1';
-      var delay=parseFloat(getComputedStyle(plane).animationDelay)||0;
-      var duration=parseFloat(getComputedStyle(plane).animationDuration)||3;
-      var fadeStart=Math.max(0, delay + duration*0.58);
-      trail.style.animationDelay=fadeStart+'s';
-      trail.classList.add('is-returning');
-    });
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',setupContrailReturn);
-  else setupContrailReturn();
-  setTimeout(setupContrailReturn,100);
-  setTimeout(setupContrailReturn,500);
-})();
-</script>
-
-<style id="contrail-return-final">
-/* すれ違い前は消さず、帰り道だけ徐々に消す */
-.realistic-gate-overlay .flight .contrail{
-  opacity:1 !important;
-  animation:none !important;
-}
-.realistic-gate-overlay .flight .contrail.is-returning{
-  animation:contrailReturnFadeFinal 1.6s linear forwards !important;
-}
-@keyframes contrailReturnFadeFinal{
-  0%{opacity:1}
-  100%{opacity:0}
-}
-</style>
 </body>
 </html>
