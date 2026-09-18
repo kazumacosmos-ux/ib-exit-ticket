@@ -81,12 +81,20 @@ function renderPublic(){
   $('myInfo').textContent=`${myTicket.name||'代表者'}・${myTicket.size}名`;
   $('currentNumber').textContent=current;
   const diff=Math.max(0,Number(myTicket.number)-current);
-  $('remaining').textContent=diff===0?'呼出中':`${diff}番`;
-  if(myTicket.status==='cancelled') $('myState').textContent='この整理券はキャンセルされています。';
-  else if(myTicket.status==='skipped') $('myState').textContent='この整理券はスキップされています。受付でスタッフに確認してください。';
-  else if(myTicket.status==='completed') $('myState').textContent='🔵 搭乗済みです。ありがとうございました！';
-  else if(Number(myTicket.number)<=current) $('myState').textContent='🔔 あなたの番号です。受付へお越しください。';
-  else $('myState').textContent='⏳ まだ順番待ちです。番号を時々確認してください。';
+  if(myTicket.status==='cancelled'){
+    $('remaining').textContent='キャンセル';
+    $('myState').textContent='この整理券はキャンセルされています。';
+  }else if(myTicket.status==='skipped'){
+    $('remaining').textContent='スキップ';
+    $('myState').textContent='この整理券はスキップされています。受付でスタッフに確認してください。';
+  }else if(myTicket.status==='completed'){
+    $('remaining').textContent='完了';
+    $('myState').textContent='🔵 搭乗済みです。ありがとうございました！';
+  }else{
+    $('remaining').textContent=diff===0?'呼出中':`${diff}番`;
+    if(Number(myTicket.number)<=current) $('myState').textContent='🔔 あなたの番号です。受付へお越しください。';
+    else $('myState').textContent='⏳ まだ順番待ちです。番号を時々確認してください。';
+  }
 }
 function loadMyTicket(){
   const saved=localStorage.getItem('ib_exit_ticket_v3');
