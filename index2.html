@@ -105,7 +105,18 @@ async function initCustomer(){
 function syncMyTicket(){
   if(!myTicket)return;
   const t=tickets?.[myTicket.number];
-  if(t){myTicket={...myTicket,...t,number:Number(myTicket.number)};localStorage.setItem('ib_exit_ticket_v3',JSON.stringify(myTicket));}
+  if(t){
+    myTicket={...myTicket,...t,number:Number(myTicket.number)};
+    if(t.status==='completed'){
+      localStorage.removeItem('ib_exit_ticket_v3');
+      myTicket=null;
+      $('customerTicket').style.display='none';
+      $('customerBooking').style.display='block';
+      $('ticketError').textContent='';
+      return;
+    }
+    localStorage.setItem('ib_exit_ticket_v3',JSON.stringify(myTicket));
+  }
   renderPublic();
 }
 async function takeTicket(){
