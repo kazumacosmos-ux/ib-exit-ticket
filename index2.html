@@ -32,7 +32,7 @@
 </div></section>
 
 <section id="staffPage" class="page"><div class="wrap"><div class="topnav"><strong>1-B出口 スタッフ</strong><button id="staffLogout">ログアウト</button></div>
-<div id="staffLogin" class="card login"><h2>スタッフログイン</h2><div class="field"><label>メールアドレス</label><input id="staffEmail" type="email" autocomplete="username"></div><div class="field"><label>パスワード</label><input id="staffPassword" type="password" autocomplete="current-password"></div><button id="staffLoginBtn" class="btn">ログイン</button><div id="staffLoginMsg" class="msg"></div></div>
+<div id="staffLogin" class="card login"><h2>スタッフログイン</h2><div class="sub">スタッフ用パスワードを入力してください。</div><div class="field"><label>パスワード</label><input id="staffPassword" type="password" autocomplete="current-password"></div><button id="staffLoginBtn" class="btn">ログイン</button><div id="staffLoginMsg" class="msg"></div></div>
 <div id="staffApp" style="display:none"><div class="card"><h2>案内カウンター</h2><div class="ticketLabel">CURRENT</div><div id="staffCurrent" class="ticketNo">0</div><button id="nextTicket" class="btn">次の番号を案内する</button><button id="staffSkip" class="btn secondary">次の番号をスキップ</button><div id="staffMsg" class="msg"></div></div><div class="card"><h2>整理券一覧</h2><div id="staffList" class="list"></div></div></div></div></section>
 
 <section id="adminPage" class="page"><div class="wrap"><div class="topnav"><strong>1-B出口 管理者</strong><button id="adminLogout">ログアウト</button></div>
@@ -106,15 +106,15 @@ function syncMyTicket(){
   if(!myTicket)return;
   const t=tickets?.[myTicket.number];
   if(t){
-    myTicket={...myTicket,...t,number:Number(myTicket.number)};
     if(t.status==='completed'){
-      localStorage.removeItem('ib_exit_ticket_v3');
       myTicket=null;
+      localStorage.removeItem('ib_exit_ticket_v3');
       $('customerTicket').style.display='none';
       $('customerBooking').style.display='block';
-      $('ticketError').textContent='';
+      renderPublic();
       return;
     }
+    myTicket={...myTicket,...t,number:Number(myTicket.number)};
     localStorage.setItem('ib_exit_ticket_v3',JSON.stringify(myTicket));
   }
   renderPublic();
@@ -153,7 +153,9 @@ function initStaff(){
   onAuthStateChanged(auth,user=>renderStaff(user));
 }
 async function staffLogin(){
-  try{await signInWithEmailAndPassword(auth,$('staffEmail').value.trim(),$('staffPassword').value);$('staffLoginMsg').textContent='';}
+  const password=$('staffPassword').value;
+  if(!password){$('staffLoginMsg').textContent='パスワードを入力してください。';return;}
+  try{await signInWithEmailAndPassword(auth,STAFF_EMAIL,password);$('staffLoginMsg').textContent='';}
   catch(e){$('staffLoginMsg').textContent=firebaseMessage(e)}
 }
 function renderStaff(user=auth.currentUser){
