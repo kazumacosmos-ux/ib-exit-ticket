@@ -3985,6 +3985,10 @@ body.customer-page-active .realistic-gate-overlay{
           </li>
 
           <li>
+            予約後に時間を変更する場合は、一度キャンセルして取り直していただくか、直接受付スタッフまでお申し出ください。
+          </li>
+
+          <li>
             搭乗券は代表者の方のスマートフォンでご提示ください。万が一に備えて、スクリーンショットを撮っておくことをおすすめします。
           </li>
 
@@ -4795,7 +4799,7 @@ body.customer-page-active .realistic-gate-overlay{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import { getDatabase, ref, onValue, onChildRemoved, runTransaction, set, update, remove, push } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
-import { getAuth, signInAnonymously, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getAuth, signInAnonymously, signInWithEmailAndPassword, onAuthStateChanged, signOut, getIdToken } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA6xBMX14Z4gO4KE8Dy0qtTrQayDh9Fuzc",
@@ -8954,6 +8958,15 @@ async function markReservationCompleted(
     );
 
   try {
+
+    // Firebase Rules の判定に使われる最新の認証トークンを取得する。
+    const user = auth.currentUser;
+    if (!user || user.email !== STAFF_EMAIL) {
+      alert("スタッフとしてログインしてください。");
+      return false;
+    }
+
+    await getIdToken(user, true);
 
     await update(
       reservationRef,
