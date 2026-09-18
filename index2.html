@@ -91,7 +91,7 @@ function renderPublic(){
     $('remaining').textContent='完了';
     $('myState').textContent='🔵 搭乗済みです。ありがとうございました！';
   }else{
-    $('remaining').textContent=diff===0?'呼出中':`${diff}番`;
+    $('remaining').textContent=diff===0?'呼出中':`約${diff*10}分`;
     if(Number(myTicket.number)<=current) $('myState').textContent='🔔 あなたの番号です。受付へお越しください。';
     else $('myState').textContent='⏳ まだ順番待ちです。番号を時々確認してください。';
   }
