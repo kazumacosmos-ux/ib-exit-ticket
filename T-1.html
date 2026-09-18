@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>1-B出口 通知設定</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;margin:0;padding:24px;background:#f5f5f5;color:#222}
+main{max-width:520px;margin:auto;background:#fff;padding:24px;border-radius:18px}
+input,button{width:100%;box-sizing:border-box;padding:13px;margin-top:8px;font-size:16px;border-radius:10px}
+input{border:1px solid #ccc}
+button{border:0;background:#111;color:#fff}
+button:disabled{opacity:.5}
+.hidden{display:none}
+.ok{color:#16723a}.error{color:#b00020}
+</style>
+</head>
+<body>
+<main>
+<h1>🔔 1-B出口 通知設定</h1>
+
+<section id="notificationLogin">
+<p>管理者アカウントでログインしてください。</p>
+<input id="adminEmail" type="email" placeholder="管理者メールアドレス" autocomplete="username">
+<input id="adminPassword" type="password" placeholder="パスワード" autocomplete="current-password">
+<button id="adminLogin">管理者ログイン</button>
+</section>
+
+<section id="notificationPanel" class="hidden">
+<p id="loggedInAs"></p>
+<p>このiPadに「新しい予約」「予約キャンセル」のプッシュ通知を送ります。</p>
+<button id="enableNotification">🔔 このiPadで通知を有効にする</button>
+<br>
+<button id="adminLogout">ログアウト</button>
+</section>
+
+<p id="notificationMessage"></p>
+</main>
+
+<script type="module" src="./T-2.js"></script>
+</body>
+</html>
