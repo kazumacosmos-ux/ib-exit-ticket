@@ -228,7 +228,19 @@ async function saveNext(){
 }
 async function resetAll(){
   if(!confirm('整理券データをすべて削除して、1番からやり直します。よろしいですか？'))return;
-  try{await remove(ticketsRef());await set(settingsRef(),{open:true,current:0,next:1});await set(ref(db,`${ROOT}/nextNumber`),1);$('adminMsg').textContent='リセットしました。';}catch(e){$('adminMsg').textContent='リセットできませんでした。\n'+firebaseMessage(e)}
+  try{
+    // tickets全体の一括削除ではなく、各整理券を1件ずつ削除する。
+    // Firebase Rulesの $ticket 権限で管理者削除を確実に判定できるようにする。
+    const nums=Object.keys(tickets||{});
+    for(const no of nums){
+      await remove(ticketRef(Number(no)));
+    }
+    await set(settingsRef(),{open:true,current:0,next:1});
+    await set(ref(db,`${ROOT}/nextNumber`),1);
+    $('adminMsg').textContent='リセットしました。1番から発行できます。';
+  }catch(e){
+    $('adminMsg').textContent='リセットできませんでした。\n'+firebaseMessage(e);
+  }
 }
 
 async function initDataListeners(){
