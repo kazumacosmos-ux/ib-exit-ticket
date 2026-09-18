@@ -99,8 +99,8 @@ async function initCustomer(){
   $('cancelTicket').onclick=cancelMy;
   $('reloadCustomer').onclick=renderPublic;
   try{await signInAnonymously(auth)}catch(e){$('customerError').textContent=firebaseMessage(e);return}
-  onValue(ticketsRef(),snap=>{tickets=snap.val()||{};syncMyTicket();renderPublic()});
-  onValue(settingsRef(),snap=>{settings={open:true,current:0,next:1,...(snap.val()||{})};renderPublic()});
+  onValue(ticketsRef(),snap=>{tickets=snap.val()||{};syncMyTicket();renderPublic()},e=>{$('customerError').textContent='整理券データを読み込めませんでした。\n'+firebaseMessage(e)});
+  onValue(settingsRef(),snap=>{settings={open:true,current:0,next:1,...(snap.val()||{})};renderPublic()},e=>{$('customerError').textContent='Firebase設定を読み込めませんでした。\n'+firebaseMessage(e)});
 }
 function syncMyTicket(){
   if(!myTicket)return;
@@ -110,19 +110,20 @@ function syncMyTicket(){
 }
 async function takeTicket(){
   const name=$('name').value.trim(),size=Number($('size').value);
+  if(!auth.currentUser){$('customerError').textContent='Firebaseへのログインが完了していません。少し待ってからもう一度押してください。';return;}
   $('customerError').textContent='';
   if(!name){$('customerError').textContent='グループ名を入力してください。';return}
   if(!Number.isInteger(size)||size<1||size>4){$('customerError').textContent='人数は1〜4名です。';return}
   if(myTicket){$('customerError').textContent='すでに整理券を取得しています。';return}
   if(settings.open===false){$('customerError').textContent='現在、整理券の受付を停止しています。';return}
-  const nextRef=ref(db,`${ROOT}/settings/next`);
+  const nextRef=ref(db,`${ROOT}/nextNumber`);
   let number=0;
   try{
     const tx=await runTransaction(nextRef,current=>{const n=Math.max(1,parseInt(current,10)||1);number=n;return n+1});
-    if(!tx.committed||!number)throw new Error('transaction failed');
+    if(!tx.committed||!number)throw new Error('整理券番号の取得に失敗しました。');
     const data={number,name,size,status:'waiting',createdAt:Date.now()};
     await set(ticketRef(number),data);
-    myTicket=data;localStorage.setItem('ib_exit_ticket_v3',JSON.stringify(data));
+    myTicket=data;settings.next=number+1;localStorage.setItem('ib_exit_ticket_v3',JSON.stringify(data));
     $('customerBooking').style.display='none';$('customerTicket').style.display='block';renderPublic();
   }catch(e){console.error(e);$('customerError').textContent='整理券を発行できませんでした。\n'+firebaseMessage(e)}
 }
@@ -202,8 +203,8 @@ async function resetAll(){
 }
 
 async function initDataListeners(){
-  onValue(ticketsRef(),snap=>{tickets=snap.val()||{};renderPublic();renderStaff();renderAdmin()});
-  onValue(settingsRef(),snap=>{settings={open:true,current:0,next:1,...(snap.val()||{})};renderPublic();renderStaff();renderAdmin()});
+  onValue(ticketsRef(),snap=>{tickets=snap.val()||{};renderPublic();renderStaff();renderAdmin()},e=>{const m='Firebaseの整理券データ読み込みエラー：'+firebaseMessage(e);if($('staffMsg'))$('staffMsg').textContent=m;if($('adminMsg'))$('adminMsg').textContent=m});
+  onValue(settingsRef(),snap=>{settings={open:true,current:0,next:1,...(snap.val()||{})};renderPublic();renderStaff();renderAdmin()},e=>{const m='Firebaseの設定読み込みエラー：'+firebaseMessage(e);if($('staffMsg'))$('staffMsg').textContent=m;if($('adminMsg'))$('adminMsg').textContent=m});
 }
 
 if(window.__ticketPage==='customer')initCustomer();
