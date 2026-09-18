@@ -175,8 +175,16 @@ async function advance(){
 }
 async function skipNext(){await skip(Number(settings.current||0)+1)}
 async function skip(n){
-  try{await update(ticketRef(n),{status:'skipped',skippedAt:Date.now()});await update(settingsRef(),{current:n});$('staffMsg').textContent=`${n}番をスキップしました。`;}
-  catch(e){$('staffMsg').textContent='スキップできませんでした。\n'+firebaseMessage(e)}
+  try{
+    const t=tickets?.[n];
+    if(t){
+      await update(ticketRef(n),{status:'skipped',skippedAt:Date.now()});
+    }
+    await update(settingsRef(),{current:n});
+    $('staffMsg').textContent=`${n}番をスキップしました。`;
+  }catch(e){
+    $('staffMsg').textContent='スキップできませんでした。\n'+firebaseMessage(e);
+  }
 }
 async function complete(n){
   try{await update(ticketRef(n),{status:'completed',completedAt:Date.now()});renderStaff();}
