@@ -5152,19 +5152,6 @@ function getToday() {
 }
 
 
-function getBoardingTime(endTime) {
-
-  const minutes =
-    timeToMinutes(
-      endTime
-    ) + 5;
-
-  return minutesToTime(
-    minutes
-  );
-
-}
-
 
 function getFlightNumber(number) {
 
@@ -6548,12 +6535,6 @@ function renderReservations() {
     );
 
 
-  const boardingTime =
-    getBoardingTime(
-      end
-    );
-
-
   area.innerHTML = `
 
     <div class="boarding-pass">
@@ -6631,21 +6612,6 @@ function renderReservations() {
           <div>
 
             <span>
-              搭乗時刻
-            </span>
-
-            <strong>
-              ${escapeHtml(
-                boardingTime
-              )}
-            </strong>
-
-          </div>
-
-
-          <div>
-
-            <span>
               人数
             </span>
 
@@ -6690,7 +6656,7 @@ function renderReservations() {
           </div>
 
           <div>
-            ・搭乗時刻前になりましたら、受付までお越しください。
+            ・体験開始時刻までに、受付までお越しください。
           </div>
 
           <div>
